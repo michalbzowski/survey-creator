@@ -1,0 +1,29 @@
+{#include layouts/main}
+{#title}Lista tagów{/title}
+{#body}
+
+<table border="1" cellpadding="5">
+    <thead>
+    <tr>
+        <th>Nazwa</th>
+        <th>Akcje</th>
+    </tr>
+    </thead>
+    <tbody>
+    {#for tag in tags}
+    <tr>
+        <td>{tag.name}</td>
+        <td>
+            <form action="/tag/{tag.id}" method="post" style="display:inline;">
+                <input type="hidden" name="_method" value="delete">
+                <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć ten tag?')">Usuń</button>
+            </form>
+        </td>
+    </tr>
+    {/for}
+    </tbody>
+</table>
+
+<p><a href="/tags/add">Dodaj nowy teg</a></p>
+{/body}
+{/include}

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Odpowiedź na zapytanie</title>
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+</head>
+<body>
+<h2>Witaj, {link.person.firstName} {link.person.lastName} ({link.person.email})</h2>
+<p><strong>{link.query.title}</strong></p>
+<p>{link.query.description}</p>
+
+<form action="/respond/{link.linkToken}" method="post">
+    <label for="answer">Twoja odpowiedź:</label>
+    <select name="answer" id="answer" required>
+        <option value="">-- wybierz --</option>
+        <option value="YES">Tak</option>
+        <option value="NO">Nie</option>
+    </select>
+    <br><br>
+    <button type="submit">Wyślij</button>
+</form>
+</body>
+</html>

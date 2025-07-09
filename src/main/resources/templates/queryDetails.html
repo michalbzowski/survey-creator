@@ -1,0 +1,38 @@
+{#include layouts/main}
+{#title}Szczegóły zapytania{/title}
+{#body}
+
+<p><strong>Tytuł:</strong> {query.title}</p>
+<p><strong>Opis:</strong> {query.description}</p>
+
+<h3>Przypisane osoby</h3>
+{#if links.isEmpty()}
+<p>Brak przypisanych osób.</p>
+{#else}
+<table border="1" cellpadding="5">
+    <thead>
+    <tr>
+        <th>Imię</th>
+        <th>Nazwisko</th>
+        <th>Email</th>
+        <th>Link</th>
+        <th>Odpowiedź</th>
+    </tr>
+    </thead>
+    <tbody>
+    {#for link in links}
+    <tr>
+        <td>{link.person.firstName}</td>
+        <td>{link.person.lastName}</td>
+        <td>{link.person.email}</td>
+        <td><a href="/respond/{link.linkToken}" target="_blank">Otwórz</a></td>
+        <td>{link.answer ?: "Brak"}</td>
+    </tr>
+    {/for}
+    </tbody>
+</table>
+{/if}
+
+<p><a href="/queries/list">← Powrót do listy zapytań</a></p>
+{/body}
+{/include}
