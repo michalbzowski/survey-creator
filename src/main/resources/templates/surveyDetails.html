@@ -2,8 +2,8 @@
 {#title}Szczegóły zapytania{/title}
 {#body}
 
-<p><strong>Tytuł:</strong> {query.title}</p>
-<p><strong>Opis:</strong> {query.description}</p>
+<p><strong>Tytuł:</strong> {survey.title}</p>
+<p><strong>Opis:</strong> {survey.description}</p>
 
 <h3>Przypisane osoby</h3>
 {#if links.isEmpty()}
@@ -25,7 +25,7 @@
         <td>{link.person.firstName}</td>
         <td>{link.person.lastName}</td>
         <td>{link.person.email}</td>
-        <td><a href="/respond/{link.linkToken}" target="_blank">Otwórz</a></td>
+        <td><a href="/web/responses/{link.linkToken}" target="_blank">Otwórz</a></td>
         <td>{link.answer ?: "Brak"}</td>
     </tr>
     {/for}
@@ -33,6 +33,6 @@
 </table>
 {/if}
 
-<p><a href="/queries/list">← Powrót do listy zapytań</a></p>
+<p><a href="/web/surveys">← Powrót do listy zapytań</a></p>
 {/body}
 {/include}

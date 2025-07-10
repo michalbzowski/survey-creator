@@ -11,22 +11,22 @@
     </tr>
     </thead>
     <tbody>
-    {#for query in queries}
+    {#for survey in surveys}
     <tr>
-        <td>{query.title}</td>
-        <td>{query.description}</td>
+        <td>{survey.title}</td>
+        <td>{survey.description}</td>
         <td>
-            <form action="/queries/{query.id}" method="post" style="display:inline;">
+            <form action="/web/surveys/{survey.id}" method="post" style="display:inline;">
                 <input type="hidden" name="_method" value="delete">
                 <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć to zapytanie?')">Usuń</button>
             </form>
 
-            <a href="/queries/{query.id}/details">
+            <a href="/web/surveys/{survey.id}/details">
                 <button type="button">Szczegóły</button>
             </a>
 
 
-            <form action="/links/generate/{query.id}" method="get" style="display:inline;">
+            <form action="/api/v1/links/{survey.id}" method="get" style="display:inline;">
                 <button type="submit" onclick="return confirm('Wygenerować linki dla tego zapytania?')">Generuj linki
                 </button>
             </form>
@@ -37,6 +37,6 @@
     </tbody>
 </table>
 
-<p><a href="/queries/add">Dodaj nowe zapytanie</a></p>
+<p><a href="/web/surveys/new">Dodaj nowe zapytanie</a></p>
 {/body}
 {/include}

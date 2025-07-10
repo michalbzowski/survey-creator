@@ -3,7 +3,7 @@
 This is a simple survey service. My main idea was to send a survey to my friends from Concert Band 
 are they available on events? I am organizing few concerts per year, and I am sending questions to fixed group 
 of people and waiting for response. I didn't found such service where I could define group of people 
-and send them simple surveys - Will you play that day or no?
+and send them simple survey - Will you play that day or no?
 
 ## Running the application in dev mode
 

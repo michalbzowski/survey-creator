@@ -6,11 +6,12 @@
     <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
 </head>
 <body>
-<h2>Witaj, {link.person.firstName} {link.person.lastName} ({link.person.email})</h2>
-<p><strong>{link.query.title}</strong></p>
-<p>{link.query.description}</p>
+<h2>Witaj, {link.person.firstName} {link.person.lastName} </h2>
+<p>({link.person.email})</p>
+<p><strong>{link.survey.title}</strong></p>
+<p>{link.survey.description}</p>
 
-<form action="/respond/{link.linkToken}" method="post">
+<form action="/web/responses/{link.linkToken}" method="post">
     <label for="answer">Twoja odpowiedź:</label>
     <select name="answer" id="answer" required>
         <option value="">-- wybierz --</option>

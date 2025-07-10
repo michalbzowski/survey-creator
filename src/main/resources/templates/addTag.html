@@ -2,13 +2,13 @@
     {#title}Dodaj tag{/title}
     {#body}
 
-    <form action="/tags" method="post">
+    <form action="/api/v1/tags" method="post">
         <label for="name">Nazwa:</label>
         <input type="text" id="name" name="name" required><br><br>
 
         <button type="submit">Dodaj</button>
     </form>
 
-    <p><a href="/tags/list">Zobacz listę tagów</a></p>
+    <p><a href="/web/tags">Zobacz listę tagów</a></p>
     {/body}
 {/include}

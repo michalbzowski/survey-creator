@@ -20,7 +20,7 @@
         <td>{person.email}</td>
         <td>{person.defaultTag}</td>
         <td>
-            <form action="/persons/{person.id}" method="post" style="display:inline;">
+            <form action="/web/persons/{person.id}" method="post" style="display:inline;">
                 <input type="hidden" name="_method" value="delete">
                 <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć tę osobę?')">Usuń</button>
             </form>
@@ -30,6 +30,6 @@
     </tbody>
 </table>
 
-<p><a href="/persons/add">Dodaj nową osobę</a></p>
+<p><a href="/web/persons/new">Dodaj nową osobę</a></p>
 {/body}
 {/include}

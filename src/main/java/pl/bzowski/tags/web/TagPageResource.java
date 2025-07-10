@@ -1,4 +1,4 @@
-package pl.bzowski.tags;
+package pl.bzowski.tags.web;
 
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
@@ -8,11 +8,12 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.persons.Person;
+import pl.bzowski.tags.Tag;
 
 import java.util.List;
 import java.util.UUID;
 
-@Path("/tags")
+@Path("/web/tags")
 public class TagPageResource {
 
     private final Template addTag;
@@ -24,23 +25,13 @@ public class TagPageResource {
     }
 
     @GET
-    @Path("/add")
+    @Path("/new")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance showAddForm() {
         return addTag.instance();
     }
 
-    @POST
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
-    public Response addPerson(@FormParam("name") String name) {
-        Tag tag = new Tag(name);
-        tag.persist();
-        return Response.seeOther(UriBuilder.fromPath("/tags/list").build()).build();
-    }
-
     @GET
-    @Path("/list")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance listTags() {
         List<Tag> tags = Tag.listAll();
@@ -53,11 +44,11 @@ public class TagPageResource {
     @Transactional
     public Response deletePerson(@PathParam("id") UUID id, @FormParam("_method") String method) {
         if ("delete".equalsIgnoreCase(method)) {
-            Person person = Person.findById(id);
-            if (person != null) {
-                person.delete();
+            Tag tag = Tag.findById(id);
+            if (tag != null) {
+                tag.delete();
             }
         }
-        return Response.seeOther(UriBuilder.fromPath("/persons/list").build()).build();
+        return Response.seeOther(UriBuilder.fromPath("/web/tags").build()).build();
     }
 }

@@ -1,14 +1,15 @@
-package pl.bzowski;
+package pl.bzowski.links;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import pl.bzowski.surveys.Survey;
 import pl.bzowski.persons.Person;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "person_query_links")
-public class PersonQueryLink extends PanacheEntityBase {
+@Table(name = "person_survey_links")
+public class PersonSurveyLink extends PanacheEntityBase {
 
     @Id
     @GeneratedValue
@@ -18,7 +19,7 @@ public class PersonQueryLink extends PanacheEntityBase {
     public Person person;
 
     @ManyToOne(optional = false)
-    public Query query;
+    public Survey survey;
 
     @Column(nullable = false, unique = true)
     public UUID linkToken; // unikalny identyfikator do URL-a
@@ -30,12 +31,12 @@ public class PersonQueryLink extends PanacheEntityBase {
         YES, NO
     }
 
-    public PersonQueryLink() {
+    public PersonSurveyLink() {
     }
 
-    public PersonQueryLink(Person person, Query query) {
+    public PersonSurveyLink(Person person, Survey survey) {
         this.person = person;
-        this.query = query;
+        this.survey = survey;
         this.linkToken = UUID.randomUUID();
     }
 }

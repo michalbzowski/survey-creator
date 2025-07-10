@@ -1,14 +1,15 @@
-package pl.bzowski.persons;
+package pl.bzowski.persons.api;
 
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pl.bzowski.persons.Person;
 
 import java.util.List;
 import java.util.UUID;
 
-@Path("/persons")
+@Path("/api/v1/persons")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class PersonResource {

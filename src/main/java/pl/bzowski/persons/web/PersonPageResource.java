@@ -1,4 +1,4 @@
-package pl.bzowski.persons;
+package pl.bzowski.persons.web;
 
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
@@ -7,12 +7,13 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
+import pl.bzowski.persons.Person;
 import pl.bzowski.tags.Tag;
 
 import java.util.List;
 import java.util.UUID;
 
-@Path("/persons")
+@Path("/web/persons")
 public class PersonPageResource {
 
     private final Template addPerson;
@@ -24,7 +25,7 @@ public class PersonPageResource {
     }
 
     @GET
-    @Path("/add")
+    @Path("/new")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance showAddForm() {
         var tags = Tag.listAll();
@@ -41,11 +42,10 @@ public class PersonPageResource {
     ) {
         Person person = new Person(firstName, lastName, email, defaultTag);
         person.persist();
-        return Response.seeOther(UriBuilder.fromPath("/persons/list").build()).build();
+        return Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build();
     }
 
     @GET
-    @Path("/list")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance listPersons() {
         List<Person> persons = Person.listAll();
@@ -63,6 +63,6 @@ public class PersonPageResource {
                 person.delete();
             }
         }
-        return Response.seeOther(UriBuilder.fromPath("/persons/list").build()).build();
+        return Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build();
     }
 }

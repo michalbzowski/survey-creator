@@ -14,7 +14,7 @@
     <tr>
         <td>{tag.name}</td>
         <td>
-            <form action="/tag/{tag.id}" method="post" style="display:inline;">
+            <form action="/web/tags/{tag.id}" method="post" style="display:inline;">
                 <input type="hidden" name="_method" value="delete">
                 <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć ten tag?')">Usuń</button>
             </form>
@@ -24,6 +24,6 @@
     </tbody>
 </table>
 
-<p><a href="/tags/add">Dodaj nowy teg</a></p>
+<p><a href="/web/tags/new">Dodaj nowy teg</a></p>
 {/body}
 {/include}
