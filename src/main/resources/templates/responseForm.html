@@ -10,9 +10,12 @@
 <p>({link.person.email})</p>
 <p><strong>{link.survey.title}</strong></p>
 <p>{link.survey.description}</p>
-
+{#if link.answer}
+<p>Już odpowiedziałeś na to pytanie: {link.answer}</p>
+<p>Jeśli chcesz zmienić odpowiedź, wyślij nową!</p>
+{/if}
 <form action="/web/responses/{link.linkToken}" method="post">
-    <label for="answer">Twoja odpowiedź:</label>
+    <label for="answer">Twoja{#if link.answer} (nowa) {/if}odpowiedź:</label>
     <select name="answer" id="answer" required>
         <option value="">-- wybierz --</option>
         <option value="YES">Tak</option>
