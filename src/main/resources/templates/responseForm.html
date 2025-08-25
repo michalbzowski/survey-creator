@@ -8,21 +8,64 @@
 <body>
 <h2>Witaj, {link.person.firstName} {link.person.lastName} </h2>
 <p>({link.person.email})</p>
-<p><strong>{link.survey.title}</strong></p>
-<p>{link.survey.description}</p>
-{#if link.answer}
-<p>Już odpowiedziałeś na to pytanie: {link.answer}</p>
-<p>Jeśli chcesz zmienić odpowiedź, wyślij nową!</p>
-{/if}
-<form action="/web/responses/{link.linkToken}" method="post">
-    <label for="answer">Twoja{#if link.answer} (nowa) {/if}odpowiedź:</label>
-    <select name="answer" id="answer" required>
+<p><strong>{link.survey.name}</strong></p>
+<form action="/web/responses/{link.linkToken}" id="response-form">
+    {#each link.survey.questions}
+    <p><strong>{it.title}</strong></p>
+    <p>{it.description}</p>
+    <label for="{it.id}">Odpowiedź:</label>
+    <select class="answer-entry" name="{it.id}" id="{it.id}" required>
         <option value="">-- wybierz --</option>
-        <option value="YES">Tak</option>
-        <option value="NO">Nie</option>
+        <option value="TAK">Tak</option>
+        <option value="NIE">Nie</option>
+        <option value="ODPOWIEM_POZNIEJ">Odpowiem później</option>
     </select>
     <br><br>
+    {/each}
     <button type="submit">Wyślij</button>
 </form>
 </body>
+<script>
+    document.getElementById('response-form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    // Zbierz dane podstawowe
+    const form = event.target;
+    const formData = new FormData(form);
+
+    // Przygotuj obiekt z odpowiedziami na pytania
+    const answers = {};
+    formData.forEach((value, key) => {
+        // key będzie ID pytania, value to wybrana odpowiedź
+        answers[key] = value;
+    });
+
+    // Wyślij JSON zawierający token i odpowiedzi (jeśli token chcesz wysłać)
+    const linkToken = form.action.split('/').pop(); // wyciąganie tokenu z URL
+
+    const payload = answers;
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            alert('Odpowiedź została wysłana.');
+            // np. przekierowanie lub reset formularza
+            // window.location.href = '/dziękujemy';
+        } else {
+            alert('Błąd podczas wysyłania odpowiedzi');
+        }
+    } catch (error) {
+        console.error('Błąd sieci:', error);
+        alert('Błąd połączenia');
+    }
+});
+
+</script>
 </html>

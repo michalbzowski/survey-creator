@@ -28,10 +28,12 @@ public class SurveyResource {
     }
 
     @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public Response createSurvey(@BeanParam Survey survey) {
+    public Response createSurvey(SurveyDTO survey) {
         try {
-            Survey created = surveyService.createSurvey(survey);
+            SurveyDTO created = surveyService.createSurvey(survey);
             return Response.status(Response.Status.CREATED).entity(created).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();

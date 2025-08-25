@@ -21,7 +21,7 @@ public class Person extends PanacheEntityBase {
     public String lastName;
 
     @Column(nullable = false, unique = true)
-    public String email;
+    public String email; //todo: Opracuj sposób na przypadki, gdy osoby są niepełnoletnie i maila wysyłasz zarówno do nich jak i do rodzicó
 
     @Column
     public String defaultTag;

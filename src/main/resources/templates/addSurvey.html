@@ -2,16 +2,32 @@
 {#title}Dodaj nowe zapytanie{/title}
 {#body}
 
-<form action="/web/surveys" method="post">
-    <label for="title">Tytuł:</label>
-    <input type="text" id="title" name="title" required><br><br>
+<form id="survey-form">
+    <label for="name"> Nazwa ankiety: </label>
+    <input type="text" id="name" name="name" value="{survey.name ?: ''}" />
 
-    <label for="description">Opis:</label><br>
-    <textarea id="description" name="description" rows="4" cols="50" required></textarea><br><br>
+    <div id="questions-container">
+        {#each survey.questions}
+        <div class="question-entry">
+            <label> Tytuł pytania: </label>
+            <input type="text" name="questions[{it_index}].title" value="{it.title ?: ''}" />
 
-    <button type="submit">Dodaj</button>
+            <label> Opis pytania: </label>
+            <input type="text" name="questions[{it_index}].description" value="{it.description ?: ''}" />
+
+            <button type="button" onclick="removeQuestion(this)">Usuń pytanie</button>
+        </div>
+        {/each}
+    </div>
+
+    <button type="button" onclick="addQuestion()">Dodaj pytanie</button>
+    <button type="submit">Zapisz ankietę</button>
 </form>
 
 <p><a href="/web/surveys">Zobacz listę zapytań</a></p>
+
+<script src="/js/script.js"></script>
+
+
 {/body}
 {/include}

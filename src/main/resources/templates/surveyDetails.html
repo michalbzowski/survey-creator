@@ -2,8 +2,7 @@
 {#title}Szczegóły zapytania{/title}
 {#body}
 
-<p><strong>Tytuł:</strong> {survey.title}</p>
-<p><strong>Opis:</strong> {survey.description}</p>
+<p><strong>Tytuł:</strong> {survey.name}</p>
 
 <h3>Przypisane osoby</h3>
 {#if links.isEmpty()}
@@ -16,6 +15,7 @@
         <th>Nazwisko</th>
         <th>Email</th>
         <th>Link</th>
+        <th>Email</th>
         <th>Odpowiedź</th>
     </tr>
     </thead>
@@ -26,13 +26,20 @@
         <td>{link.person.lastName}</td>
         <td>{link.person.email}</td>
         <td><a href="/web/responses/{link.linkToken}" target="_blank">Otwórz</a></td>
-        <td>{link.answer ?: "Brak"}</td>
+
+        <td>
+            {#if link.status.name() eq "TO_SEND"}
+            <form id="send-email-button" action="/api/v1/links/{survey.id}/email/{link.person.id}" method="post" style="display:inline;">
+                <button type="submit">Wyślij</button>
+            </form>
+            {/if}
+        </td>
+        <td>{link.surveyAnswered ?: "Brak"}</td>
     </tr>
     {/for}
     </tbody>
 </table>
 {/if}
-
 <p><a href="/web/surveys">← Powrót do listy zapytań</a></p>
 {/body}
 {/include}

@@ -2,8 +2,10 @@ package pl.bzowski.surveys;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import jakarta.ws.rs.FormParam;
+import pl.bzowski.question.Question;
+import pl.bzowski.surveys.api.SurveyDTO;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -15,19 +17,20 @@ public class Survey extends PanacheEntityBase {
     public UUID id;
 
     @Column(nullable = false)
-    @FormParam("title")
-    public String title;
+    public String name;
 
-    @Column(nullable = false)
-    @FormParam("description")
-    public String description;
+    @OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<Question> questions;
 
-    // Konstruktor domyślny wymagany przez JPA
-    public Survey() {
+    public Survey() {}
+
+    public Survey(String name, List<Question> questions) {
+        this.name = name;
+        this.questions = questions;
     }
 
-    public Survey(String title, String description) {
-        this.title = title;
-        this.description = description;
+    // Przykładowa metoda tworząca DTO z Survey do REST API
+    public SurveyDTO toDTO() {
+        return new SurveyDTO(this.id, this.name, this.questions.stream().map(Question::toDTO).toList());
     }
 }

@@ -6,15 +6,13 @@
     <thead>
     <tr>
         <th>Tytuł</th>
-        <th>Opis</th>
         <th>Akcje</th>
     </tr>
     </thead>
     <tbody>
     {#for survey in surveys}
     <tr>
-        <td>{survey.title}</td>
-        <td>{survey.description}</td>
+        <td>{survey.name}</td>
         <td>
             <form action="/web/surveys/{survey.id}" method="post" style="display:inline;">
                 <input type="hidden" name="_method" value="delete">

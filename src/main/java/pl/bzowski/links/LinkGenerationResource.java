@@ -5,6 +5,10 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
+
+import java.net.URI;
+import java.util.logging.Level;
+import pl.bzowski.email.EmailService;
 import pl.bzowski.surveys.Survey;
 import pl.bzowski.persons.Person;
 
@@ -18,7 +22,12 @@ import java.util.logging.Logger;
 @Consumes(MediaType.APPLICATION_JSON)
 public class LinkGenerationResource {
 
+    private final EmailService emailService;
     Logger logger = Logger.getLogger(LinkGenerationResource.class.getName());
+
+    public LinkGenerationResource(EmailService emailService) {
+        this.emailService = emailService;
+    }
 
     @GET
     public List<PersonSurveyLink> listAllLinks() {
@@ -54,5 +63,48 @@ public class LinkGenerationResource {
 
         // Przekierowanie do widoku szczegółów zapytania
         return Response.seeOther(UriBuilder.fromPath("/web/surveys/{id}/details").build(surveyId)).build();
+    }
+
+    @POST
+    @Path("/{surveyId}/email/{personId}")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Transactional
+    public Response sendLinkByEmail(@PathParam("surveyId") UUID surveyId, @PathParam("personId") UUID personId) {
+        logger.info(String.format("Start sending link by email for survey %s for person %s", surveyId, personId));
+        Survey survey = Survey.findById(surveyId);
+        if (survey == null) {
+            logger.info("Survey is null");
+            return Response.status(Response.Status.NOT_FOUND).entity("Zapytanie nie istnieje").build();
+        }
+
+        Person person = Person.findById(personId);
+        if (person == null) {
+            logger.info("Person is null");
+            return Response.status(Response.Status.NOT_FOUND).entity("Osoba nie istnieje").build();
+        }
+        Optional<PersonSurveyLink> personSurveyLinkOptional = PersonSurveyLink.find("person = ?1 and survey = ?2", person, survey).firstResultOptional();
+
+        boolean exists = personSurveyLinkOptional.isPresent();
+        if (!exists) {
+            logger.info(String.format("Can not send link. Link doesn't exists for: %s - %s", person.email, surveyId));
+            return Response.status(Response.Status.NOT_FOUND).entity("Link nie istnieje").build();
+        } else {
+            PersonSurveyLink personSurveyLink = personSurveyLinkOptional.get();
+            String wholeLink = "http://localhost:8080" + "/web/responses/" + personSurveyLink.linkToken.toString();
+            try {
+                emailService.sendEmail(person.email, "new mail", wholeLink);
+                logger.info(String.format("E-mail with link %s sent", wholeLink));
+                personSurveyLink.sent();
+                personSurveyLink.persist();
+                String redirectUrl = String.format("/web/surveys/%s/details", surveyId.toString()); // adres strony, na którą chcesz wrócić
+                return Response.seeOther(URI.create(redirectUrl)).build();
+            } catch (RuntimeException ex) {
+                String format = String.format("E-mail with link %s NOT SENT", wholeLink);
+                personSurveyLink.sendingError();
+                personSurveyLink.persist();
+                logger.log(Level.WARNING, format);
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Błąd!").build();
+            }
+        }
     }
 }

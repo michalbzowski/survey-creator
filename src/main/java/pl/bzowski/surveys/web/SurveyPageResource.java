@@ -8,10 +8,13 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.persons.Person;
+import pl.bzowski.question.QuestionDTO;
 import pl.bzowski.surveys.Survey;
+import pl.bzowski.surveys.api.SurveyDTO;
 import pl.bzowski.surveys.service.SurveyService;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,13 +35,18 @@ public class SurveyPageResource {
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance showAddForm() {
-        return addSurvey.instance();
+
+        SurveyDTO survey = new SurveyDTO();
+        survey.name = "";
+        survey.questions = new ArrayList<>();
+        survey.questions.add(new QuestionDTO(null, "Kot", "Pies"));
+        return addSurvey.data("survey", survey);
     }
 
     @POST
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public Response addQuery(@BeanParam Survey survey) {
+    public Response addSurvey(SurveyDTO survey) {
         try {
             surveyService.createSurvey(survey);
             return Response.seeOther(UriBuilder.fromPath("/web/surveys").build()).build();

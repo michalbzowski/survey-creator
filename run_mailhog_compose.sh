@@ -1,0 +1,1 @@
+docker compose --file mailhog-compose.yml up  -d

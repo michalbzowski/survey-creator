@@ -24,12 +24,19 @@ public class PersonSurveyLink extends PanacheEntityBase {
     @Column(nullable = false, unique = true)
     public UUID linkToken; // unikalny identyfikator do URL-a
 
-    @Enumerated(EnumType.STRING)
-    public Answer answer;
+    @Column(nullable = false)
+    public Boolean surveyAnswered = false;
 
-    public enum Answer {
-        YES, NO
+    public void sendingError() {
+        this.status = SendingStatus.ERROR;
     }
+
+    public enum SendingStatus {
+        TO_SEND, SENT, ERROR
+    }
+
+    @Enumerated(EnumType.STRING)
+    public SendingStatus status;
 
     public PersonSurveyLink() {
     }
@@ -38,5 +45,10 @@ public class PersonSurveyLink extends PanacheEntityBase {
         this.person = person;
         this.survey = survey;
         this.linkToken = UUID.randomUUID();
+        this.status = SendingStatus.TO_SEND;
+    }
+
+    public void sent() {
+        status = SendingStatus.SENT;
     }
 }
