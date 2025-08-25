@@ -1,0 +1,24 @@
+{#include layouts/main}
+    {#title}Dodaj nowe wydarzenie{/title}
+    {#body}
+
+    <form action="/web/events" method="post">
+        <label for="name">Nazwa:</label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="location">Miejsce:</label>
+        <input type="text" id="location" name="location" required><br><br>
+
+        <label for="localDateTime">Dzień i godzina:</label>
+        <input type="datetime-local" id="localDateTime" name="localDateTime" required><br><br>
+
+        <label for="description">Opis:</label>
+        <textarea id="description" name="description" placeholder="Opisz wydarzenie..." required></textarea>
+
+
+        <button type="submit">Dodaj</button>
+    </form>
+
+    <p><a href="/web/events">Zobacz listę wydarzeń</a></p>
+    {/body}
+{/include}

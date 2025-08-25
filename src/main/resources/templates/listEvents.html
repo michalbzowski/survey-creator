@@ -1,0 +1,36 @@
+{#include layouts/main}
+{#title}Lista wydarzeń{/title}
+{#body}
+
+<table border="1" cellpadding="5">
+    <thead>
+    <tr>
+        <th>Nazwa</th>
+        <th>Lokalizacja</th>
+        <th>Data i czas</th>
+        <th>Opis</th>
+        <th>Akcje</th>
+    </tr>
+    </thead>
+    <tbody>
+    {#for event in events}
+    <tr>
+        <td>{event.name}</td>
+        <td>{event.location}</td>
+        <td>{event.localDateTime}</td>
+        <td>{event.description}</td>
+        <td>
+            <form action="/web/events/{event.id}" method="post" style="display:inline;">
+                <input type="hidden" name="_method" value="delete">
+                <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć to wydarzenie?')">Usuń</button>
+            </form>
+        </td>
+    </tr>
+    {/for}
+    </tbody>
+</table>
+
+<p><a href="/web/events/new">Dodaj nowe wydarzenie</a></p>
+
+{/body}
+{/include}
