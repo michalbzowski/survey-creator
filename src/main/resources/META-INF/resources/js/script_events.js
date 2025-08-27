@@ -55,7 +55,7 @@ function addEvent() {
     }
 
     // Tworzymy element div
-    const div = document.createElement('div');
+    const div = document.createElement('article');
     div.className = 'event-entry';
 
     // Tworzymy select
@@ -84,20 +84,20 @@ function addEvent() {
     div.appendChild(select);
 
     // Przycisk usuń
-    const btn = document.createElement('button');
-    btn.type = 'button';
+    const par = document.createElement('p');
+    const btn = document.createElement('a');
     btn.textContent = 'Usuń wydarzenie';
     btn.onclick = function() {
         removeEvent(btn);
     };
 
-    div.appendChild(btn);
+    div.appendChild(par).appendChild(btn);
 
     container.appendChild(div);
 }
 
 function removeEvent(button) {
-    const entry = button.parentNode;
+    const entry = button.parentNode.parentNode;
     const container = entry.parentNode;
     container.removeChild(entry);
 

@@ -3,7 +3,7 @@
 {#body}
 
 {#if events}
-<table border="1" cellpadding="5">
+<table>
     <thead>
 
     <tr>
@@ -19,7 +19,7 @@
     <tr>
         <td>{event.name}</td>
         <td>{event.location}</td>
-        <td>{event.localDateTime}</td>
+        <td>{event.formatedLocalDateTime}</td>
         <td>{event.description}</td>
         <td>
             <form action="/web/events/{event.id}" method="post" style="display:inline;">

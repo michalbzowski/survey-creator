@@ -2,12 +2,13 @@
 {#title}Nowa ankieta{/title}
 {#body}
 <form id="survey-form">
-    <label for="name">Nazwa ankiety: </label>
-    <input type="text" id="name" name="name" value="{survey.name ?: ''}" />
-
+    <article>
+        <label for="name">Nazwa ankiety: </label>
+        <input type="text" id="name" name="name" value="{survey.name ?: ''}" />
+    </article>
     <div id="events-container">
         {#each survey.events}
-        <div class="event-entry">
+        <article class="event-entry">
             <label>Wybierz wydarzenie:</label>
             <select name="events[{it_index}]" onchange="checkDuplicateEvents(this)" required>
                 <option value="">-- wybierz --</option>
@@ -15,8 +16,8 @@
                 <option value="{event.id}" selected={event.id == it.id}>{event.name}</option>
                 {/for}
             </select>
-            <button type="button" onclick="removeEvent(this)">Usuń wydarzenie</button>
-        </div>
+            <p><a href="#" onclick="removeEvent(this)">Usuń wydarzenie</a></p>
+        </article>
         {/each}
     </div>
 

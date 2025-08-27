@@ -1,5 +1,6 @@
 package pl.bzowski.surveys.web;
 
+import io.quarkus.panache.common.Sort;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.ws.rs.*;
@@ -28,7 +29,7 @@ public class SurveyDetailsResource {
             throw new NotFoundException("Nie znaleziono zapytania");
         }
 
-        List<PersonSurveyLink> links = PersonSurveyLink.find("survey", survey).list();
+        List<PersonSurveyLink> links = PersonSurveyLink.find("survey", Sort.by("person.lastName"), survey).list();
 
         return surveyDetails
                 .data("survey", survey)

@@ -28,7 +28,7 @@ public class Event extends PanacheEntityBase {
     @Column(nullable = false)
     public LocalDateTime localDateTime;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 4096)
     public String description;
 
     @ManyToOne

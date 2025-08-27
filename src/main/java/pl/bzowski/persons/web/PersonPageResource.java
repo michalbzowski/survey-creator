@@ -1,5 +1,7 @@
 package pl.bzowski.persons.web;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.panache.common.Sort;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.transaction.Transactional;
@@ -10,6 +12,7 @@ import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.persons.Person;
 import pl.bzowski.tags.Tag;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,7 +52,7 @@ public class PersonPageResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance listPersons() {
-        List<Person> persons = Person.listAll();
+        List<Person> persons = Person.listAll(Sort.by("lastName"));
         return listPersons.data("persons", persons);
     }
 

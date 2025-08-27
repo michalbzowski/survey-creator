@@ -2,7 +2,7 @@
 {#title}Osoby{/title}
 {#body}
 
-<table border="1" cellpadding="5">
+<table>
     <thead>
     <tr>
         <th>Imię</th>
@@ -20,7 +20,10 @@
         <td>{person.email}</td>
         <td>{person.defaultTag.name}</td>
         <td>
-            <a href="/web/persons/edit/{person.id}">Edytuj</a>
+            <a href="/web/persons/edit/{person.id}">
+                <button type="button">Edytuj</button>
+            </a>
+
             <form action="/web/persons/{person.id}" method="post" style="display:inline;">
                 <input type="hidden" name="_method" value="delete">
                 <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć tę osobę?')">Usuń</button>
