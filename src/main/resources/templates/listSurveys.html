@@ -15,21 +15,17 @@
     <tr>
         <td>{survey.name}</td>
         <td>
-            <form action="/web/surveys/{survey.id}" method="post" style="display:inline;">
-                <input type="hidden" name="_method" value="delete">
-                <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć to zapytanie?')">Usuń</button>
-            </form>
-
             <a href="/web/surveys/{survey.id}/details">
                 <button type="button">Szczegóły</button>
             </a>
-
-
             <form action="/api/v1/links/{survey.id}" method="get" style="display:inline;">
                 <button type="submit" onclick="return confirm('Wygenerować linki dla tego zapytania?')">Generuj linki
                 </button>
             </form>
-
+            <form action="/web/surveys/{survey.id}" method="post" style="display:inline;">
+                <input type="hidden" name="_method" value="delete">
+                <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć to zapytanie?')">Usuń</button>
+            </form>
         </td>
     </tr>
     {/for}

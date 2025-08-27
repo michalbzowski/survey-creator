@@ -11,7 +11,6 @@ import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.events.Event;
 import pl.bzowski.links.PersonSurveyLink;
 import pl.bzowski.question.PersonEventAnswer;
-import pl.bzowski.surveys.Survey;
 import pl.bzowski.tags.Tag;
 
 import java.util.ArrayList;

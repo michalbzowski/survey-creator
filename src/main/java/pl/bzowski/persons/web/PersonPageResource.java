@@ -32,7 +32,7 @@ public class PersonPageResource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance showAddForm() {
         var tags = Tag.listAll();
-        return addPerson.data("tags", tags);
+        return addPerson.data("person", new Person(), "tags", tags);
     }
 
     @POST

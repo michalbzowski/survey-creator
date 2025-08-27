@@ -1,6 +1,7 @@
 package pl.bzowski.events;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.panache.common.Sort;
 import jakarta.persistence.*;
 import pl.bzowski.events.web.EventDto;
 import pl.bzowski.surveys.Survey;
@@ -46,12 +47,17 @@ public class Event extends PanacheEntityBase {
     }
 
     public static List<Event> findAvailableEvents() {
-        return list("survey is null");
+        return list("survey is null", Sort.by("localDateTime", Sort.Direction.Ascending));
     }
 
     public String formatedLocalDateTime() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy HH:mm", new Locale("pl", "PL"));
         return localDateTime.format(formatter);
+    }
+
+    public String nameWithFormatedLocalDateTime() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy HH:mm", new Locale("pl", "PL"));
+        return localDateTime.format(formatter) + " " + name;
     }
 
     public EventDto toDTO() {

@@ -13,7 +13,7 @@
             <select name="events[{it_index}]" onchange="checkDuplicateEvents(this)" required>
                 <option value="">-- wybierz --</option>
                 {#for event in availableEvents}
-                <option value="{event.id}" selected={event.id == it.id}>{event.name}</option>
+                <option value="{event.id}">{event.nameWithFormatedLocalDateTime}</option>
                 {/for}
             </select>
             <p><a href="#" onclick="removeEvent(this)">Usuń wydarzenie</a></p>
@@ -21,11 +21,9 @@
         {/each}
     </div>
 
-    <button type="button" onclick="addEvent()">Dodaj wydarzenie</button>
     <button type="submit">Zapisz ankietę</button>
+    <a href="#" onclick="addEvent()">Dodaj kolejne wydarzenie do tej ankiety</a>
 </form>
-
-<p><a href="/web/surveys">Zobacz listę zapytań</a></p>
 <script>
     const availableEventsJson = {availableEventsJson.raw()};
 </script>

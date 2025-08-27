@@ -9,6 +9,10 @@
 <h3>Przypisane osoby</h3>
 {#if links.isEmpty()}
 <p>Brak przypisanych osób.</p>
+<form action="/api/v1/links/{survey.id}" method="get" style="display:inline;">
+    <button type="submit" onclick="return confirm('Wygenerować linki dla tego zapytania?')">Generuj linki
+    </button>
+</form>
 {#else}
 <table>
     <thead>
@@ -38,7 +42,13 @@
             <i class="si-check-circle"></i>
             {/if}
         </td>
-        <td>{link.surveyAnswered ?: "Brak"}</td>
+        <td style="text-align: center;">
+            {#if link.surveyAnswered}
+            <i class="si-check-circle"></i>
+            {#else}
+            <i class="si-ban"></i>
+            {/if}
+        </td>
     </tr>
     {/for}
     </tbody>

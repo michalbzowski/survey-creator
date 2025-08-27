@@ -17,9 +17,24 @@ public class PersonSurveyLink extends PanacheEntityBase {
 
     @ManyToOne(optional = false)
     public Person person;
+//
+//    @Column
+//    public String personFirstName;
+//
+//    @Column
+//    public String personLastName;
+//
+//    @Column
+//    public String personEmail;
+//
+//    @Column
+//    public String personTag;
 
     @ManyToOne(optional = false)
     public Survey survey;
+
+//    @Column(nullable = false)
+//    public UUID surveyId;
 
     @Column(nullable = false, unique = true)
     public UUID linkToken; // unikalny identyfikator do URL-a
