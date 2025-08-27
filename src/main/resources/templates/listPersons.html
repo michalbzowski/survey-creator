@@ -1,5 +1,5 @@
 {#include layouts/main}
-{#title}Lista osób{/title}
+{#title}Osoby{/title}
 {#body}
 
 <table border="1" cellpadding="5">
@@ -18,8 +18,9 @@
         <td>{person.firstName}</td>
         <td>{person.lastName}</td>
         <td>{person.email}</td>
-        <td>{person.defaultTag}</td>
+        <td>{person.defaultTag.name}</td>
         <td>
+            <a href="/web/persons/edit/{person.id}">Edytuj</a>
             <form action="/web/persons/{person.id}" method="post" style="display:inline;">
                 <input type="hidden" name="_method" value="delete">
                 <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć tę osobę?')">Usuń</button>

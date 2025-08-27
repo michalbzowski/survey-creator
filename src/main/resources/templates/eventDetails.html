@@ -1,0 +1,50 @@
+{#include layouts/main}
+{#title}{event.name}{/title}
+{#body}
+<article>
+    <aside>
+        <h3>Statystyki</h3>
+        <ul>
+            <li>Linki: {linkCount}</li>
+            <li>Wysłane: {sentLinkCount}</li>
+            <li>Odpowiedzi: {answerSum}</li>
+            <li>Bez odpowiedzi: {unansweredCount}</li>
+            <li>Tak: {answerYesCount}</li>
+            <li>Nie: {answerNoCount}</li>
+            <li>Odpowiem później: {answerLaterCount}</li>
+        </ul>
+    </aside>
+
+    <p><strong>Gdzie:</strong> {event.location}</p>
+    <p><strong>Kiedy:</strong> {event.formatedLocalDateTime}</p>
+
+    <p>{event.description}</p>
+
+</article>
+<article>
+    <h3>Odpowiedzi</h3>
+    <table border="1" cellpadding="5">
+        <thead>
+        <tr>
+            <th>Nazwa Taga</th>
+            <th>TAK</th>
+            <th>NIE</th>
+            <th>POZNIEJ</th>
+        </tr>
+        </thead>
+        <tbody>
+        {#for stat in fullStats}
+        <tr>
+            <td>{stat.tag}</td>
+            <td>{stat.yes}</td>
+            <td>{stat.no}</td>
+            <td>{stat.later}</td>
+        </tr>
+        {/for}
+        </tbody>
+    </table>
+</article>
+<p><a href="/web/events">Powrót do listy wydarzeń</a></p>
+
+{/body}
+{/include}

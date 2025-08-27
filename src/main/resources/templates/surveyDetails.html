@@ -3,6 +3,9 @@
 {#body}
 
 <p><strong>Tytuł:</strong> {survey.name}</p>
+{#each survey.events}
+<p>{it.name}</p>
+{/each}
 
 <h3>Przypisane osoby</h3>
 {#if links.isEmpty()}

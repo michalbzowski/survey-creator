@@ -2,14 +2,15 @@ package pl.bzowski.question;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import pl.bzowski.events.Event;
 import pl.bzowski.persons.Person;
 import pl.bzowski.surveys.Survey;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "person_question_answers")
-public class PersonQuestionAnswer extends PanacheEntityBase {
+@Table(name = "person_event_answers")
+public class PersonEventAnswer extends PanacheEntityBase {
 
     @Id
     @GeneratedValue
@@ -24,8 +25,8 @@ public class PersonQuestionAnswer extends PanacheEntityBase {
     public Survey survey;
 
     @ManyToOne
-    @JoinColumn(name = "question_id")
-    public Question question;
+    @JoinColumn(name = "event_id")
+    public Event event;
 
     @Enumerated(EnumType.STRING)
     public Answer answer;

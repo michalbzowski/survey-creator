@@ -7,6 +7,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
+import pl.bzowski.events.Event;
 import pl.bzowski.persons.Person;
 import pl.bzowski.question.QuestionDTO;
 import pl.bzowski.surveys.Survey;
@@ -21,26 +22,30 @@ import java.util.UUID;
 @Path("/web/surveys")
 public class SurveyPageResource {
 
+
+
     private final Template addSurvey;
     private final Template listSurveys;
     private final SurveyService surveyService;
+    private final JsonHelper jsonHelper;
 
-    public SurveyPageResource(Template addSurvey, Template listSurveys, SurveyService surveyService) {
+    public SurveyPageResource(Template addSurvey, Template listSurveys, SurveyService surveyService, JsonHelper jsonHelper) {
         this.addSurvey = addSurvey;
         this.listSurveys = listSurveys;
         this.surveyService = surveyService;
+        this.jsonHelper = jsonHelper;
     }
 
     @GET
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance showAddForm() {
-
-        SurveyDTO survey = new SurveyDTO();
-        survey.name = "";
-        survey.questions = new ArrayList<>();
-        survey.questions.add(new QuestionDTO(null, "Kot", "Pies"));
-        return addSurvey.data("survey", survey);
+    public TemplateInstance createSurveyForm() {
+        List<Event> availableEvents = Event.findAvailableEvents();
+        List<Event> first = List.of(availableEvents.getFirst());
+        String availableEventsJson = jsonHelper.toJson(availableEvents);
+        return addSurvey.data("survey", new Survey("", first),
+                "availableEvents", availableEvents,
+                "availableEventsJson", availableEventsJson);
     }
 
     @POST

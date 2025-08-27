@@ -40,7 +40,8 @@ public class PersonPageResource {
                               @FormParam("email") String email,
                               @FormParam("defaultTag") String defaultTag
     ) {
-        Person person = new Person(firstName, lastName, email, defaultTag);
+        Tag tag = Tag.find("name", defaultTag).firstResult();
+        Person person = new Person(firstName, lastName, email, tag);
         person.persist();
         return Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build();
     }
@@ -65,4 +66,41 @@ public class PersonPageResource {
         }
         return Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build();
     }
+
+    @GET
+    @Path("/edit/{id}")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance showEditForm(@PathParam("id") UUID id) {
+        Person person = Person.findById(id);
+        if (person == null) {
+            throw new WebApplicationException("Person not found", 404);
+        }
+        var tags = Tag.listAll();
+        return addPerson.data("person", person)
+                .data("tags", tags)
+                .data("edit", true);  // Flaga, by zmienić formularz z dodawania na edycję
+    }
+
+    @POST
+    @Path("/edit/{id}")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Transactional
+    public Response editPerson(@PathParam("id") UUID id,
+                               @FormParam("firstName") String firstName,
+                               @FormParam("lastName") String lastName,
+                               @FormParam("email") String email,
+                               @FormParam("defaultTag") String defaultTag) {
+        Person person = Person.findById(id);
+        if (person == null) {
+            throw new WebApplicationException("Person not found", 404);
+        }
+        Tag tag = Tag.find("name", defaultTag).firstResult();
+        person.firstName = firstName;
+        person.lastName = lastName;
+        person.email = email;
+        person.defaultTag = tag;
+        // person.persist() nie jest potrzebne, bo entita jest zarządzana (transakcja)
+        return Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build();
+    }
+
 }

@@ -2,8 +2,13 @@ package pl.bzowski.events;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import pl.bzowski.events.web.EventDto;
+import pl.bzowski.surveys.Survey;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Entity
@@ -26,6 +31,10 @@ public class Event extends PanacheEntityBase {
     @Column(nullable = false)
     public String description;
 
+    @ManyToOne
+    @JoinColumn(name = "survey_id")
+    public Survey survey;
+
     public Event() {
     }
 
@@ -34,5 +43,18 @@ public class Event extends PanacheEntityBase {
         this.location = location;
         this.localDateTime = localDateTime;
         this.description = description;
+    }
+
+    public static List<Event> findAvailableEvents() {
+        return list("survey is null");
+    }
+
+    public String formatedLocalDateTime() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy HH:mm", new Locale("pl", "PL"));
+        return localDateTime.format(formatter);
+    }
+
+    public EventDto toDTO() {
+        return new EventDto(id, name, location, localDateTime, description);
     }
 }

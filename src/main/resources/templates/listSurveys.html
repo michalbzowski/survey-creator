@@ -1,7 +1,8 @@
 {#include layouts/main}
-{#title}Lista zapytań{/title}
+{#title}Ankiety{/title}
 {#body}
 
+{#if surveys}
 <table border="1" cellpadding="5">
     <thead>
     <tr>
@@ -34,7 +35,9 @@
     {/for}
     </tbody>
 </table>
-
-<p><a href="/web/surveys/new">Dodaj nowe zapytanie</a></p>
+{#else}
+<p>Brak stworzonych ankiet</p>
+{/if}
+<p><a href="/web/surveys/new">Dodaj nową ankietę</a></p>
 {/body}
 {/include}

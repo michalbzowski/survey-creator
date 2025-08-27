@@ -5,12 +5,11 @@ import io.quarkus.qute.TemplateInstance;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import pl.bzowski.events.Event;
 import pl.bzowski.links.PersonSurveyLink;
 import pl.bzowski.persons.Person;
-import pl.bzowski.question.PersonQuestionAnswer;
-import pl.bzowski.question.Question;
+import pl.bzowski.question.PersonEventAnswer;
 import pl.bzowski.surveys.Survey;
 
 import java.util.Map;
@@ -61,33 +60,33 @@ public class ResponsePageResource {
             for (String key : answers.keySet()) {
                 String value = answers.get(key);
                 logger.info(String.format("Key: %s, value: %s", key, value));
-                Question question;
+                Event event;
 
 
-                question = Question.findById(UUID.fromString(key));
+                event = Event.findById(UUID.fromString(key));
 
-                logger.info("Question: " + question.title);
+                logger.info("Event: " + event.name);
                 try {
-                    Optional<PersonQuestionAnswer> pqa = PersonQuestionAnswer
-                            .find("person = ?1 and survey = ?2 and question = ?3 ", person, survey, question)
+                    Optional<PersonEventAnswer> pqa = PersonEventAnswer
+                            .find("person = ?1 and survey = ?2 and event = ?3 ", person, survey, event)
                             .firstResultOptional();
 
-                    PersonQuestionAnswer.Answer answer = PersonQuestionAnswer.Answer.valueOf(value);
+                    PersonEventAnswer.Answer answer = PersonEventAnswer.Answer.valueOf(value);
                     if (pqa.isPresent()) {
                         logger.info("PQA present");
-                        PersonQuestionAnswer personQuestionAnswer = pqa.get();
-                        personQuestionAnswer.answer = answer;
-                        logger.info(String.format("Updated %s", personQuestionAnswer.id));
+                        PersonEventAnswer personEventAnswer = pqa.get();
+                        personEventAnswer.answer = answer;
+                        logger.info(String.format("Updated %s", personEventAnswer.id));
                     } else {
                         logger.info("PQA absent");
-                        PersonQuestionAnswer personQuestionAnswer = new PersonQuestionAnswer();
-                        personQuestionAnswer.person = person;
-                        personQuestionAnswer.survey = survey;
+                        PersonEventAnswer personEventAnswer = new PersonEventAnswer();
+                        personEventAnswer.person = person;
+                        personEventAnswer.survey = survey;
                         link.surveyAnswered = Boolean.TRUE;
-                        personQuestionAnswer.question = question;
-                        personQuestionAnswer.answer = answer;
-                        personQuestionAnswer.persist();
-                        logger.info(String.format("Persisted new %s", personQuestionAnswer.id));
+                        personEventAnswer.event = event;
+                        personEventAnswer.answer = answer;
+                        personEventAnswer.persist();
+                        logger.info(String.format("Persisted new %s", personEventAnswer.id));
                     }
                 } catch (RuntimeException ex) {
                     logger.info("Exception:" + ex.getMessage());

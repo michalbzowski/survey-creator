@@ -1,29 +1,27 @@
 {#include layouts/main}
-    {#title}Dodaj nową osobę{/title}
-    {#body}
+{#title}{edit ? "Edytuj osobę" : "Dodaj nową osobę"}{/title}
+{#body}
 
-    <form action="/web/persons" method="post">
-        <label for="firstName">Imię:</label>
-        <input type="text" id="firstName" name="firstName" required><br><br>
+<form action="{edit ? '/web/persons/edit/' + person.id : '/web/persons'}" method="post">
+    <label for="firstName">Imię:</label>
+    <input type="text" id="firstName" name="firstName" value="{person.firstName}" required><br><br>
 
-        <label for="lastName">Nazwisko:</label>
-        <input type="text" id="lastName" name="lastName" required><br><br>
+    <label for="lastName">Nazwisko:</label>
+    <input type="text" id="lastName" name="lastName" value="{person.lastName}" required><br><br>
 
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br><br>
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" value="{person.email}" required><br><br>
 
-        <label for="defaultTag">Default Tag:</label>
-        <select id="defaultTag" name="defaultTag">
+    <label for="defaultTag">Default Tag:</label>
+    <select id="defaultTag" name="defaultTag">
+        {#for tag in tags}
+        <option value="{tag.name}" {#if person.defaultTag && person.defaultTag.name == tag.name}selected{/if}>{tag.name}</option>
+        {/for}
+    </select><br><br>
 
-            {#for tag in tags}
-             <option id="{tag.id}" value="{tag.name}">{tag.name}</option>
-             {/for}
+    <button type="submit">{edit ? "Zapisz" : "Dodaj"}</button>
+</form>
 
-        </select><br><br>
-
-        <button type="submit">Dodaj</button>
-    </form>
-
-    <p><a href="/web/persons">Zobacz listę osób</a></p>
-    {/body}
+<p><a href="/web/persons">Zobacz listę osób</a></p>
+{/body}
 {/include}

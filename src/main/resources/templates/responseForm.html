@@ -10,17 +10,20 @@
 <p>({link.person.email})</p>
 <p><strong>{link.survey.name}</strong></p>
 <form action="/web/responses/{link.linkToken}" id="response-form">
-    {#each link.survey.questions}
-    <p><strong>{it.title}</strong></p>
-    <p>{it.description}</p>
-    <label for="{it.id}">Odpowiedź:</label>
-    <select class="answer-entry" name="{it.id}" id="{it.id}" required>
-        <option value="">-- wybierz --</option>
-        <option value="TAK">Tak</option>
-        <option value="NIE">Nie</option>
-        <option value="ODPOWIEM_POZNIEJ">Odpowiem później</option>
-    </select>
-    <br><br>
+    {#each link.survey.events}
+    <article>
+        <p><strong>{it.name}</strong></p>
+        <p>{it.location}</p>
+        <p>{it.localDateTime}</p>
+        <p>{it.description}</p>
+        <label for="{it.id}">Odpowiedź:</label>
+        <select class="answer-entry" name="{it.id}" id="{it.id}" required>
+            <option value="">-- wybierz --</option>
+            <option value="TAK">Tak</option>
+            <option value="NIE">Nie</option>
+            <option value="ODPOWIEM_POZNIEJ">Odpowiem później</option>
+        </select>
+    </article>
     {/each}
     <button type="submit">Wyślij</button>
 </form>
@@ -55,9 +58,7 @@
         });
 
         if (response.ok) {
-            alert('Odpowiedź została wysłana.');
-            // np. przekierowanie lub reset formularza
-            // window.location.href = '/dziękujemy';
+            window.location.href = '/web/thank_you';
         } else {
             alert('Błąd podczas wysyłania odpowiedzi');
         }

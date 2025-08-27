@@ -1,9 +1,11 @@
 {#include layouts/main}
-{#title}Lista wydarzeń{/title}
+{#title}Wydarzenia{/title}
 {#body}
 
+{#if events}
 <table border="1" cellpadding="5">
     <thead>
+
     <tr>
         <th>Nazwa</th>
         <th>Lokalizacja</th>
@@ -24,11 +26,17 @@
                 <input type="hidden" name="_method" value="delete">
                 <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć to wydarzenie?')">Usuń</button>
             </form>
+            <a href="/web/events/{event.id}/details">
+                <button type="button">Szczegóły</button>
+            </a>
         </td>
     </tr>
     {/for}
     </tbody>
 </table>
+{#else}
+<p>Brak utworzonych wydarzeń</p>
+{/if}
 
 <p><a href="/web/events/new">Dodaj nowe wydarzenie</a></p>
 
