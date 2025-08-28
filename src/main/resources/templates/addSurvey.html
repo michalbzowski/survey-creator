@@ -16,13 +16,21 @@
                 <option value="{event.id}">{event.nameWithFormatedLocalDateTime}</option>
                 {/for}
             </select>
-            <p><a href="#" onclick="removeEvent(this)">Usuń wydarzenie</a></p>
+            <p>
+                <a href="#" onclick="removeEvent(this)">
+                    <i class="si-minus-circle"></i>
+                    Usuń wydarzenie
+                </a>
+            </p>
         </article>
         {/each}
     </div>
 
     <button type="submit">Zapisz ankietę</button>
-    <a href="#" onclick="addEvent()">Dodaj kolejne wydarzenie do tej ankiety</a>
+    <a href="#" onclick="addEvent()">
+        <i class="si-plus-circle"></i>
+        Dodaj kolejne wydarzenie do tej ankiety
+    </a>
 </form>
 <script>
     const availableEventsJson = {availableEventsJson.raw()};

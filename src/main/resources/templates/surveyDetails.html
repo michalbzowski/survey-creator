@@ -28,14 +28,14 @@
     <tbody>
     {#for link in links}
     <tr>
-        <td>{link.person.firstName}</td>
-        <td>{link.person.lastName}</td>
-        <td>{link.person.email}</td>
+        <td>{link.personFirstName}</td>
+        <td>{link.personLastName}</td>
+        <td>{link.personEmail}</td>
         <td><a href="/web/responses/{link.linkToken}" target="_blank">Otwórz</a></td>
 
         <td style="text-align: center;">
             {#if link.status.name() eq "TO_SEND"}
-            <form id="send-email-button" action="/api/v1/links/{survey.id}/email/{link.person.id}" method="post" style="display:inline;">
+            <form id="send-email-button" action="/api/v1/links/{survey.id}/email/{link.personId}" method="post" style="display:inline;">
                 <button type="submit">Wyślij</button>
             </form>
             {#else}

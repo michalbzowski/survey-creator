@@ -3,6 +3,14 @@
 {#body}
 <article>
     <aside>
+        {#if noSurveyYet}
+        <p><a href="/web/surveys/new">Dodaj nową ankietę</a></p>
+        {#else if linkCount == 0}
+        <form action="/api/v1/links/{eventSurveyId}" method="get" style="display:inline;">
+            <button type="submit" onclick="return confirm('Wygenerować linki dla tego zapytania?')">Generuj linki
+            </button>
+        </form>
+        {#else}
         <h3>Statystyki</h3>
         <ul>
             <li>Linki: {linkCount}</li>
@@ -13,6 +21,7 @@
             <li>Nie: {answerNoCount}</li>
             <li>Odpowiem później: {answerLaterCount}</li>
         </ul>
+        {/if}
     </aside>
 
     <p><strong>Gdzie:</strong> {event.location}</p>

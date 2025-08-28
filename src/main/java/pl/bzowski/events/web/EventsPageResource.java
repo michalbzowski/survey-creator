@@ -1,6 +1,7 @@
 package pl.bzowski.events.web;
 
 import io.quarkus.hibernate.orm.panache.Panache;
+import io.quarkus.panache.common.Sort;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.transaction.Transactional;
@@ -36,7 +37,7 @@ public class EventsPageResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance listEvents() {
-        List<Event> events = Event.listAll();
+        List<Event> events = Event.listAll(Sort.by("localDateTime"));
         return listEvents.data("events", events);
     }
 
@@ -69,7 +70,8 @@ public class EventsPageResource {
 
 
         // Ładujemy statystyki
-        long linkCount = PersonSurveyLink.count("survey = ?1", event.survey);
+        boolean noSurveyYet = event.survey == null;
+        long linkCount = event.survey == null ? 0 : PersonSurveyLink.count("surveyId = ?1", event.survey.id);
 //        long sentLinkCount = PersonEventAnswer.count("event = ?1 and /* tu warunek wysłania linka */", event);
         PersonEventAnswer.Answer tak = PersonEventAnswer.Answer.TAK;
         long answerYesCount = PersonEventAnswer.count("event = ?1 and answer = ?2", event, tak);
@@ -104,7 +106,9 @@ public class EventsPageResource {
                 .data("answerYesCount", answerYesCount)
                 .data("answerNoCount", answerNoCount)
                 .data("answerLaterCount", answerLaterCount)
-                .data("fullStats", fullStats);
+                .data("fullStats", fullStats)
+                .data("noSurveyYet", noSurveyYet)
+                .data("eventSurveyId", event.survey == null ? null : event.survey.id);
     }
 
     private static List<Object[]> getResultList(Event event, PersonEventAnswer.Answer answer) {

@@ -15,26 +15,26 @@ public class PersonSurveyLink extends PanacheEntityBase {
     @GeneratedValue
     public UUID id;
 
-    @ManyToOne(optional = false)
-    public Person person;
-//
-//    @Column
-//    public String personFirstName;
-//
-//    @Column
-//    public String personLastName;
-//
-//    @Column
-//    public String personEmail;
-//
-//    @Column
-//    public String personTag;
+    @Column
+    public UUID personId;
+
+    @Column
+    public String personFirstName;
+
+    @Column
+    public String personLastName;
+
+    @Column
+    public String personEmail;
+
+    @Column
+    public String personTag;
 
     @ManyToOne(optional = false)
     public Survey survey;
 
-//    @Column(nullable = false)
-//    public UUID surveyId;
+    @Column(nullable = false)
+    public UUID surveyId;
 
     @Column(nullable = false, unique = true)
     public UUID linkToken; // unikalny identyfikator do URL-a
@@ -57,8 +57,12 @@ public class PersonSurveyLink extends PanacheEntityBase {
     }
 
     public PersonSurveyLink(Person person, Survey survey) {
-        this.person = person;
+        this.personId = person.id;
+        this.personFirstName = person.firstName;
+        this.personLastName = person.lastName;
+        this.personEmail = person.email;
         this.survey = survey;
+        this.surveyId = survey.id;
         this.linkToken = UUID.randomUUID();
         this.status = SendingStatus.TO_SEND;
     }

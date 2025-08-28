@@ -55,7 +55,7 @@ public class ResponsePageResource {
             throw new NotFoundException("Nie znaleziono linku " + link);
         }
         try {
-            Person person = link.person;
+            Person person = Person.findById(link.personId);
             Survey survey = link.survey;
             for (String key : answers.keySet()) {
                 String value = answers.get(key);

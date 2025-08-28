@@ -49,7 +49,7 @@ public class LinkGenerationResource {
         logger.info("Persons found: " + (long) persons.size());
         for (Person person : persons) {
             // Sprawdź, czy link już istnieje
-            Optional<PersonSurveyLink> personSurveyLink = PersonSurveyLink.find("person = ?1 and survey = ?2", person, survey).firstResultOptional();
+            Optional<PersonSurveyLink> personSurveyLink = PersonSurveyLink.find("personId = ?1 and surveyId = ?2", person.id, survey.id).firstResultOptional();
 
             boolean exists = personSurveyLink.isPresent();
             if (!exists) {
@@ -82,7 +82,7 @@ public class LinkGenerationResource {
             logger.info("Person is null");
             return Response.status(Response.Status.NOT_FOUND).entity("Osoba nie istnieje").build();
         }
-        Optional<PersonSurveyLink> personSurveyLinkOptional = PersonSurveyLink.find("person = ?1 and survey = ?2", person, survey).firstResultOptional();
+        Optional<PersonSurveyLink> personSurveyLinkOptional = PersonSurveyLink.find("personId = ?1 and surveyId = ?2", person.id, survey.id).firstResultOptional();
 
         boolean exists = personSurveyLinkOptional.isPresent();
         if (!exists) {

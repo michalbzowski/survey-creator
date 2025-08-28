@@ -29,7 +29,7 @@ public class SurveyDetailsResource {
             throw new NotFoundException("Nie znaleziono zapytania");
         }
 
-        List<PersonSurveyLink> links = PersonSurveyLink.find("survey", Sort.by("person.lastName"), survey).list();
+        List<PersonSurveyLink> links = PersonSurveyLink.find("surveyId", Sort.by("personLastName"), survey.id).list();
 
         return surveyDetails
                 .data("survey", survey)

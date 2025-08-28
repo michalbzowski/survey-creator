@@ -6,8 +6,8 @@
     <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
 </head>
 <body>
-<h2>Witaj, {link.person.firstName} {link.person.lastName} </h2>
-<p>({link.person.email})</p>
+<h2>Witaj, {link.personFirstName} {link.personLastName} </h2>
+<p>({link.personEmail})</p>
 <p><strong>{link.survey.name}</strong></p>
 <form action="/web/responses/{link.linkToken}" id="response-form">
     {#each link.survey.events}

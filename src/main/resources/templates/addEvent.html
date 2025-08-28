@@ -1,5 +1,5 @@
 {#include layouts/main}
-    {#title}Dodaj nowe wydarzenie{/title}
+    {#title}Nowe wydarzenie{/title}
     {#body}
 
     <form action="/web/events" method="post">
@@ -15,10 +15,7 @@
         <label for="description">Opis:</label>
         <textarea maxlength="4096" id="description" name="description" placeholder="Opisz wydarzenie..." required></textarea>
 
-
         <button type="submit">Dodaj</button>
     </form>
-
-    <p><a href="/web/events">Zobacz listę wydarzeń</a></p>
     {/body}
 {/include}
