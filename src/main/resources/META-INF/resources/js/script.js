@@ -29,7 +29,7 @@ async function submitSurvey(event) {
     if (response.ok) {
         window.location.href = '/web/surveys'; // przekierowanie po sukcesie
     } else {
-        alert('Błąd przy zapisie ankiety');
+        alert('Błąd przy zapisie listy obecności');
     }
 }
 

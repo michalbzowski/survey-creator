@@ -24,13 +24,13 @@ public class SurveyPageResource {
 
 
 
-    private final Template addSurvey;
+    private final Template createSurvey;
     private final Template listSurveys;
     private final SurveyService surveyService;
     private final JsonHelper jsonHelper;
 
-    public SurveyPageResource(Template addSurvey, Template listSurveys, SurveyService surveyService, JsonHelper jsonHelper) {
-        this.addSurvey = addSurvey;
+    public SurveyPageResource(Template createSurvey, Template listSurveys, SurveyService surveyService, JsonHelper jsonHelper) {
+        this.createSurvey = createSurvey;
         this.listSurveys = listSurveys;
         this.surveyService = surveyService;
         this.jsonHelper = jsonHelper;
@@ -39,22 +39,24 @@ public class SurveyPageResource {
     @GET
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance createSurveyForm() {
+    public TemplateInstance createSurveyForm(@QueryParam("name") String name, @QueryParam("eventId") UUID eventId) {
         List<Event> availableEvents = Event.findAvailableEvents();
         List<Event> first = List.of(availableEvents.getFirst());
         String availableEventsJson = jsonHelper.toJson(availableEvents);
-        return addSurvey.data("survey", new Survey("", first),
+        return createSurvey.data("survey", new Survey("", first),
                 "availableEvents", availableEvents,
-                "availableEventsJson", availableEventsJson);
+                "availableEventsJson", availableEventsJson,
+                "name", name,
+                "eventId", eventId);
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public Response addSurvey(SurveyDTO survey) {
+    public Response createSurvey(SurveyDTO survey) {
         try {
-            surveyService.createSurvey(survey);
-            return Response.seeOther(UriBuilder.fromPath("/web/surveys").build()).build();
+            var dto = surveyService.createSurvey(survey);
+            return Response.ok(dto).build();
         } catch (IllegalArgumentException e) {
             // obsługa błędu, np. zwrócenie strony z komunikatem
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();

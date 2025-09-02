@@ -1,9 +1,9 @@
-document.getElementById('survey-form').addEventListener('submit', submitSurvey);
+u('#survey-form').on('submit', submitSurvey);
 
 async function submitSurvey(event) {
     event.preventDefault();
 
-    const name = document.getElementById('name').value;
+    const name = u('#name').val();
 
     if (!name) {
         alert('Uzupełnij nazwę!');
@@ -11,7 +11,7 @@ async function submitSurvey(event) {
     }
 
     const events = [];
-    document.querySelectorAll('.event-entry select').forEach(select => {
+    u('.event-entry select').each(select => {
         if (select.value) {
             events.push(select.value);
         }
@@ -29,9 +29,7 @@ async function submitSurvey(event) {
 
     const response = await fetch('/web/surveys', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(survey),
     });
 
@@ -43,10 +41,10 @@ async function submitSurvey(event) {
 }
 
 function addEvent() {
-    const container = document.getElementById('events-container');
+    const container = u('#events-container').get(0);
 
-    // Pobierz dostępne eventy, które nie są aktualnie wybrane
-    const selectedIds = Array.from(container.querySelectorAll('select')).map(s => s.value);
+    // Pobierz wybrane wartości
+    const selectedIds = u('select', container).map(s => s.value);
     const availableOptions = getAvailableEventsOptions(selectedIds);
 
     if (availableOptions.length === 0) {
@@ -54,7 +52,7 @@ function addEvent() {
         return;
     }
 
-    // Tworzymy element div
+    // Tworzymy element div.article
     const div = document.createElement('article');
     div.className = 'event-entry';
 
@@ -72,7 +70,6 @@ function addEvent() {
     defaultOption.textContent = '-- wybierz --';
     select.appendChild(defaultOption);
 
-    // Dodajemy opcje do selecta
     availableOptions.forEach(event => {
         const option = document.createElement('option');
         option.value = event.id;
@@ -97,20 +94,19 @@ function addEvent() {
 }
 
 function removeEvent(button) {
-    const entry = button.parentNode.parentNode;
-    const container = entry.parentNode;
+    const entry = u(button).parent().parent().get(0);
+    const container = u(entry).parent().get(0);
     container.removeChild(entry);
 
-    // Uaktualnij nazwy selectów, by indeksy były spójne
-    Array.from(container.children).forEach((child, index) => {
-        const select = child.querySelector('select');
+    // Uaktualnij nazwy selectów
+    u('select', container).each((select, index) => {
         select.name = `events[${index}]`;
     });
 }
 
 function checkDuplicateEvents(changedSelect) {
-    const container = document.getElementById('events-container');
-    const values = Array.from(container.querySelectorAll('select')).map(s => s.value).filter(v => v);
+    const container = u('#events-container').get(0);
+    const values = u('select', container).map(s => s.value).filter(v => v);
 
     const duplicates = values.filter((item, idx) => values.indexOf(item) !== idx);
     if (duplicates.length > 0) {
@@ -120,9 +116,6 @@ function checkDuplicateEvents(changedSelect) {
 }
 
 function getAvailableEventsOptions(selectedIds) {
-    // Dostępne eventy musi dostarczyć serwer w globalnej zmiennej JS lub można pobrać osobnym wywołaniem API (przykład statyczny tutaj)
-    // Przykładowo (należy zastąpić dynamicznymi danymi z serwera):
-    const allEvents =  availableEventsJson|| [];
-
+    const allEvents = availableEventsJson || [];
     return allEvents.filter(ev => !selectedIds.includes(ev.id));
 }

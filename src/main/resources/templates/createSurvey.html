@@ -1,10 +1,10 @@
 {#include layouts/main}
-{#title}Nowa ankieta{/title}
+{#title}Nowa lista obecności{/title}
 {#body}
 <form id="survey-form">
     <article>
-        <label for="name">Nazwa ankiety: </label>
-        <input type="text" id="name" name="name" value="{survey.name ?: ''}" />
+        <label for="name">Nazwa listy obecności: </label>
+        <input type="text" id="name" name="name" value="{name ?: ''}" />
     </article>
     <div id="events-container">
         {#each survey.events}
@@ -26,17 +26,18 @@
         {/each}
     </div>
 
-    <button type="submit">Zapisz ankietę</button>
+    <button type="submit">Zapisz listę obecności</button>
     <a href="#" onclick="addEvent()">
         <i class="si-plus-circle"></i>
-        Dodaj kolejne wydarzenie do tej ankiety
+        Dodaj kolejne wydarzenie do tej listy obecności
     </a>
 </form>
 <script>
     const availableEventsJson = {availableEventsJson.raw()};
+    const selectEventId = "{eventId}"
 </script>
 
-<script src="/js/script_events.js"></script>
+<script src="/js/script_create_survey_umbrella.js" defer></script>
 
 {/body}
 {/include}

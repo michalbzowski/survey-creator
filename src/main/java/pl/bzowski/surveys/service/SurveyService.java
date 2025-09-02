@@ -29,7 +29,7 @@ public class SurveyService {
                     throw new IllegalArgumentException("Nie znaleziono wydarzenia o id: " + id);
                 }
                 if (event.survey != null) {
-                    throw new IllegalArgumentException("Wydarzenie jest już przypisane do ankiety");
+                    throw new IllegalArgumentException("Wydarzenie jest już przypisane do listy obecnościy");
                 }
                 events.add(event);
             }
@@ -40,8 +40,8 @@ public class SurveyService {
         survey.events = events;
 
         survey.persist();
-
-        // Opcjonalnie przypisz ankietę do eventów (jeśli w Event masz relację odwrotną)
+        surveyDTO.id = survey.id;
+        // Opcjonalnie przypisz listę obecności do eventów (jeśli w Event masz relację odwrotną)
         for (Event ev : events) {
             ev.survey = survey;
         }

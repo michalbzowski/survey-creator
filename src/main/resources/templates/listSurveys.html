@@ -1,9 +1,16 @@
 {#include layouts/main}
-{#title}Ankiety{/title}
+{#title}
+Listy Obecności
+<a href="/web/surveys/new">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-plus-icon lucide-book-plus"><path d="M12 7v6"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M9 10h6"/></svg>
+</a>
+{/title}
 {#body}
 
+
 {#if surveys}
-<table border="1" cellpadding="5">
+
+<table>
     <thead>
     <tr>
         <th>Tytuł</th>
@@ -15,25 +22,26 @@
     <tr>
         <td>{survey.name}</td>
         <td>
-            <a href="/web/surveys/{survey.id}/details">
-                <button type="button">Szczegóły</button>
-            </a>
-            <form action="/api/v1/links/{survey.id}" method="get" style="display:inline;">
-                <button type="submit" onclick="return confirm('Wygenerować linki dla tego zapytania?')">Generuj linki
-                </button>
-            </form>
-            <form action="/web/surveys/{survey.id}" method="post" style="display:inline;">
-                <input type="hidden" name="_method" value="delete">
-                <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć to zapytanie?')">Usuń</button>
-            </form>
+            <div role="group">
+                <a href="/web/surveys/{survey.id}/details">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                </a>
+                <a href="#" class="generate-links" data-id="{survey.id}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link-icon lucide-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                </a>
+                <a href="#" class="delete-survey" data-id="{survey.id}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-x-icon lucide-circle-x"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+                </a>
+            </div>
+
         </td>
     </tr>
     {/for}
     </tbody>
 </table>
 {#else}
-<p>Brak stworzonych ankiet</p>
+<p>Brak stworzonych list obecności</p>
 {/if}
-<p><a href="/web/surveys/new">Dodaj nową ankietę</a></p>
+<script src="/js/script_list_surveys_umbrella.js"></script>
 {/body}
 {/include}

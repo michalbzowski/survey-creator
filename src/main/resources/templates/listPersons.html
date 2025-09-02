@@ -1,6 +1,12 @@
 {#include layouts/main}
-{#title}Osoby{/title}
+{#title}
+    Osoby
+    <a href="/web/persons/new">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round-plus-icon lucide-user-round-plus"><path d="M2 21a8 8 0 0 1 13.292-6"/><circle cx="10" cy="8" r="5"/><path d="M19 16v6"/><path d="M22 19h-6"/></svg>
+    </a>
+{/title}
 {#body}
+
 
 <table>
     <thead>
@@ -20,20 +26,20 @@
         <td>{person.email}</td>
         <td>{person.defaultTag.name}</td>
         <td>
-            <a href="/web/persons/edit/{person.id}">
-                <button type="button">Edytuj</button>
-            </a>
+            <div role="group">
+                <a href="/web/persons/edit/{person.id}" class="button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round-pen-icon lucide-user-round-pen"><path d="M2 21a8 8 0 0 1 10.821-7.487"/><path d="M21.378 16.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><circle cx="10" cy="8" r="5"/></svg>
+                </a>
 
-            <form action="/web/persons/{person.id}" method="post" style="display:inline;">
-                <input type="hidden" name="_method" value="delete">
-                <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć tę osobę?')">Usuń</button>
-            </form>
+                <a href="/web/persons/{person.id}" class="delete-person" data-id="{person.id}" title="Usuń tę osobę" aria-label="Usuń tę osobę">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round-x-icon lucide-user-round-x"><path d="M2 21a8 8 0 0 1 11.873-7"/><circle cx="10" cy="8" r="5"/><path d="m17 17 5 5"/><path d="m22 17-5 5"/></svg>
+                </a>
+            </div>
         </td>
     </tr>
     {/for}
     </tbody>
 </table>
-
-<p><a href="/web/persons/new">Dodaj nową osobę</a></p>
+<script src="/js/script_list_persons_umbrella.js"></script>
 {/body}
 {/include}

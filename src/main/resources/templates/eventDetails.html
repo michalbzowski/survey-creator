@@ -1,17 +1,26 @@
 {#include layouts/main}
-{#title}{event.name}{/title}
+{#title}Szczegóły wydarzenia{/title}
 {#body}
 <article>
-    <aside>
-        {#if noSurveyYet}
-        <p><a href="/web/surveys/new">Dodaj nową ankietę</a></p>
-        {#else if linkCount == 0}
-        <form action="/api/v1/links/{eventSurveyId}" method="get" style="display:inline;">
-            <button type="submit" onclick="return confirm('Wygenerować linki dla tego zapytania?')">Generuj linki
-            </button>
-        </form>
-        {#else}
-        <h3>Statystyki</h3>
+    {#if noSurveyYet}
+    <p><a href="/web/surveys/new?name={event.name}&eventId={event.id}">
+        Stwórz listę obecnościę
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="lucide lucide-book-plus-icon lucide-book-plus">
+            <path d="M12 7v6"/>
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/>
+            <path d="M9 10h6"/>
+        </svg>
+    </a></p>
+    {#else if linkCount == 0}
+    <form action="/api/v1/links/{eventSurveyId}" method="get" style="display:inline;">
+        <button type="submit" onclick="return confirm('Wygenerować linki dla tego zapytania?')">Generuj linki
+        </button>
+    </form>
+    {#else}
+    <details>
+        <summary>Statystyki</summary>
         <ul>
             <li>Linki: {linkCount}</li>
             <li>Wysłane: {sentLinkCount}</li>
@@ -21,8 +30,10 @@
             <li>Nie: {answerNoCount}</li>
             <li>Odpowiem później: {answerLaterCount}</li>
         </ul>
-        {/if}
-    </aside>
+    </details>
+
+
+    {/if}
 
     <p><strong>Gdzie:</strong> {event.location}</p>
     <p><strong>Kiedy:</strong> {event.formatedLocalDateTime}</p>
@@ -30,6 +41,9 @@
     <p>{event.description}</p>
 
 </article>
+{#if noSurveyYet}
+--
+{#else}
 <article>
     <h3>Odpowiedzi</h3>
     <table border="1" cellpadding="5">
@@ -53,7 +67,6 @@
         </tbody>
     </table>
 </article>
-<p><a href="/web/events">Powrót do listy wydarzeń</a></p>
-
+{/if}
 {/body}
 {/include}

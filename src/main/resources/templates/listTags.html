@@ -1,8 +1,14 @@
 {#include layouts/main}
-{#title}Tagi{/title}
+{#title}
+    Tagi
+    <a href="/web/tags/new">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-plus-icon lucide-circle-plus"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+    </a>
+{/title}
 {#body}
 
-<table border="1" cellpadding="5">
+
+<table>
     <thead>
     <tr>
         <th>Nazwa</th>
@@ -14,16 +20,16 @@
     <tr>
         <td>{tag.name}</td>
         <td>
-            <form action="/web/tags/{tag.id}" method="post" style="display:inline;">
-                <input type="hidden" name="_method" value="delete">
-                <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć ten tag?')">Usuń</button>
-            </form>
+            <div role="group">
+                <a href="#" class="delete-tag" data-id="{tag.id}" aria-label="Usuń ten tag" title="Usuń ten tag">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-x-icon lucide-circle-x"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+                </a>
+            </div>
         </td>
     </tr>
     {/for}
     </tbody>
 </table>
-
-<p><a href="/web/tags/new">Dodaj nowy tag</a></p>
+<script src="/js/sctipt_list_tags_umbrella.js"></script>
 {/body}
 {/include}

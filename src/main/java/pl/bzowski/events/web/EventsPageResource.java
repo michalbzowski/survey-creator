@@ -55,7 +55,7 @@ public class EventsPageResource {
     public Response addEvent(@BeanParam EventDto eventDto) {
         Event event = new Event(eventDto.name, eventDto.location, eventDto.localDateTime, eventDto.description);
         event.persist();
-        return Response.seeOther(UriBuilder.fromPath("/web/events").build()).build();
+        return Response.seeOther(UriBuilder.fromPath("/web/events/" + event.id + "/details").build()).build();
     }
 
     @GET
@@ -122,6 +122,20 @@ public class EventsPageResource {
                 .setParameter("event", event)
                 .setParameter("answer", answer)
                 .getResultList();
+    }
+
+    @POST
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Transactional
+    public Response deleteEvent(@PathParam("id") UUID id, @FormParam("_method") String method) {
+        if ("delete".equalsIgnoreCase(method)) {
+            Event event = Event.findById(id);
+            if (event != null) {
+                event.delete();
+            }
+        }
+        return Response.seeOther(UriBuilder.fromPath("/web/events").build()).build();
     }
 
 

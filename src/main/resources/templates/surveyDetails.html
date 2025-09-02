@@ -1,5 +1,5 @@
 {#include layouts/main}
-{#title}{survey.name}{/title}
+{#title}Szczegóły listy obecności{/title}
 {#body}
 
 {#each survey.events}
@@ -9,10 +9,10 @@
 <h3>Przypisane osoby</h3>
 {#if links.isEmpty()}
 <p>Brak przypisanych osób.</p>
-<form action="/api/v1/links/{survey.id}" method="get" style="display:inline;">
-    <button type="submit" onclick="return confirm('Wygenerować linki dla tego zapytania?')">Generuj linki
-    </button>
-</form>
+<a href="#" class="generate-links" data-id="{survey.id}">
+    Wygeneruj linki
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link-icon lucide-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+</a>
 {#else}
 <table>
     <thead>
@@ -54,6 +54,6 @@
     </tbody>
 </table>
 {/if}
-<p><a href="/web/surveys">← Powrót do listy zapytań</a></p>
+<script src="/js/script_list_surveys_umbrella.js"></script>
 {/body}
 {/include}

@@ -1,34 +1,40 @@
 {#include layouts/main}
-{#title}Wydarzenia{/title}
+{#title}
+    Wydarzenia
+    <a href="/web/events/new">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-plus2-icon lucide-calendar-plus-2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M10 16h4"/><path d="M12 14v4"/></svg>
+    </a>
+{/title}
+
 {#body}
 
 {#if events}
 <table>
     <thead>
-
     <tr>
-        <th>Nazwa</th>
-        <th>Lokalizacja</th>
-        <th>Data i czas</th>
-        <th>Opis</th>
-        <th>Akcje</th>
+        <th scope="col">Nazwa</th>
+        <th scope="col">Lokalizacja</th>
+        <th scope="col">Data i czas</th>
+        <th scope="col">Opis</th>
+        <th scope="col">Akcje</th>
     </tr>
     </thead>
     <tbody>
     {#for event in events}
     <tr>
-        <td>{event.name}</td>
+        <th scope="row">{event.name}</th>
         <td>{event.location}</td>
         <td>{event.formatedLocalDateTime}</td>
         <td>{event.description}</td>
         <td>
+            <div role="group">
             <a href="/web/events/{event.id}/details">
-                <button type="button">Szczegóły</button>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
             </a>
-            <form action="/web/events/{event.id}" method="post" style="display:inline;">
-                <input type="hidden" name="_method" value="delete">
-                <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć to wydarzenie?')">Usuń</button>
-            </form>
+            <a class="delete-event" data-id="{event.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-x-icon lucide-circle-x"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+            </a>
+            </div>
         </td>
     </tr>
     {/for}
@@ -38,7 +44,8 @@
 <p>Brak utworzonych wydarzeń</p>
 {/if}
 
-<p><a href="/web/events/new">Dodaj nowe wydarzenie</a></p>
+<script src="/js/script_list_event_umbrella.js"></script>
+
 
 {/body}
 {/include}

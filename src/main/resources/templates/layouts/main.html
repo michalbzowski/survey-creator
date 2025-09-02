@@ -2,22 +2,34 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
     <title>{#insert title}{/}</title>
-    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/siimple-icons/siimple-icons.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link href="/css/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/umbrellajs"></script>
+<!--    IKONKI: https://lucide.dev/icons/pencil -->
 </head>
 <body>
-<header>
+<header class="container">
     <nav>
-        <a href="/web/events">Wydarzenia</a>
-        <a href="/web/surveys">Ankiety</a>
-        <a href="/web/persons">Osoby</a>
-        <a href="/web/tags">Tagi</a>
+        <ul>
+            <li><strong>Czy będziesz obecny?</strong></li>
+        </ul>
+        <ul>
+            <li><a href="/web/events">Wydarzenia</a></li>
+            <li><a href="/web/surveys">Listy obecności</a></li>
+            <li><a href="/web/persons">Osoby</a></li>
+            <li><a href="/web/tags">Tagi</a></li>
+        </ul>
     </nav>
 </header>
+<main class="container">
     <h2>{#insert title}{/}</h2>
     {#insert body /}
-<footer>
+</main>
+<footer class="container">
     <p>&copy; 2025 Michał Bzowski</p>
 </footer>
 </body>
