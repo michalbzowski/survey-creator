@@ -9,7 +9,7 @@ import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import pl.bzowski.events.Event;
 import pl.bzowski.links.PersonSurveyLink;
 import pl.bzowski.persons.Person;
-import pl.bzowski.question.PersonEventAnswer;
+import pl.bzowski.events.PersonEventAnswer;
 import pl.bzowski.surveys.Survey;
 
 import java.util.Map;

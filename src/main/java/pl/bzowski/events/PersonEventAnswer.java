@@ -1,8 +1,7 @@
-package pl.bzowski.question;
+package pl.bzowski.events;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import pl.bzowski.events.Event;
 import pl.bzowski.persons.Person;
 import pl.bzowski.surveys.Survey;
 

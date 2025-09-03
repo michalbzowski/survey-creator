@@ -4,6 +4,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import io.quarkus.elytron.security.common.BcryptUtil;
 
+import java.util.UUID;
+
 @ApplicationScoped
 public class UserService {
 

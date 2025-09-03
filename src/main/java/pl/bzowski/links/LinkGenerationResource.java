@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.logging.Level;
 import pl.bzowski.email.EmailService;
+import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.surveys.Survey;
 import pl.bzowski.persons.Person;
 
@@ -23,10 +24,12 @@ import java.util.logging.Logger;
 public class LinkGenerationResource {
 
     private final EmailService emailService;
+    private final PersonRepository personRepository;
     Logger logger = Logger.getLogger(LinkGenerationResource.class.getName());
 
-    public LinkGenerationResource(EmailService emailService) {
+    public LinkGenerationResource(EmailService emailService, PersonRepository personRepository) {
         this.emailService = emailService;
+        this.personRepository = personRepository;
     }
 
     @GET
@@ -45,7 +48,7 @@ public class LinkGenerationResource {
             return Response.status(Response.Status.NOT_FOUND).entity("Zapytanie nie istnieje").build();
         }
 
-        List<Person> persons = Person.listAll();
+        List<Person> persons = personRepository.listAll();
         logger.info("Persons found: " + (long) persons.size());
         for (Person person : persons) {
             // Sprawdź, czy link już istnieje

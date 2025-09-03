@@ -2,12 +2,14 @@ package pl.bzowski.persons;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import pl.bzowski.security.RegisteredUser;
 import pl.bzowski.tags.Tag;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "persons")
+@Table(name = "persons",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"email", "registered_user_id"}))
 public class Person extends PanacheEntityBase {
 
     @Id
@@ -20,12 +22,16 @@ public class Person extends PanacheEntityBase {
     @Column(nullable = false)
     public String lastName;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     public String email; //todo: Opracuj sposób na przypadki, gdy osoby są niepełnoletnie i maila wysyłasz zarówno do nich jak i do rodzicó
 
     @ManyToOne
     @JoinColumn(name = "tag_id")
     public Tag defaultTag;
+
+    @ManyToOne
+    @JoinColumn(name = "registered_user_id")
+    public RegisteredUser registeredUser;
 
     // Konstruktor domyślny wymagany przez JPA
     public Person() {}

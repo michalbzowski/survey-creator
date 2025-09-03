@@ -11,8 +11,9 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.events.Event;
 import pl.bzowski.links.PersonSurveyLink;
-import pl.bzowski.question.PersonEventAnswer;
+import pl.bzowski.events.PersonEventAnswer;
 import pl.bzowski.tags.Tag;
+import pl.bzowski.tags.TagsRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,11 +28,13 @@ public class EventsPageResource {
     private final Template addEvent;
     private final Template listEvents;
     private final Template eventDetails;
+    private final TagsRepository tagsRepository;
 
-    public EventsPageResource(Template addEvent, Template listEvents, Template eventDetails) {
+    public EventsPageResource(Template addEvent, Template listEvents, Template eventDetails, TagsRepository tagsRepository) {
         this.addEvent = addEvent;
         this.listEvents = listEvents;
         this.eventDetails = eventDetails;
+        this.tagsRepository = tagsRepository;
     }
 
     @GET
@@ -45,7 +48,7 @@ public class EventsPageResource {
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance showAddForm() {
-        var tags = Tag.listAll();
+        var tags = tagsRepository.listAll();
         return addEvent.data("tags", tags);
     }
 

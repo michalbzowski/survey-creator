@@ -1,8 +1,5 @@
 package pl.bzowski.surveys.api;
 
-import pl.bzowski.events.web.EventDto;
-import pl.bzowski.question.QuestionDTO;
-
 import java.util.List;
 import java.util.UUID;
 

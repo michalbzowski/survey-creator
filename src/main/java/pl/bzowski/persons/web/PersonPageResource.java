@@ -1,19 +1,18 @@
 package pl.bzowski.persons.web;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.persons.Person;
+import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.tags.Tag;
+import pl.bzowski.tags.TagsRepository;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,17 +21,21 @@ public class PersonPageResource {
 
     private final Template addPerson;
     private final Template listPersons;
+    private final TagsRepository tagsRepository;
+    private final PersonRepository personRepository;
 
-    public PersonPageResource(Template addPerson, Template listPersons) {
+    public PersonPageResource(Template addPerson, Template listPersons, TagsRepository tagsRepository, PersonRepository personRepository) {
         this.addPerson = addPerson;
         this.listPersons = listPersons;
+        this.tagsRepository = tagsRepository;
+        this.personRepository = personRepository;
     }
 
     @GET
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance showAddForm() {
-        var tags = Tag.listAll();
+        var tags = tagsRepository.listAll();
         return addPerson.data("person", new Person(), "tags", tags);
     }
 
@@ -46,14 +49,14 @@ public class PersonPageResource {
     ) {
         Tag tag = Tag.find("name", defaultTag).firstResult();
         Person person = new Person(firstName, lastName, email, tag);
-        person.persist();
+        personRepository.persist(person);
         return Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build();
     }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance listPersons() {
-        List<Person> persons = Person.listAll(Sort.by("lastName"));
+        List<Person> persons = personRepository.listAll(Sort.by("lastName"));
         return listPersons.data("persons", persons);
     }
 
@@ -79,7 +82,7 @@ public class PersonPageResource {
         if (person == null) {
             throw new WebApplicationException("Person not found", 404);
         }
-        var tags = Tag.listAll();
+        var tags = tagsRepository.listAll();
         return addPerson.data("person", person)
                 .data("tags", tags)
                 .data("edit", true);  // Flaga, by zmienić formularz z dodawania na edycję

@@ -1,10 +1,12 @@
 package pl.bzowski.persons.api;
 
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import pl.bzowski.persons.Person;
+import pl.bzowski.persons.PersonRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,9 +16,16 @@ import java.util.UUID;
 @Consumes(MediaType.APPLICATION_JSON)
 public class PersonResource {
 
+    private final PersonRepository personRepository;
+
+    @Inject
+    public PersonResource(PersonRepository personRepository) {
+        this.personRepository = personRepository;
+    }
+
     @GET
     public List<Person> listAllPersons() {
-        return Person.listAll();
+        return personRepository.listAll();
     }
 
     @POST
@@ -25,8 +34,8 @@ public class PersonResource {
         if (person == null || person.email == null || person.firstName == null || person.lastName == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("Brakuje wymaganych danych!").build();
         }
+        personRepository.persist(person);
 
-        person.persist();
         return Response.status(Response.Status.CREATED).entity(person).build();
     }
 

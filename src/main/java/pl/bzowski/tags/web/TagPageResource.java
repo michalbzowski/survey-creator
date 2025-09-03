@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.persons.Person;
 import pl.bzowski.tags.Tag;
+import pl.bzowski.tags.TagsRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,10 +19,12 @@ public class TagPageResource {
 
     private final Template addTag;
     private final Template listTags;
+    private final TagsRepository tagsRepository;
 
-    public TagPageResource(Template addTag, Template listTags) {
+    public TagPageResource(Template addTag, Template listTags, TagsRepository tagsRepository) {
         this.addTag = addTag;
         this.listTags = listTags;
+        this.tagsRepository = tagsRepository;
     }
 
     @GET
@@ -34,7 +37,7 @@ public class TagPageResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance listTags() {
-        List<Tag> tags = Tag.listAll();
+        List<Tag> tags = tagsRepository.listAll();
         return listTags.data("tags", tags);
     }
 
