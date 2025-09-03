@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <title>Logowanie</title>
+</head>
+<body>
+<main class="container">
+    <h1>Logowanie użytkownika</h1>
+
+    <form action="/j_security_check" method="post">
+        <label for="usernameLogin">Nazwa użytkownika:</label><br>
+        <input type="text" id="usernameLogin" name="j_username" required><br><br>
+
+        <label for="passwordLogin">Hasło:</label><br>
+        <input type="password" id="passwordLogin" name="j_password" required><br><br>
+
+        <button type="submit">Zaloguj się</button>
+    </form>
+    <a href="/sec/register">Zarejestruj się!</a>
+</main>
+</body>
+</html>

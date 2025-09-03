@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <title>Rejestracja użytkownika</title>
+</head>
+<body>
+<main class="container">
+    <h1>Rejestracja nowego użytkownika</h1>
+
+    <form action="/sec/register" method="post">
+        <label for="username">Nazwa użytkownika:</label><br>
+        <input type="text" id="username" name="username" required minlength="3" maxlength="50"><br><br>
+
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email" required><br><br>
+
+        <label for="password">Hasło:</label><br>
+        <input type="password" id="password" name="password" required minlength="8"><br><br>
+
+        <button type="submit">Zarejestruj się</button>
+    </form>
+</main>
+</body>
+</html>

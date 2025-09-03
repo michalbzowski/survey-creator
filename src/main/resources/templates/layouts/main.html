@@ -22,6 +22,7 @@
             <li><a href="/web/surveys">Listy obecności</a></li>
             <li><a href="/web/persons">Osoby</a></li>
             <li><a href="/web/tags">Tagi</a></li>
+            <li><a href="#" onclick="logout()">Wyloguj</a> </li>
         </ul>
     </nav>
 </header>
@@ -32,5 +33,15 @@
 <footer class="container">
     <p>&copy; 2025 Michał Bzowski</p>
 </footer>
+<script>
+    function logout() {
+        fetch('/logout', { method: 'POST' })
+            .then(() => {
+                window.location.href = '/sec/login'; // przekieruj na stronę logowania
+            })
+            .catch(err => console.error('Logout error', err));
+}
+
+</script>
 </body>
 </html>
