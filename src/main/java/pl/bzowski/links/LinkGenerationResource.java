@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.logging.Level;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.email.EmailService;
 import pl.bzowski.persons.PersonRepository;
@@ -27,6 +28,9 @@ public class LinkGenerationResource {
     private final EmailService emailService;
     private final PersonRepository personRepository;
     Logger logger = Logger.getLogger(LinkGenerationResource.class.getName());
+
+    @ConfigProperty(name = "app.host")
+    String appHost;
 
     public LinkGenerationResource(EmailService emailService, PersonRepository personRepository) {
         this.emailService = emailService;
@@ -94,7 +98,7 @@ public class LinkGenerationResource {
             return Response.status(Response.Status.NOT_FOUND).entity("Link nie istnieje").build();
         } else {
             PersonAttendanceListLink personAttendanceListLink = personAttendanceListLinkOptional.get();
-            String wholeLink = "http://localhost:8080" + "/web/responses/" + personAttendanceListLink.linkToken.toString();
+            String wholeLink = appHost + "/web/responses/" + personAttendanceListLink.linkToken.toString();
             try {
                 emailService.sendEmail(person.email, "new mail", wholeLink);
                 logger.info(String.format("E-mail with link %s sent", wholeLink));
