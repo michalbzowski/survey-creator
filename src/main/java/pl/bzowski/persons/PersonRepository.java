@@ -1,32 +1,28 @@
 package pl.bzowski.persons;
 
 import io.quarkus.panache.common.Sort;
-import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
-import pl.bzowski.security.RegisteredUser;
+import pl.bzowski.base.RepositoryBase;
 
 import java.util.List;
 
 @RequestScoped
-public class PersonRepository {
+public class PersonRepository extends RepositoryBase {
 
-    @Inject
-    SecurityIdentity securityIdentity;
+    public PersonRepository() {
+        //
+    }
 
     public List<Person> listAll() {
-        var username = securityIdentity.getPrincipal().getName();
-        return Person.list("registeredUser.username", username);
+        return Person.list("registeredUser.username", currentUsername());
     }
 
     public List<Person> listAll(Sort lastName) {
-        var username = securityIdentity.getPrincipal().getName();
-        return Person.list("registeredUser.username", lastName, username);
+        return Person.list("registeredUser.username", lastName, currentUsername());
     }
 
     public void persist(Person person) {
-        String username = securityIdentity.getPrincipal().getName();
-        person.registeredUser = RegisteredUser.find("username", username).firstResult();
+        person.registeredUser = currentRegisteredUser();
         person.persist();
     }
 }

@@ -10,7 +10,8 @@ import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.events.Event;
 import pl.bzowski.attendance_list.api.AttendanceListDTO;
-import pl.bzowski.attendance_list.service.AttendanceListService;
+import pl.bzowski.attendance_list.service.AttendanceListRepository;
+import pl.bzowski.events.EventRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,21 +21,26 @@ public class AttendanceListPageResource {
 
     private final Template createAttendanceList;
     private final Template listAttendanceList;
-    private final AttendanceListService attendanceListService;
+    private final AttendanceListRepository attendanceListRepository;
     private final JsonHelper jsonHelper;
+    private final EventRepository eventRepository;
 
-    public AttendanceListPageResource(Template createAttendanceList, Template listAttendanceList, AttendanceListService attendanceListService, JsonHelper jsonHelper) {
+    public AttendanceListPageResource(Template createAttendanceList, Template listAttendanceList, AttendanceListRepository attendanceListRepository, JsonHelper jsonHelper, EventRepository eventRepository) {
         this.createAttendanceList = createAttendanceList;
         this.listAttendanceList = listAttendanceList;
-        this.attendanceListService = attendanceListService;
+        this.attendanceListRepository = attendanceListRepository;
         this.jsonHelper = jsonHelper;
+        this.eventRepository = eventRepository;
     }
 
     @GET
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance createAttendanceListForm(@QueryParam("name") String name, @QueryParam("eventId") UUID eventId) {
-        List<Event> availableEvents = Event.findAvailableEvents();
+        List<Event> availableEvents = eventRepository.findAvailableEvents();
+        if (availableEvents.isEmpty()) {
+            throw new RuntimeException("Stwórz wydarzenie!");
+        }
         List<Event> first = List.of(availableEvents.getFirst());
         String availableEventsJson = jsonHelper.toJson(availableEvents);
         return createAttendanceList.data("attendanceList", new AttendanceList("", first),
@@ -49,7 +55,7 @@ public class AttendanceListPageResource {
     @Transactional
     public Response createAttendanceList(AttendanceListDTO attendanceList) {
         try {
-            var dto = attendanceListService.createAttendanceList(attendanceList);
+            var dto = attendanceListRepository.createAttendanceList(attendanceList);
             return Response.ok(dto).build();
         } catch (IllegalArgumentException e) {
             // obsługa błędu, np. zwrócenie strony z komunikatem
@@ -60,7 +66,7 @@ public class AttendanceListPageResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance listQueries() {
-        List<AttendanceList> attendanceList = AttendanceList.listAll();
+        List<AttendanceList> attendanceList = attendanceListRepository.listAll();
         return listAttendanceList.data("attendanceList", attendanceList);
     }
 

@@ -13,6 +13,6 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendEmail(String to, String subject, String body) {
-        mailer.send(Mail.withText(to, subject, body));
+        mailer.send(Mail.withHtml(to, subject, body));
     }
 }

@@ -5,6 +5,7 @@ import io.quarkus.panache.common.Sort;
 import jakarta.persistence.*;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.events.web.EventDto;
+import pl.bzowski.security.RegisteredUser;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -36,6 +37,10 @@ public class Event extends PanacheEntityBase {
     @JoinColumn(name = "attendance_list_id")
     public AttendanceList attendanceList;
 
+    @ManyToOne
+    @JoinColumn(name = "registered_user_id")
+    public RegisteredUser registeredUser;
+
     public Event() {
     }
 
@@ -44,10 +49,6 @@ public class Event extends PanacheEntityBase {
         this.location = location;
         this.localDateTime = localDateTime;
         this.description = description;
-    }
-
-    public static List<Event> findAvailableEvents() {
-        return list("attendanceList is null", Sort.by("localDateTime", Sort.Direction.Ascending));
     }
 
     public String formatedLocalDateTime() {

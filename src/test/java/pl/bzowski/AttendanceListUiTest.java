@@ -84,7 +84,7 @@ public class AttendanceListUiTest {
         submit.click();
 
         // Można też sprawdzić tekst potwierdzenia
-        assertTrue(driver.getPageSource().contains("Dziękujemy"));
+        assertTrue(driver.getPageSource().contains("Dziękuje"));
     }
 
     public void verifyAnswerSaved() {

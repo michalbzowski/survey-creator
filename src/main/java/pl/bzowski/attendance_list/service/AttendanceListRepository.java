@@ -1,8 +1,9 @@
 package pl.bzowski.attendance_list.service;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.transaction.Transactional;
 import pl.bzowski.attendance_list.AttendanceList;
+import pl.bzowski.base.RepositoryBase;
 import pl.bzowski.events.Event;
 import pl.bzowski.attendance_list.api.AttendanceListDTO;
 
@@ -10,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@ApplicationScoped
-public class AttendanceListService {
+@RequestScoped
+public class AttendanceListRepository extends RepositoryBase {
 
     @Transactional
     public AttendanceListDTO createAttendanceList(AttendanceListDTO attendanceListDTO) {
@@ -37,7 +38,7 @@ public class AttendanceListService {
         AttendanceList attendanceList = new AttendanceList();
         attendanceList.name = attendanceListDTO.name;
         attendanceList.events = events;
-
+        attendanceList.registeredUser = currentRegisteredUser();
         attendanceList.persist();
         attendanceListDTO.id = attendanceList.id;
         // Opcjonalnie przypisz listę obecności do eventów (jeśli w Event masz relację odwrotną)
@@ -48,4 +49,7 @@ public class AttendanceListService {
         return attendanceListDTO;
     }
 
+    public List<AttendanceList> listAll() {
+        return AttendanceList.list("registeredUser", currentRegisteredUser());
+    }
 }

@@ -10,6 +10,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.events.Event;
+import pl.bzowski.events.EventRepository;
 import pl.bzowski.links.PersonAttendanceListLink;
 import pl.bzowski.events.PersonEventAnswer;
 import pl.bzowski.tags.TagsRepository;
@@ -28,18 +29,20 @@ public class EventsPageResource {
     private final Template listEvents;
     private final Template eventDetails;
     private final TagsRepository tagsRepository;
+    private final EventRepository eventRepository;
 
-    public EventsPageResource(Template addEvent, Template listEvents, Template eventDetails, TagsRepository tagsRepository) {
+    public EventsPageResource(Template addEvent, Template listEvents, Template eventDetails, TagsRepository tagsRepository, EventRepository eventRepository) {
         this.addEvent = addEvent;
         this.listEvents = listEvents;
         this.eventDetails = eventDetails;
         this.tagsRepository = tagsRepository;
+        this.eventRepository = eventRepository;
     }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance listEvents() {
-        List<Event> events = Event.listAll(Sort.by("localDateTime"));
+        List<Event> events = eventRepository.listAll(Sort.by("localDateTime"));
         return listEvents.data("events", events);
     }
 
@@ -55,8 +58,8 @@ public class EventsPageResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
     public Response addEvent(@BeanParam EventDto eventDto) {
-        Event event = new Event(eventDto.name, eventDto.location, eventDto.localDateTime, eventDto.description);
-        event.persist();
+        Event event = eventRepository.persist(eventDto);
+
         return Response.seeOther(UriBuilder.fromPath("/web/events/" + event.id + "/details").build()).build();
     }
 

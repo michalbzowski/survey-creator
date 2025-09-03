@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import pl.bzowski.events.Event;
 import pl.bzowski.attendance_list.api.AttendanceListDTO;
+import pl.bzowski.security.RegisteredUser;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +26,10 @@ public class AttendanceList extends PanacheEntityBase {
             joinColumns = @JoinColumn(name = "attendance_list_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id"))
     public List<Event> events;
+
+    @ManyToOne
+    @JoinColumn(name = "registered_user_id")
+    public RegisteredUser registeredUser;
 
     public AttendanceList() {}
 

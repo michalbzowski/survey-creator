@@ -1,26 +1,19 @@
 package pl.bzowski.tags;
 
-import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
-import pl.bzowski.security.RegisteredUser;
+import pl.bzowski.base.RepositoryBase;
 
 import java.util.List;
 
 @RequestScoped
-public class TagsRepository {
-    @Inject
-    SecurityIdentity securityIdentity;
+public class TagsRepository extends RepositoryBase {
 
     public List<Tag> listAll() {
-        var username = securityIdentity.getPrincipal().getName();
-        return Tag.list("registeredUser.username", username);
+        return Tag.list("registeredUser.username", currentUsername());
     }
 
     public void createTag(String name) {
-        String username = securityIdentity.getPrincipal().getName();
-        RegisteredUser registeredUser = RegisteredUser.find("username", username).firstResult();
-        Tag tag = new Tag(name, registeredUser);
+        Tag tag = new Tag(name, currentRegisteredUser());
         tag.persist();
     }
 }

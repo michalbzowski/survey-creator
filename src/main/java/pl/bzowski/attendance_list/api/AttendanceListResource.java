@@ -7,7 +7,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.attendance_list.AttendanceList;
-import pl.bzowski.attendance_list.service.AttendanceListService;
+import pl.bzowski.attendance_list.service.AttendanceListRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,16 +15,16 @@ import java.util.UUID;
 @Path("/api/v1/attendance_list")
 public class AttendanceListResource {
 
-    private final AttendanceListService attendanceListService;
+    private final AttendanceListRepository attendanceListRepository;
 
     @Inject
-    public AttendanceListResource(AttendanceListService attendanceListService) {
-        this.attendanceListService = attendanceListService;
+    public AttendanceListResource(AttendanceListRepository attendanceListRepository) {
+        this.attendanceListRepository = attendanceListRepository;
     }
 
     @GET
     public List<AttendanceList> listAllAttendanceList() {
-        return AttendanceList.listAll();
+        return attendanceListRepository.listAll();
     }
 
     @POST
@@ -33,7 +33,7 @@ public class AttendanceListResource {
     @Transactional
     public Response createAttendanceList(AttendanceListDTO attendanceListDTO) {
         try {
-            AttendanceListDTO created = attendanceListService.createAttendanceList(attendanceListDTO);
+            AttendanceListDTO created = attendanceListRepository.createAttendanceList(attendanceListDTO);
             return Response.status(Response.Status.CREATED).entity(created).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
