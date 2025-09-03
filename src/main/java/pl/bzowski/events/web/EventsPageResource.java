@@ -77,7 +77,7 @@ public class EventsPageResource {
         // Ładujemy statystyki
         boolean noAttendanceListYet = event.attendanceList == null;
         long linkCount = event.attendanceList == null ? 0 : PersonAttendanceListLink.count("attendanceListId = ?1", event.attendanceList.id);
-        long sentLinkCount = PersonAttendanceListLink.count("attendanceListId = ?1 and status = ?2", event.attendanceList.id, PersonAttendanceListLink.SendingStatus.SENT);
+        long sentLinkCount = event.attendanceList == null ? 0 : PersonAttendanceListLink.count("attendanceListId = ?1 and status = ?2", event.attendanceList.id, PersonAttendanceListLink.SendingStatus.SENT);
         PersonEventAnswer.Answer tak = PersonEventAnswer.Answer.TAK;
         long answerYesCount = PersonEventAnswer.count("event = ?1 and answer = ?2", event, tak);
         long answerNoCount = PersonEventAnswer.count("event = ?1 and answer = ?2", event, PersonEventAnswer.Answer.NIE);
