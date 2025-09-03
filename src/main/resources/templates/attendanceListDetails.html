@@ -1,0 +1,69 @@
+{#include layouts/main}
+{#title}Szczegóły listy obecności{/title}
+{#body}
+
+<p>Lista obecności dotyczy wydarzeń:</p>
+<ol>
+    {#each attendanceList.events}
+    <li>{it.name}</li>
+    {/each}
+</ol>
+
+<h3>Osoby, które chcesz zapytać o obecność:</h3>
+{#if links.isEmpty()}
+<p>Nie wybrałeś jeszcze osób do tej listy obecności.
+    <a href="#" class="generate-links" data-id="{attendanceList.id}">
+        Wybierz osoby do listy obecności
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link-icon lucide-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    </a>
+</p>
+{#else}
+
+<table>
+    <thead>
+    <a href="#" id="send-to-all">Wyślij e-mail do wszystkich</a>
+    <tr>
+        <th>Imię</th>
+        <th>Nazwisko</th>
+        <th>Email</th>
+        <th>Link</th>
+        <th>Wiadomość</th>
+        <th>Odpowiedziała</th>
+    </tr>
+    </thead>
+    <tbody>
+    {#for link in links}
+    <tr>
+        <td>{link.personFirstName}</td>
+        <td>{link.personLastName}</td>
+        <td>{link.personEmail}</td>
+        <td><a href="/web/responses/{link.linkToken}" target="_blank">Otwórz</a></td>
+
+        <td style="text-align: center;">
+            {#if link.status.name() eq "TO_SEND"}
+            <a href="#" id="{link.id}" data-id="{link.id}"  class="send-email-button" data-attendance-list-id="{attendanceList.id}" data-link-person-id="{link.personId}">
+                Wyślij e-mail
+            </a>
+<!--            -->
+<!--            <form id="send-email-button" action="/api/v1/links/{attendanceList.id}/email/{link.personId}" method="post" style="display:inline;">-->
+<!--                <button type="submit">Wyślij e-mail</button>-->
+<!--            </form>-->
+            {#else}
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#13aa2c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-icon lucide-check"><path d="M20 6 9 17l-5-5"/></svg>
+            {/if}
+        </td>
+        <td style="text-align: center;">
+            {#if link.attendanceListAnswered}
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#13aa2c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-icon lucide-check"><path d="M20 6 9 17l-5-5"/></svg>
+            {#else}
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#cc2828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hourglass-icon lucide-hourglass"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>
+            {/if}
+        </td>
+    </tr>
+    {/for}
+    </tbody>
+</table>
+{/if}
+<script src="/js/script_list_attendance_list_umbrella.js"></script>
+{/body}
+{/include}

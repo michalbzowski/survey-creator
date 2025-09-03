@@ -8,9 +8,9 @@
 <body>
 <h2>Witaj, {link.personFirstName} {link.personLastName} </h2>
 <p>({link.personEmail})</p>
-<p><strong>{link.survey.name}</strong></p>
+<p><strong>{link.attendanceList.name}</strong></p>
 <form action="/web/responses/{link.linkToken}" id="response-form">
-    {#each link.survey.events}
+    {#each link.attendanceList.events}
     <article>
         <p><strong>{it.name}</strong></p>
         <p>{it.location}</p>

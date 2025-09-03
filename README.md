@@ -1,9 +1,9 @@
-# survey-service
+# attendanceList-service
 
-This is a simple survey service. My main idea was to send a survey to my friends from Concert Band 
+This is a simple attendanceList service. My main idea was to send a attendanceList to my friends from Concert Band 
 are they available on events? I am organizing few concerts per year, and I am sending questions to fixed group 
 of people and waiting for response. I didn't found such service where I could define group of people 
-and send them simple survey - Will you play that day or no?
+and send them simple attendanceList - Will you play that day or no?
 
 ## Running the application in dev mode
 
@@ -50,7 +50,7 @@ Or, if you don't have GraalVM installed, you can run the native executable build
 ./mvnw package -Dnative -Dquarkus.native.container-build=true
 ```
 
-You can then execute your native executable with: `./target/survey-service-1.0.0-SNAPSHOT-runner`
+You can then execute your native executable with: `./target/attendanceList-service-1.0.0-SNAPSHOT-runner`
 
 If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
 

@@ -2,14 +2,14 @@ package pl.bzowski.links;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import pl.bzowski.surveys.Survey;
+import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.persons.Person;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "person_survey_links")
-public class PersonSurveyLink extends PanacheEntityBase {
+@Table(name = "person_attendance_list_links")
+public class PersonAttendanceListLink extends PanacheEntityBase {
 
     @Id
     @GeneratedValue
@@ -31,16 +31,16 @@ public class PersonSurveyLink extends PanacheEntityBase {
     public String personTag;
 
     @ManyToOne(optional = false)
-    public Survey survey;
+    public AttendanceList attendanceList;
 
     @Column(nullable = false)
-    public UUID surveyId;
+    public UUID attendanceListId;
 
     @Column(nullable = false, unique = true)
     public UUID linkToken; // unikalny identyfikator do URL-a
 
     @Column(nullable = false)
-    public Boolean surveyAnswered = false;
+    public Boolean attendanceListAnswered = false;
 
     public void sendingError() {
         this.status = SendingStatus.ERROR;
@@ -53,16 +53,16 @@ public class PersonSurveyLink extends PanacheEntityBase {
     @Enumerated(EnumType.STRING)
     public SendingStatus status;
 
-    public PersonSurveyLink() {
+    public PersonAttendanceListLink() {
     }
 
-    public PersonSurveyLink(Person person, Survey survey) {
+    public PersonAttendanceListLink(Person person, AttendanceList attendanceList) {
         this.personId = person.id;
         this.personFirstName = person.firstName;
         this.personLastName = person.lastName;
         this.personEmail = person.email;
-        this.survey = survey;
-        this.surveyId = survey.id;
+        this.attendanceList = attendanceList;
+        this.attendanceListId = attendanceList.id;
         this.linkToken = UUID.randomUUID();
         this.status = SendingStatus.TO_SEND;
     }

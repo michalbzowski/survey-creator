@@ -3,7 +3,7 @@ package pl.bzowski.events;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import pl.bzowski.persons.Person;
-import pl.bzowski.surveys.Survey;
+import pl.bzowski.attendance_list.AttendanceList;
 
 import java.util.UUID;
 
@@ -20,8 +20,8 @@ public class PersonEventAnswer extends PanacheEntityBase {
     public Person person;
 
     @ManyToOne
-    @JoinColumn(name = "survey_id")
-    public Survey survey;
+    @JoinColumn(name = "attendance_list_id")
+    public AttendanceList attendanceList;
 
     @ManyToOne
     @JoinColumn(name = "event_id")

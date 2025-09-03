@@ -6,11 +6,11 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.events.Event;
-import pl.bzowski.links.PersonSurveyLink;
+import pl.bzowski.links.PersonAttendanceListLink;
 import pl.bzowski.persons.Person;
 import pl.bzowski.events.PersonEventAnswer;
-import pl.bzowski.surveys.Survey;
 
 import java.util.Map;
 import java.util.Optional;
@@ -36,7 +36,7 @@ public class ResponsePageResource {
     @Path("/{token}")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance showForm(@PathParam("token") UUID token) {
-        PersonSurveyLink link = PersonSurveyLink.find("linkToken", token).firstResult();
+        PersonAttendanceListLink link = PersonAttendanceListLink.find("linkToken", token).firstResult();
         if (link == null) {
             throw new NotFoundException("Nie znaleziono linku");
         }
@@ -50,13 +50,13 @@ public class ResponsePageResource {
     @Transactional
     public TemplateInstance submitAnswer(@PathParam("token") UUID token, @RequestBody Map<String, String> answers) {
         logger.info(String.format("Submit answer for %s - %d", token.toString(), answers.size()));
-        PersonSurveyLink link = PersonSurveyLink.find("linkToken", token).firstResult();
+        PersonAttendanceListLink link = PersonAttendanceListLink.find("linkToken", token).firstResult();
         if (link == null) {
             throw new NotFoundException("Nie znaleziono linku " + link);
         }
         try {
             Person person = Person.findById(link.personId);
-            Survey survey = link.survey;
+            AttendanceList attendanceList = link.attendanceList;
             for (String key : answers.keySet()) {
                 String value = answers.get(key);
                 logger.info(String.format("Key: %s, value: %s", key, value));
@@ -68,7 +68,7 @@ public class ResponsePageResource {
                 logger.info("Event: " + event.name);
                 try {
                     Optional<PersonEventAnswer> pqa = PersonEventAnswer
-                            .find("person = ?1 and survey = ?2 and event = ?3 ", person, survey, event)
+                            .find("person = ?1 and attendanceList = ?2 and event = ?3 ", person, attendanceList, event)
                             .firstResultOptional();
 
                     PersonEventAnswer.Answer answer = PersonEventAnswer.Answer.valueOf(value);
@@ -81,8 +81,8 @@ public class ResponsePageResource {
                         logger.info("PQA absent");
                         PersonEventAnswer personEventAnswer = new PersonEventAnswer();
                         personEventAnswer.person = person;
-                        personEventAnswer.survey = survey;
-                        link.surveyAnswered = Boolean.TRUE;
+                        personEventAnswer.attendanceList = attendanceList;
+                        link.attendanceListAnswered = Boolean.TRUE;
                         personEventAnswer.event = event;
                         personEventAnswer.answer = answer;
                         personEventAnswer.persist();

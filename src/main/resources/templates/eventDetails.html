@@ -1,10 +1,17 @@
 {#include layouts/main}
-{#title}Szczegóły wydarzenia{/title}
+{#title}Wydarzenie: {event.name}{/title}
 {#body}
-<article>
-    {#if noSurveyYet}
-    <p><a href="/web/surveys/new?name={event.name}&eventId={event.id}">
-        Stwórz listę obecnościę
+    <details name = "event-details">
+        <summary>Szczegóły</summary>
+        <p><strong>Gdzie:</strong> {event.location}</p>
+        <p><strong>Kiedy:</strong> {event.formatedLocalDateTime}</p>
+        <p>{event.description}</p>
+    </details>
+    <hr />
+    {#if noAttendanceListYet}
+    <p>To wydarzenie nie ma jeszcze swojej listy obecności.
+        <a href="/web/attendance_list/new?name={event.name}&eventId={event.id}">
+        Stwórz listę obecności
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
              class="lucide lucide-book-plus-icon lucide-book-plus">
@@ -14,15 +21,15 @@
         </svg>
     </a></p>
     {#else if linkCount == 0}
-    <form action="/api/v1/links/{eventSurveyId}" method="get" style="display:inline;">
-        <button type="submit" onclick="return confirm('Wygenerować linki dla tego zapytania?')">Generuj linki
+    <form action="/api/v1/links/{eventAttendanceListId}" method="get" style="display:inline;">
+        <button type="submit" onclick="return confirm('Czy wybrać wszystkie osoby do tej listy obecności?')">Generuj linki
         </button>
     </form>
     {#else}
-    <details>
+    <details name = "event-details">
         <summary>Statystyki</summary>
         <ul>
-            <li>Linki: {linkCount}</li>
+            <li>Wybrane osoby: {linkCount}</li>
             <li>Wysłane: {sentLinkCount}</li>
             <li>Odpowiedzi: {answerSum}</li>
             <li>Bez odpowiedzi: {unansweredCount}</li>
@@ -31,22 +38,14 @@
             <li>Odpowiem później: {answerLaterCount}</li>
         </ul>
     </details>
-
-
+<hr />
     {/if}
-
-    <p><strong>Gdzie:</strong> {event.location}</p>
-    <p><strong>Kiedy:</strong> {event.formatedLocalDateTime}</p>
-
-    <p>{event.description}</p>
-
-</article>
-{#if noSurveyYet}
---
+{#if noAttendanceListYet}
+<!--Blank-->
 {#else}
-<article>
-    <h3>Odpowiedzi</h3>
-    <table border="1" cellpadding="5">
+<details name = "event-details">
+    <summary>Odpowiedzi</summary>
+    <table>
         <thead>
         <tr>
             <th>Nazwa Taga</th>
@@ -66,7 +65,7 @@
         {/for}
         </tbody>
     </table>
-</article>
+</details>
 {/if}
 {/body}
 {/include}

@@ -10,9 +10,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.events.Event;
-import pl.bzowski.links.PersonSurveyLink;
+import pl.bzowski.links.PersonAttendanceListLink;
 import pl.bzowski.events.PersonEventAnswer;
-import pl.bzowski.tags.Tag;
 import pl.bzowski.tags.TagsRepository;
 
 import java.util.ArrayList;
@@ -73,9 +72,9 @@ public class EventsPageResource {
 
 
         // Ładujemy statystyki
-        boolean noSurveyYet = event.survey == null;
-        long linkCount = event.survey == null ? 0 : PersonSurveyLink.count("surveyId = ?1", event.survey.id);
-//        long sentLinkCount = PersonEventAnswer.count("event = ?1 and /* tu warunek wysłania linka */", event);
+        boolean noAttendanceListYet = event.attendanceList == null;
+        long linkCount = event.attendanceList == null ? 0 : PersonAttendanceListLink.count("attendanceListId = ?1", event.attendanceList.id);
+        long sentLinkCount = PersonAttendanceListLink.count("attendanceListId = ?1 and status = ?2", event.attendanceList.id, PersonAttendanceListLink.SendingStatus.SENT);
         PersonEventAnswer.Answer tak = PersonEventAnswer.Answer.TAK;
         long answerYesCount = PersonEventAnswer.count("event = ?1 and answer = ?2", event, tak);
         long answerNoCount = PersonEventAnswer.count("event = ?1 and answer = ?2", event, PersonEventAnswer.Answer.NIE);
@@ -103,15 +102,15 @@ public class EventsPageResource {
         return eventDetails
                 .data("event", event)
                 .data("linkCount", linkCount)
-                .data("sentLinkCount", -1)
+                .data("sentLinkCount", sentLinkCount)
                 .data("answerSum", answerSum)
                 .data("unansweredCount", unansweredCount)
                 .data("answerYesCount", answerYesCount)
                 .data("answerNoCount", answerNoCount)
                 .data("answerLaterCount", answerLaterCount)
                 .data("fullStats", fullStats)
-                .data("noSurveyYet", noSurveyYet)
-                .data("eventSurveyId", event.survey == null ? null : event.survey.id);
+                .data("noAttendanceListYet", noAttendanceListYet)
+                .data("eventAttendanceListId", event.attendanceList == null ? null : event.attendanceList.id);
     }
 
     private static List<Object[]> getResultList(Event event, PersonEventAnswer.Answer answer) {

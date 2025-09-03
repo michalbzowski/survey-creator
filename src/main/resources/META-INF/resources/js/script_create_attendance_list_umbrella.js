@@ -1,13 +1,13 @@
 
 // Obsługa submit formularza
-u('#survey-form').on('submit', async function(event) {
+u('#attendance-list-form').on('submit', async function(event) {
     event.preventDefault();
-    const name = u('#name').nodes[0].value.trim();
+    const name = u('#name').nodes[0].value.trim() || ""; //Wydaje mi się, że ta nazwa do niczego mi nie służy
 
-    if (!name) {
-        alert('Uzupełnij nazwę!');
-        return;
-    }
+//    if (!name) {
+//        alert('Uzupełnij nazwę!');
+//        return;
+//    }
 
     const events = [];
     u('.event-entry select').each(select => {
@@ -21,18 +21,18 @@ u('#survey-form').on('submit', async function(event) {
         return;
     }
 
-    const survey = { name, events };
+    const attendanceList = { name, events };
 
     try {
-        const response = await fetch('/web/surveys', {
+        const response = await fetch('/web/attendance_list', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(survey),
+            body: JSON.stringify(attendanceList),
         });
 
         if (response.ok) {
             const result = await response.json();
-            window.location.href = '/web/surveys/' + result.id + '/details';
+            window.location.href = '/web/attendance_list/' + result.id + '/details';
         } else {
             alert('Błąd przy zapisie listy obecności');
         }
@@ -86,7 +86,7 @@ function addEvent() {
     const par = document.createElement('p');
     const btn = document.createElement('a');
     btn.href = '#';
-    btn.textContent = 'Usuń wydarzenie';
+    btn.textContent = 'Usuń wydarzenie z tej listy obecności';
     btn.onclick = function(e) {
         e.preventDefault();
         removeEvent(btn);

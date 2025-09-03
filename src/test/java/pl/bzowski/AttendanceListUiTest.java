@@ -13,7 +13,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class SurveyUiTest {
+public class AttendanceListUiTest {
 
     static WebDriver driver;
     static UUID queryId;

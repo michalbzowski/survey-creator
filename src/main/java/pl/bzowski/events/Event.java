@@ -3,8 +3,8 @@ package pl.bzowski.events;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Sort;
 import jakarta.persistence.*;
+import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.events.web.EventDto;
-import pl.bzowski.surveys.Survey;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -33,8 +33,8 @@ public class Event extends PanacheEntityBase {
     public String description;
 
     @ManyToOne
-    @JoinColumn(name = "survey_id")
-    public Survey survey;
+    @JoinColumn(name = "attendance_list_id")
+    public AttendanceList attendanceList;
 
     public Event() {
     }
@@ -47,7 +47,7 @@ public class Event extends PanacheEntityBase {
     }
 
     public static List<Event> findAvailableEvents() {
-        return list("survey is null", Sort.by("localDateTime", Sort.Direction.Ascending));
+        return list("attendanceList is null", Sort.by("localDateTime", Sort.Direction.Ascending));
     }
 
     public String formatedLocalDateTime() {

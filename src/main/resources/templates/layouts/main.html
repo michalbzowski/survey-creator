@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link href="/css/style.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/umbrellajs"></script>
-<!--    IKONKI: https://lucide.dev/icons/pencil -->
+    <!--    IKONKI: https://lucide.dev/icons/pencil -->
 </head>
 <body>
 <header class="container">
@@ -19,13 +19,16 @@
         </ul>
         <ul>
             <li><a href="/web/events">Wydarzenia</a></li>
-            <li><a href="/web/surveys">Listy obecności</a></li>
+            <li><a href="/web/attendance_list">Listy obecności</a></li>
             <li><a href="/web/persons">Osoby</a></li>
             <li><a href="/web/tags">Tagi</a></li>
-            <li><a href="#" onclick="logout()">Wyloguj</a> </li>
+            <li><a href="#" onclick="logout()">Wyloguj</a></li>
         </ul>
     </nav>
 </header>
+<div class="loader-overlay" id="loader" style="display: none;">
+    <div class="loader"></div>
+</div>
 <main class="container">
     <h2>{#insert title}{/}</h2>
     {#insert body /}
@@ -40,7 +43,15 @@
                 window.location.href = '/sec/login'; // przekieruj na stronę logowania
             })
             .catch(err => console.error('Logout error', err));
-}
+    }
+
+    function showLoader() {
+      u('#loader').each(el => el.style.display = 'flex'); // np. flex dla wyrównania
+    }
+
+    function hideLoader() {
+      u('#loader').each(el => el.style.display = 'none');
+    }
 
 </script>
 </body>

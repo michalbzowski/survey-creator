@@ -8,9 +8,10 @@ import jakarta.ws.rs.core.UriBuilder;
 
 import java.net.URI;
 import java.util.logging.Level;
+
+import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.email.EmailService;
 import pl.bzowski.persons.PersonRepository;
-import pl.bzowski.surveys.Survey;
 import pl.bzowski.persons.Person;
 
 import java.util.List;
@@ -33,18 +34,18 @@ public class LinkGenerationResource {
     }
 
     @GET
-    public List<PersonSurveyLink> listAllLinks() {
-        return PersonSurveyLink.listAll();
+    public List<PersonAttendanceListLink> listAllLinks() {
+        return PersonAttendanceListLink.listAll();
     }
 
     @GET
-    @Path("/{surveyId}")
+    @Path("/{attendanceListId}")
     @Transactional
-    public Response generateLinks(@PathParam("surveyId") UUID surveyId) {
-        logger.info("Generate links for " + surveyId.toString());
-        Survey survey = Survey.findById(surveyId);
-        if (survey == null) {
-            logger.info("Survey is null");
+    public Response generateLinks(@PathParam("attendanceListId") UUID attendanceListId) {
+        logger.info("Generate links for " + attendanceListId.toString());
+        AttendanceList attendanceList = AttendanceList.findById(attendanceListId);
+        if (attendanceList == null) {
+            logger.info("AttendanceList is null");
             return Response.status(Response.Status.NOT_FOUND).entity("Zapytanie nie istnieje").build();
         }
 
@@ -52,12 +53,12 @@ public class LinkGenerationResource {
         logger.info("Persons found: " + (long) persons.size());
         for (Person person : persons) {
             // Sprawdź, czy link już istnieje
-            Optional<PersonSurveyLink> personSurveyLink = PersonSurveyLink.find("personId = ?1 and surveyId = ?2", person.id, survey.id).firstResultOptional();
+            Optional<PersonAttendanceListLink> personAttendanceListLink = PersonAttendanceListLink.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id).firstResultOptional();
 
-            boolean exists = personSurveyLink.isPresent();
+            boolean exists = personAttendanceListLink.isPresent();
             if (!exists) {
-                logger.info("Link doesn't exists for: " + person.email + " - " + surveyId);
-                PersonSurveyLink link = new PersonSurveyLink(person, survey);
+                logger.info("Link doesn't exists for: " + person.email + " - " + attendanceListId);
+                PersonAttendanceListLink link = new PersonAttendanceListLink(person, attendanceList);
                 link.persist();
             } else {
                 logger.info("Person " + person.email + " has already link!");
@@ -65,18 +66,18 @@ public class LinkGenerationResource {
         }
 
         // Przekierowanie do widoku szczegółów zapytania
-        return Response.seeOther(UriBuilder.fromPath("/web/surveys/{id}/details").build(surveyId)).build();
+        return Response.seeOther(UriBuilder.fromPath("/web/attendance_list/{id}/details").build(attendanceListId)).build();
     }
 
     @POST
-    @Path("/{surveyId}/email/{personId}")
+    @Path("/{attendanceListId}/email/{personId}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
-    public Response sendLinkByEmail(@PathParam("surveyId") UUID surveyId, @PathParam("personId") UUID personId) {
-        logger.info(String.format("Start sending link by email for survey %s for person %s", surveyId, personId));
-        Survey survey = Survey.findById(surveyId);
-        if (survey == null) {
-            logger.info("Survey is null");
+    public Response sendLinkByEmail(@PathParam("attendanceListId") UUID attendanceListId, @PathParam("personId") UUID personId) {
+        logger.info(String.format("Start sending link by email for attendanceList %s for person %s", attendanceListId, personId));
+        AttendanceList attendanceList = AttendanceList.findById(attendanceListId);
+        if (attendanceList == null) {
+            logger.info("attendanceList is null");
             return Response.status(Response.Status.NOT_FOUND).entity("Zapytanie nie istnieje").build();
         }
 
@@ -85,26 +86,26 @@ public class LinkGenerationResource {
             logger.info("Person is null");
             return Response.status(Response.Status.NOT_FOUND).entity("Osoba nie istnieje").build();
         }
-        Optional<PersonSurveyLink> personSurveyLinkOptional = PersonSurveyLink.find("personId = ?1 and surveyId = ?2", person.id, survey.id).firstResultOptional();
+        Optional<PersonAttendanceListLink> personAttendanceListLinkOptional = PersonAttendanceListLink.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id).firstResultOptional();
 
-        boolean exists = personSurveyLinkOptional.isPresent();
+        boolean exists = personAttendanceListLinkOptional.isPresent();
         if (!exists) {
-            logger.info(String.format("Can not send link. Link doesn't exists for: %s - %s", person.email, surveyId));
+            logger.info(String.format("Can not send link. Link doesn't exists for: %s - %s", person.email, attendanceListId));
             return Response.status(Response.Status.NOT_FOUND).entity("Link nie istnieje").build();
         } else {
-            PersonSurveyLink personSurveyLink = personSurveyLinkOptional.get();
-            String wholeLink = "http://localhost:8080" + "/web/responses/" + personSurveyLink.linkToken.toString();
+            PersonAttendanceListLink personAttendanceListLink = personAttendanceListLinkOptional.get();
+            String wholeLink = "http://localhost:8080" + "/web/responses/" + personAttendanceListLink.linkToken.toString();
             try {
                 emailService.sendEmail(person.email, "new mail", wholeLink);
                 logger.info(String.format("E-mail with link %s sent", wholeLink));
-                personSurveyLink.sent();
-                personSurveyLink.persist();
-                String redirectUrl = String.format("/web/surveys/%s/details", surveyId.toString()); // adres strony, na którą chcesz wrócić
+                personAttendanceListLink.sent();
+                personAttendanceListLink.persist();
+                String redirectUrl = String.format("/web/attendance_list/%s/details", attendanceListId.toString()); // adres strony, na którą chcesz wrócić
                 return Response.seeOther(URI.create(redirectUrl)).build();
             } catch (RuntimeException ex) {
                 String format = String.format("E-mail with link %s NOT SENT", wholeLink);
-                personSurveyLink.sendingError();
-                personSurveyLink.persist();
+                personAttendanceListLink.sendingError();
+                personAttendanceListLink.persist();
                 logger.log(Level.WARNING, format);
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Błąd!").build();
             }

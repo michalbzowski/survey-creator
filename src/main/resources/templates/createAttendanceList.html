@@ -1,13 +1,13 @@
 {#include layouts/main}
 {#title}Nowa lista obecności{/title}
 {#body}
-<form id="survey-form">
-    <article>
+<form id="attendance-list-form">
+    <article hidden="true">
         <label for="name">Nazwa listy obecności: </label>
         <input type="text" id="name" name="name" value="{name ?: ''}" />
     </article>
     <div id="events-container">
-        {#each survey.events}
+        {#each attendanceList.events}
         <article class="event-entry">
             <label>Wybierz wydarzenie:</label>
             <select name="events[{it_index}]" onchange="checkDuplicateEvents(this)" required>
@@ -19,7 +19,7 @@
             <p>
                 <a href="#" onclick="removeEvent(this)">
                     <i class="si-minus-circle"></i>
-                    Usuń wydarzenie
+                    Usuń wydarzenie z tej listy obecności
                 </a>
             </p>
         </article>
@@ -37,7 +37,7 @@
     const selectEventId = "{eventId}"
 </script>
 
-<script src="/js/script_create_survey_umbrella.js" defer></script>
+<script src="/js/script_create_attendance_list_umbrella.js" defer></script>
 
 {/body}
 {/include}

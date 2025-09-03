@@ -1,17 +1,17 @@
-package pl.bzowski.surveys.api;
+package pl.bzowski.attendance_list.api;
 
 import java.util.List;
 import java.util.UUID;
 
-public class SurveyDTO {
+public class AttendanceListDTO {
     public UUID id;
     public String name;
     public List<UUID> events;
 
-    public SurveyDTO() {
+    public AttendanceListDTO() {
     }
 
-    public SurveyDTO(UUID id, String name, List<UUID> events) {
+    public AttendanceListDTO(UUID id, String name, List<UUID> events) {
         this.id = id;
         this.name = name;
         this.events = events;
