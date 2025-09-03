@@ -104,8 +104,7 @@ public class LinkGenerationResource {
                 logger.info(String.format("E-mail with link %s sent", email));
                 personAttendanceListLink.sent();
                 personAttendanceListLink.persist();
-                String redirectUrl = String.format("/web/attendance_list/%s/details", attendanceListId.toString()); // adres strony, na którą chcesz wrócić
-                return Response.seeOther(URI.create(redirectUrl)).build();
+                return Response.ok().build();
             } catch (RuntimeException ex) {
                 String format = String.format("E-mail with link %s NOT SENT", email);
                 personAttendanceListLink.sendingError();
