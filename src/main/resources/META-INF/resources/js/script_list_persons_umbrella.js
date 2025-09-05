@@ -8,7 +8,7 @@ u(document).on('click', 'a.delete-person', async function(event) {
     }
 
     try {
-        const response = await fetch(`/web/persons/${personId}`, {
+        const response = await fetchWithLoader(`/web/persons/${personId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'

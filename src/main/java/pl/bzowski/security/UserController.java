@@ -1,76 +1,34 @@
 package pl.bzowski.security;
 
-import jakarta.inject.Inject;
-import jakarta.validation.Valid;
+import jakarta.inject.Singleton;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import io.quarkus.qute.Template;
-import io.quarkus.qute.TemplateInstance;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriBuilder;
+import pl.bzowski.base.RepositoryBase;
 
 @Path("/sec/")
-public class UserController {
+@Singleton
+public class UserController extends RepositoryBase {
 
-  @Inject
-  Template register;
-
-  @Inject
-  Template login;
-
-  @Inject
-  Template loginError;
-
-  @Inject
-  UserService userService;
-
-  @GET
-  @Path("register")
-  @Produces(MediaType.TEXT_HTML)
-  public TemplateInstance showRegisterForm() {
-    return register.instance();
-  }
-
-  @GET
-  @Path("login")
-  @Produces(MediaType.TEXT_HTML)
-  public TemplateInstance showLoginForm() {
-    return login.instance();
-  }
-
-  @GET
-  @Path("loginError")
-  @Produces(MediaType.TEXT_HTML)
-  public TemplateInstance showLoginError() {
-    return loginError.instance();
-  }
-
-  @POST
-  @Path("register")
-  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  @Produces(MediaType.TEXT_PLAIN)
-  public Response registerUser(@BeanParam @Valid UserRegistrationForm form) {
-    boolean created = userService.register(form);
-    if (created) {
-      return Response.seeOther(UriBuilder.fromPath("/web/events").build()).build();
-    } else {
-      return Response.status(Response.Status.BAD_REQUEST)
-              .entity("Błąd rejestracji: użytkownik może już istnieć").build();
+    @GET
+    @Path("username")
+    public Response getCurrentUserUsername() {
+        return Response.ok(super.currentUsername()).build();
     }
-  }
 
-  @POST
-  @Path("logout")
-  public Response logout() {
-    // Ustaw cookie na wygasłe, aby usunąć sesję
-    NewCookie logoutCookie = new NewCookie.Builder("quarkus-credential")
-            .maxAge(0)
-            .path("/")
-            .build();
+    @GET
+    @Path("/logout")
+    public Response logout() {
+        // Usuwamy ciasteczka przez ustawienie pustej wartości i daty wygaśnięcia w przeszłości
+        NewCookie removeQuarkusCredential = new NewCookie("quarkus-credential", "", "/", null, null, 0, false);
+        NewCookie removeQSession = new NewCookie("q_session_chunk_1", "", "/", null, null, 0, false);
 
-    return Response.noContent()
-            .cookie(logoutCookie)
-            .build();
-  }
+        String keycloakLogoutUrl = "http://0.0.0.0:9999/realms/master/protocol/openid-connect/logout?redirect_uri=http%3A%2F%2Flocalhost:8080%2Flogged-out";
+
+        Response.ResponseBuilder response = Response.seeOther(java.net.URI.create(keycloakLogoutUrl));
+        response.cookie(removeQuarkusCredential);
+        response.cookie(removeQSession);
+
+        return response.build();
+    }
 }

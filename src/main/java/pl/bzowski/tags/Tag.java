@@ -1,9 +1,7 @@
 package pl.bzowski.tags;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import pl.bzowski.security.RegisteredUser;
 
 import java.util.UUID;
 
@@ -18,15 +16,14 @@ public class Tag extends PanacheEntityBase {
     @Column(nullable = false)
     public String name;
 
-    @ManyToOne
-    @JoinColumn(name = "registered_user_id")
-    public RegisteredUser registeredUser;
+    @Column(nullable = false, name = "registered_user_id")
+    public UUID registeredUserId;
 
     public Tag() {}
 
-    public Tag(String name, RegisteredUser registeredUser) {
+    public Tag(String name, UUID registeredUserId) {
         this.name = name;
-        this.registeredUser = registeredUser;
+        this.registeredUserId = registeredUserId;
     }
 
 }

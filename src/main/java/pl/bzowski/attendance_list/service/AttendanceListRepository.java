@@ -38,7 +38,7 @@ public class AttendanceListRepository extends RepositoryBase {
         AttendanceList attendanceList = new AttendanceList();
         attendanceList.name = attendanceListDTO.name;
         attendanceList.events = events;
-        attendanceList.registeredUser = currentRegisteredUser();
+        attendanceList.registeredUserId = currentRegisteredUserId();
         attendanceList.persist();
         attendanceListDTO.id = attendanceList.id;
         // Opcjonalnie przypisz listę obecności do eventów (jeśli w Event masz relację odwrotną)
@@ -50,6 +50,6 @@ public class AttendanceListRepository extends RepositoryBase {
     }
 
     public List<AttendanceList> listAll() {
-        return AttendanceList.list("registeredUser", currentRegisteredUser());
+        return AttendanceList.list("registeredUserId", currentRegisteredUserId());
     }
 }

@@ -14,15 +14,15 @@ public class PersonRepository extends RepositoryBase {
     }
 
     public List<Person> listAll() {
-        return Person.list("registeredUser.username", currentUsername());
+        return Person.list("registeredUserId", currentRegisteredUserId());
     }
 
     public List<Person> listAll(Sort lastName) {
-        return Person.list("registeredUser.username", lastName, currentUsername());
+        return Person.list("registeredUserId", lastName, currentRegisteredUserId());
     }
 
     public void persist(Person person) {
-        person.registeredUser = currentRegisteredUser();
+        person.registeredUserId = currentRegisteredUserId();
         person.persist();
     }
 }

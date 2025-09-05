@@ -24,7 +24,7 @@ u('#attendance-list-form').on('submit', async function(event) {
     const attendanceList = { name, events };
 
     try {
-        const response = await fetch('/web/attendance_list', {
+        const response = await fetchWithLoader('/web/attendance_list', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(attendanceList),

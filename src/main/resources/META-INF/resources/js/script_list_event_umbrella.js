@@ -8,7 +8,7 @@ u(document).on('click', '.delete-event', async function(event) {
     }
 
     try {
-        const response = await fetch(`/web/events/${eventId}`, {
+        const response = await fetchWithLoader(`/web/events/${eventId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'

@@ -7,14 +7,17 @@
 </head>
 <body>
 <h2>Witaj, {link.personFirstName} {link.personLastName} </h2>
+{#if link.attendanceListAnswered}
+<p>Już odpowiedziałeś na tą ankietę. Jeśli chcesz zmienić zdanie, uzupełnij i wyślij ponownie</p>
+{/if}
 <p>({link.personEmail})</p>
-<p><strong>{link.attendanceList.name}</strong></p>
+<p>Dotyczy wydarzeń: {link.attendanceList.joinedEventsName}</p>
 <form action="/web/responses/{link.linkToken}" id="response-form">
     {#each link.attendanceList.events}
     <article>
         <p><strong>{it.name}</strong></p>
         <p>{it.location}</p>
-        <p>{it.localDateTime}</p>
+        <p>{it.formatedLocalDateTime}</p>
         <p>{it.description}</p>
         <label for="{it.id}">Odpowiedź:</label>
         <select class="answer-entry" name="{it.id}" id="{it.id}" required>
@@ -49,7 +52,7 @@
     const payload = answers;
 
     try {
-        const response = await fetch(form.action, {
+        const response = await fetchWithLoader(form.action, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

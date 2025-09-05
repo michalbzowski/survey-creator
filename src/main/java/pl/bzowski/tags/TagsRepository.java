@@ -9,11 +9,11 @@ import java.util.List;
 public class TagsRepository extends RepositoryBase {
 
     public List<Tag> listAll() {
-        return Tag.list("registeredUser.username", currentUsername());
+        return Tag.list("registeredUserId", currentRegisteredUserId());
     }
 
     public void createTag(String name) {
-        Tag tag = new Tag(name, currentRegisteredUser());
+        Tag tag = new Tag(name, currentRegisteredUserId());
         tag.persist();
     }
 }

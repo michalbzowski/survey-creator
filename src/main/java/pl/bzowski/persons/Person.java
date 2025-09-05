@@ -2,7 +2,6 @@ package pl.bzowski.persons;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import pl.bzowski.security.RegisteredUser;
 import pl.bzowski.tags.Tag;
 
 import java.util.UUID;
@@ -29,9 +28,8 @@ public class Person extends PanacheEntityBase {
     @JoinColumn(name = "tag_id")
     public Tag defaultTag;
 
-    @ManyToOne
-    @JoinColumn(name = "registered_user_id")
-    public RegisteredUser registeredUser;
+    @Column(nullable = false, name = "registered_user_id")
+    public UUID registeredUserId;
 
     // Konstruktor domyślny wymagany przez JPA
     public Person() {}

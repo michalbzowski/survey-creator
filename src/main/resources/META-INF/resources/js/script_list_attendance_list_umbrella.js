@@ -19,7 +19,7 @@ u(document).on('click', 'a.delete-attendance-list', async function(event) {
     }
 
     try {
-        const response = await fetch(`/web/attendance_list/${id}`, {
+        const response = await fetchWithLoader(`/web/attendance_list/${id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: '_method=delete',
@@ -41,7 +41,7 @@ u(document).on('click', 'a.send-email-button', async function(e) {
     const linkPersonId = u(this).data('link-person-id');
 
     try {
-        const response = await fetch(`/api/v1/links/${attendanceListId}/email/${linkPersonId}`, {
+        const response = await fetchWithLoader(`/api/v1/links/${attendanceListId}/email/${linkPersonId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         });
@@ -79,7 +79,7 @@ u(document).on('click', '#send-to-all', async function(event) {
         const linkPersonId = btn.data('link-person-id');
 
         try {
-            const response = await fetch(`/api/v1/links/${attendanceListId}/email/${linkPersonId}`, {
+            const response = await fetchWithLoader(`/api/v1/links/${attendanceListId}/email/${linkPersonId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             });

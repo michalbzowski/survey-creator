@@ -8,7 +8,7 @@ u(document).on('click', 'a.delete-tag', async function(event) {
     }
 
     try {
-        const response = await fetch(`/web/tags/${tagId}`, {
+        const response = await fetchWithLoader(`/web/tags/${tagId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',

@@ -25,7 +25,8 @@
             <li><a href="/web/attendance_list">Listy obecności</a></li>
             <li><a href="/web/persons">Osoby</a></li>
             <li><a href="/web/tags">Tagi</a></li>
-            <li><a href="#" onclick="logout()">Wyloguj</a></li>
+            <a href="/sec/logout">Wyloguj</a>
+            <li id="registered-user"></li>
         </ul>
     </nav>
 </header>
@@ -40,14 +41,6 @@
     <p>&copy; 2025 Michał Bzowski</p>
 </footer>
 <script>
-    function logout() {
-        fetch('/logout', { method: 'POST' })
-            .then(() => {
-                window.location.href = '/sec/login'; // przekieruj na stronę logowania
-            })
-            .catch(err => console.error('Logout error', err));
-    }
-
     function showLoader() {
       u('#loader').each(el => el.style.display = 'flex'); // np. flex dla wyrównania
     }
@@ -56,6 +49,37 @@
       u('#loader').each(el => el.style.display = 'none');
     }
 
+    function fetchWithLoader(url, options) {
+      showLoader();
+      return fetchWithLoader(url, options)
+        .then(response => {
+          hideLoader();
+          return response;
+        })
+        .catch(error => {
+          hideLoader();
+          throw error;
+        });
+    }
+
+    async function getUsername() {
+        try {
+            const response = await fetch(`/sec/username`, {
+                method: 'GET',
+            });
+
+            if (response.ok) {
+                const text = await response.text();
+                u('#registered-user').text(text);
+            } else {
+                alert('Błąd przy pobieraniu nazwy usera');
+            }
+        } catch {
+            alert('Błąd połączenia z serwerem');
+        }
+    }
+
+    getUsername()
 </script>
 </body>
 </html>

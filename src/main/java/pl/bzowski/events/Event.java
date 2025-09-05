@@ -1,15 +1,12 @@
 package pl.bzowski.events;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import io.quarkus.panache.common.Sort;
 import jakarta.persistence.*;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.events.web.EventDto;
-import pl.bzowski.security.RegisteredUser;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -37,9 +34,8 @@ public class Event extends PanacheEntityBase {
     @JoinColumn(name = "attendance_list_id")
     public AttendanceList attendanceList;
 
-    @ManyToOne
-    @JoinColumn(name = "registered_user_id")
-    public RegisteredUser registeredUser;
+    @Column(nullable = false, name = "registered_user_id")
+    public UUID registeredUserId;
 
     public Event() {
     }
