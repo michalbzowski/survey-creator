@@ -1,6 +1,7 @@
 ;
     create table attendance_list (
         id uuid not null,
+        registered_user_id uuid not null,
         name varchar(255),
         primary key (id)
     )
@@ -14,6 +15,7 @@
         localDateTime timestamp(6) not null,
         attendance_list_id uuid,
         id uuid not null,
+        registered_user_id uuid not null,
         description varchar(4096) not null,
         location varchar(255) not null,
         name varchar(255) not null,
@@ -46,7 +48,7 @@
 ;
     create table persons (
         id uuid not null,
-        registered_user_id uuid,
+        registered_user_id uuid not null,
         tag_id uuid,
         email varchar(255) not null,
         firstName varchar(255) not null,
@@ -55,18 +57,9 @@
         unique (email, registered_user_id)
     )
 ;
-    create table registered_users (
-        id uuid not null,
-        username varchar(50) not null,
-        email varchar(255) not null,
-        passwordHash varchar(255) not null,
-        role varchar(255),
-        primary key (id)
-    )
-;
     create table tags (
         id uuid not null,
-        registered_user_id uuid,
+        registered_user_id uuid not null,
         name varchar(255) not null,
         primary key (id)
     )
@@ -110,13 +103,3 @@
        add constraint FKeg2x5kl8cv8rglf8dpi5y7dcq 
        foreign key (tag_id) 
        references tags
-;
-    alter table if exists persons 
-       add constraint FKfcdx79ah9k2a5alj5ei7quuf9 
-       foreign key (registered_user_id) 
-       references registered_users
-;
-    alter table if exists tags 
-       add constraint FK8jllpc105i46hby5pbcpk2x49 
-       foreign key (registered_user_id) 
-       references registered_users
