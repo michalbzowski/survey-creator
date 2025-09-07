@@ -27,7 +27,7 @@ public class UserController extends RepositoryBase {
         NewCookie removeQuarkusCredential = new NewCookie("quarkus-credential", "", "/", null, null, 0, false);
         NewCookie removeQSession = new NewCookie("q_session_chunk_1", "", "/", null, null, 0, false);
 
-        String keycloakLogoutUrl = appHost + "/realms/master/protocol/openid-connect/logout?redirect_uri=http%3A%2F%2Flocalhost:8080%2Flogged-out";
+        String keycloakLogoutUrl = appHost + "/auth/realms/master/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fapp.potwierdzobecnosc.pl%2Flogged-out";
 
         Response.ResponseBuilder response = Response.seeOther(java.net.URI.create(keycloakLogoutUrl));
         response.cookie(removeQuarkusCredential);
