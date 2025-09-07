@@ -52,7 +52,7 @@
     const payload = answers;
 
     try {
-        const response = await fetchWithLoader(form.action, {
+        const response = await fetch(form.action, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
