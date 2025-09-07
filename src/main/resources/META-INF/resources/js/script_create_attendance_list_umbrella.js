@@ -36,8 +36,8 @@ u('#attendance-list-form').on('submit', async function(event) {
         } else {
             alert('Błąd przy zapisie listy obecności');
         }
-    } catch {
-        alert('Błąd połączenia z serwerem');
+    } catch (error) {
+        alert('Błąd połączenia z serwerem:' + error);
     }
 });
 

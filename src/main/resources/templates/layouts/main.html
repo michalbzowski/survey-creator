@@ -51,7 +51,7 @@
 
     function fetchWithLoader(url, options) {
       showLoader();
-      return fetchWithLoader(url, options)
+      return fetch(url, options)
         .then(response => {
           hideLoader();
           return response;

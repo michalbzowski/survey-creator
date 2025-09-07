@@ -8,12 +8,16 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.attendance_list.service.AttendanceListRepository;
+import pl.bzowski.links.LinkGenerationResource;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 @Path("/api/v1/attendance_list")
 public class AttendanceListResource {
+
+    Logger logger = Logger.getLogger(LinkGenerationResource.class.getName());
 
     private final AttendanceListRepository attendanceListRepository;
 
@@ -33,6 +37,7 @@ public class AttendanceListResource {
     @Transactional
     public Response createAttendanceList(AttendanceListDTO attendanceListDTO) {
         try {
+            logger.info("createAttendanceList");
             AttendanceListDTO created = attendanceListRepository.createAttendanceList(attendanceListDTO);
             return Response.status(Response.Status.CREATED).entity(created).build();
         } catch (IllegalArgumentException e) {
