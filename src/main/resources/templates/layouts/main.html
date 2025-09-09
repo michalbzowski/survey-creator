@@ -8,6 +8,7 @@
     <title>{#insert title}{/}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link href="/css/style.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href=/images/favicon.ico">
     <script src="https://cdn.jsdelivr.net/npm/umbrellajs"></script>
     <!--    IKONKI: https://lucide.dev/icons/pencil -->
 </head>
@@ -21,12 +22,20 @@
             </li>
         </ul>
         <ul>
-            <li><a href="/web/events">Wydarzenia</a></li>
-            <li><a href="/web/attendance_list">Listy obecności</a></li>
-            <li><a href="/web/persons">Osoby</a></li>
-            <li><a href="/web/tags">Tagi</a></li>
-            <a href="/sec/logout">Wyloguj</a>
-            <li id="registered-user"></li>
+            <li><a href="/web/events" class="secondary">Wydarzenia</a></li>
+            <li><a href="/web/attendance_list" class="secondary">Listy obecności</a></li>
+            <li><a href="/web/persons" class="secondary">Osoby</a></li>
+            <li><a href="/web/tags" class="secondary">Tagi</a></li>
+            <details class="dropdown">
+                <summary>
+                    Ustawienia
+                </summary>
+                <ul dir="rtl">
+                    <li id="registered-user"></li>
+                    <li><a href="/sec/logout">Wyloguj</a></li>
+                </ul>
+            </details>
+
         </ul>
     </nav>
 </header>
@@ -34,7 +43,7 @@
     <div class="loader"></div>
 </div>
 <main class="container">
-    <h2>{#insert title}{/}</h2>
+    <h2>{#insert title}{/}{#insert subtitle}{/}</h2>
     {#insert body /}
 </main>
 <footer class="container">
