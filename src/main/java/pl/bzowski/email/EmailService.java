@@ -1,8 +1,9 @@
 package pl.bzowski.email;
 
 
+import io.smallrye.mutiny.Uni;
 
 public interface EmailService {
-    void sendEmail(String to, String subject, String body);
+    Uni<Void> sendEmail(String to, String subject, String body);
 }
 

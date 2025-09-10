@@ -1,0 +1,42 @@
+{#include layouts/main}
+{#title}
+Grupy
+{/title}
+{#subtitle}
+<a href="/web/groups/new">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-plus-icon lucide-circle-plus"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+</a>
+{/subtitle}
+{#body}
+
+<table>
+    <thead>
+    <tr>
+        <th>Nazwa</th>
+        <th>Akcje</th>
+    </tr>
+    </thead>
+    <tbody>
+    {#for group in groups}
+    <tr>
+        <td>{group.name}</td>
+        <td>
+            <div role="group">
+                <a href="/web/groups/edit/{group.id}" class="edit-group" aria-label="Edytuj tę grupę" title="Edytuj tę grupę">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-edit-2-icon lucide-edit-2"><path d="M17 3a2.828 2.828 0 0 1 4 4L7 21H3v-4L17 3z"/></svg>
+                </a>
+
+                <a href="#" class="delete-group" data-id="{group.id}" aria-label="Usuń tę grupę" title="Usuń tę grupę">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-x-icon lucide-circle-x"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+                </a>
+            </div>
+        </td>
+    </tr>
+    {/for}
+    </tbody>
+</table>
+
+<script src="/js/script_list_groups_umbrella.js"></script>
+
+{/body}
+{/include}

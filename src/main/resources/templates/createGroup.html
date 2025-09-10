@@ -1,0 +1,25 @@
+{#include layouts/main}
+{#title}{edit ? "Edytuj grupę" : "Stwórz nową grupę"}{/title}
+{#body}
+<form action="{edit ? '/web/groups/edit/' + group.id : '/web/groups'}" method="post">
+    <label for="name">Nazwa grupy:</label>
+    <input type="text" id="name" name="name" value="{group.name}" required><br><br>
+
+    <fieldset>
+        <legend>Wybierz osoby należące do grupy:</legend>
+        {#for person in persons}
+        <div>
+            <label>
+                <input type="checkbox" name="persons" value="{person.id}"
+                       {#if group.hasThat(person)}checked{/if}>
+                {person.firstName} {person.lastName} ({person.email})
+            </label>
+        </div>
+        {/for}
+    </fieldset>
+
+    <button type="submit">{edit ? "Zapisz" : "Dodaj"}</button>
+</form>
+
+{/body}
+{/include}

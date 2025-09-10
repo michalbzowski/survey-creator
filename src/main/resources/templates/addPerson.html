@@ -19,6 +19,19 @@
         {/for}
     </select><br><br>
 
+    <fieldset>
+        <legend>Grupy:</legend>
+        {#for group in groups}
+        <div>
+            <label>
+                <input type="checkbox" name="groups" value="{group.id}"
+                       {#if person.isInGroup(group)}checked{/if}>
+                {group.name}
+            </label>
+        </div>
+        {/for}
+    </fieldset><br>
+
     <button type="submit">{edit ? "Zapisz" : "Dodaj"}</button>
 </form>
 {/body}

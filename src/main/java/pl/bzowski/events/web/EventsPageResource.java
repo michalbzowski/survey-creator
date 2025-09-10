@@ -9,10 +9,17 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
+import pl.bzowski.attendance_list.AttendanceList;
+import pl.bzowski.attendance_list.api.AttendanceListDTO;
+import pl.bzowski.attendance_list.service.AttendanceListRepository;
 import pl.bzowski.events.Event;
 import pl.bzowski.events.EventRepository;
+import pl.bzowski.group.GroupsRepository;
+import pl.bzowski.links.LinkGenerationResource;
 import pl.bzowski.links.PersonAttendanceListLink;
 import pl.bzowski.events.PersonEventAnswer;
+import pl.bzowski.persons.Person;
+import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.tags.TagsRepository;
 
 import java.util.ArrayList;
@@ -30,13 +37,21 @@ public class EventsPageResource {
     private final Template eventDetails;
     private final TagsRepository tagsRepository;
     private final EventRepository eventRepository;
+    private final GroupsRepository groupsRepository;
+    private final PersonRepository personRepository;
+    private final AttendanceListRepository attendanceListRepository;
+    private final LinkGenerationResource linkGenerationResource;
 
-    public EventsPageResource(Template addEvent, Template listEvents, Template eventDetails, TagsRepository tagsRepository, EventRepository eventRepository) {
+    public EventsPageResource(Template addEvent, Template listEvents, Template eventDetails, TagsRepository tagsRepository, EventRepository eventRepository, GroupsRepository groupsRepository, PersonRepository personRepository, AttendanceListRepository attendanceListRepository, LinkGenerationResource linkGenerationResource) {
         this.addEvent = addEvent;
         this.listEvents = listEvents;
         this.eventDetails = eventDetails;
         this.tagsRepository = tagsRepository;
         this.eventRepository = eventRepository;
+        this.groupsRepository = groupsRepository;
+        this.personRepository = personRepository;
+        this.attendanceListRepository = attendanceListRepository;
+        this.linkGenerationResource = linkGenerationResource;
     }
 
     @GET
@@ -51,16 +66,78 @@ public class EventsPageResource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance showAddForm() {
         var tags = tagsRepository.listAll();
-        return addEvent.data("tags", tags);
+        var groups = groupsRepository.listAll();
+        var persons = personRepository.listAll();
+        return addEvent.data("tags", tags,
+                "groups", groups,
+                "persons", persons);
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
-    public Response addEvent(@BeanParam EventDto eventDto) {
+    public Response addEvent(@BeanParam EventDto eventDto,
+                             @FormParam("withAttendanceList") String withAttendanceList,
+                             @FormParam("attendanceType") String attendanceType,
+                             @FormParam("groups") List<UUID> groupIds,
+                             @FormParam("persons") List<UUID> personIds) {
         Event event = eventRepository.persist(eventDto);
-
+        logger.info("withAttendanceList: " + withAttendanceList);
+        if ("checked".equals(withAttendanceList)) {
+            AttendanceListDTO attendanceList = persistAttendanceList(eventDto, event);
+            logger.info("attendanceList: " + attendanceList.id);
+            switch (attendanceType) {
+                case "group" -> {
+                    if (groupIds != null && !groupIds.isEmpty()) {
+                        // Pobierz osoby z wybranych grup i dodaj do listy obecności
+                        List<Person> personsFromGroups = getPersonsFromGroups(groupIds);
+                        linkGenerationResource.generateLinksFor(attendanceList.id, personsFromGroups);
+                    }
+                }
+                case "person" -> {
+                    if (personIds != null && !personIds.isEmpty()) {
+                        // Dodaj wybrane osoby do listy obecności
+                        List<Person> selectedPersons = getSelectedPersonsFromForm(personIds);
+                        logger.info("Kot: " + selectedPersons.size());
+                        linkGenerationResource.generateLinksFor(attendanceList.id, selectedPersons);
+                    }
+                }
+                case "all" -> {
+                    // Pobierz wszystkich dostępnych użytkownikowi (tu uproszczone - wszyscy)
+                    List<Person> allPersons = personRepository.listAll();
+                    linkGenerationResource.generateLinksFor(attendanceList.id, allPersons);
+                }
+                default -> {
+                    // brak akcji
+                }
+            }
+            return Response.seeOther(UriBuilder.fromPath("/web/attendance_list/" + attendanceList.id + "/details").build()).build();
+        }
         return Response.seeOther(UriBuilder.fromPath("/web/events/" + event.id + "/details").build()).build();
+    }
+
+    private static List<Person> getSelectedPersonsFromForm(List<UUID> personIds) {
+        return Person.find("id in ?1", personIds).list();
+    }
+
+    private static void createLinsk(List<Person> personsFromGroups, AttendanceList attendanceList) {
+
+        for (Person p : personsFromGroups) {
+            PersonAttendanceListLink ai = new PersonAttendanceListLink(p, attendanceList);
+            ai.persist();
+        }
+    }
+
+    private static List<Person> getPersonsFromGroups(List<UUID> groupIds) {
+        return Person.find("groups.id in ?1", groupIds).list();
+    }
+
+    private AttendanceListDTO persistAttendanceList(EventDto eventDto, Event event) {
+        // Utwórz listę obecności (AttendanceList) powiązaną z tym wydarzeniem
+        AttendanceListDTO attendanceListDTO = new AttendanceListDTO();
+        attendanceListDTO.name = eventDto.name;
+        attendanceListDTO.events = List.of(event.id);
+        return attendanceListRepository.createAttendanceList(attendanceListDTO);
     }
 
     @GET

@@ -2,8 +2,11 @@ package pl.bzowski.persons;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import pl.bzowski.group.Group;
 import pl.bzowski.tags.Tag;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -31,13 +34,25 @@ public class Person extends PanacheEntityBase {
     @Column(nullable = false, name = "registered_user_id")
     public UUID registeredUserId;
 
+    @ManyToMany
+    @JoinTable(
+            name = "person_group",
+            joinColumns = @JoinColumn(name = "person_id"),
+            inverseJoinColumns = @JoinColumn(name = "group_id")
+    )
+    public Set<Group> groups = new HashSet<>();
+
     // Konstruktor domyślny wymagany przez JPA
     public Person() {}
 
-    public Person(String firstName, String lastName, String email,  Tag defaultTag) {
+    public Person(String firstName, String lastName, String email, Tag defaultTag) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.defaultTag = defaultTag;
+    }
+
+    public boolean isInGroup(Group group) {
+        return this.groups.stream().anyMatch(g -> g.id.equals(group.id));
     }
 }

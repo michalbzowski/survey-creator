@@ -1,12 +1,13 @@
 package pl.bzowski.links;
 
+import io.smallrye.mutiny.Uni;
+import jakarta.transaction.SystemException;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 
-import java.net.URI;
 import java.util.logging.Level;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -46,14 +47,22 @@ public class LinkGenerationResource {
     @Path("/{attendanceListId}")
     @Transactional
     public Response generateLinks(@PathParam("attendanceListId") UUID attendanceListId) {
+        List<Person> persons = personRepository.listAll();
+        if (generateLinksFor(attendanceListId, persons))
+            return Response.status(Response.Status.NOT_FOUND).entity("Zapytanie nie istnieje").build();
+
+        // Przekierowanie do widoku szczegółów zapytania
+        return Response.seeOther(UriBuilder.fromPath("/web/attendance_list/{id}/details").build(attendanceListId)).build();
+    }
+
+    public boolean generateLinksFor(UUID attendanceListId, List<Person> persons) {
         logger.info("Generate links for " + attendanceListId.toString());
         AttendanceList attendanceList = AttendanceList.findById(attendanceListId);
         if (attendanceList == null) {
             logger.info("AttendanceList is null");
-            return Response.status(Response.Status.NOT_FOUND).entity("Zapytanie nie istnieje").build();
+            return true;
         }
 
-        List<Person> persons = personRepository.listAll();
         logger.info("Persons found: " + (long) persons.size());
         for (Person person : persons) {
             // Sprawdź, czy link już istnieje
@@ -68,49 +77,49 @@ public class LinkGenerationResource {
                 logger.info("Person " + person.email + " has already link!");
             }
         }
-
-        // Przekierowanie do widoku szczegółów zapytania
-        return Response.seeOther(UriBuilder.fromPath("/web/attendance_list/{id}/details").build(attendanceListId)).build();
+        return false;
     }
 
     @POST
     @Path("/{attendanceListId}/email/{personId}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
-    public Response sendLinkByEmail(@PathParam("attendanceListId") UUID attendanceListId, @PathParam("personId") UUID personId) {
+    public Uni<Void> sendLinkByEmail(@PathParam("attendanceListId") UUID attendanceListId, @PathParam("personId") UUID personId) {
         logger.info(String.format("Start sending link by email for attendanceList %s for person %s", attendanceListId, personId));
         AttendanceList attendanceList = AttendanceList.findById(attendanceListId);
         if (attendanceList == null) {
             logger.info("attendanceList is null");
-            return Response.status(Response.Status.NOT_FOUND).entity("Zapytanie nie istnieje").build();
+            throw new NotFoundException("Zapytanie nie istnieje");
         }
 
         Person person = Person.findById(personId);
         if (person == null) {
             logger.info("Person is null");
-            return Response.status(Response.Status.NOT_FOUND).entity("Osoba nie istnieje").build();
+            throw new NotFoundException("Osoba nie istnieje");
         }
         Optional<PersonAttendanceListLink> personAttendanceListLinkOptional = PersonAttendanceListLink.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id).firstResultOptional();
 
         boolean exists = personAttendanceListLinkOptional.isPresent();
         if (!exists) {
-            logger.info(String.format("Can not send link. Link doesn't exists for: %s - %s", person.email, attendanceListId));
-            return Response.status(Response.Status.NOT_FOUND).entity("Link nie istnieje").build();
+            String format = String.format("Can not send link. Link doesn't exists for: %s - %s", person.email, attendanceListId);
+            logger.info(format);
+            throw new RuntimeException(format);
         } else {
             PersonAttendanceListLink personAttendanceListLink = personAttendanceListLinkOptional.get();
             String email = getEmailContent(personAttendanceListLink);
             try {
-                emailService.sendEmail(person.email, "Odpowiedz, czy będziesz na wydarzeniu?", email);
+                Uni<Void> ret = emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email);
                 logger.info(String.format("E-mail with link %s sent", email));
                 personAttendanceListLink.sent();
                 personAttendanceListLink.persist();
-                return Response.ok().build();
+                return ret;
             } catch (RuntimeException ex) {
                 String format = String.format("E-mail with link %s NOT SENT", email);
                 personAttendanceListLink.sendingError();
                 personAttendanceListLink.persist();
                 logger.log(Level.WARNING, format);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Błąd!").build();
+                logger.log(Level.INFO, ex.getMessage());
+                throw new RuntimeException();
             }
         }
     }

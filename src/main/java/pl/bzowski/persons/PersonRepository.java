@@ -5,6 +5,7 @@ import jakarta.enterprise.context.RequestScoped;
 import pl.bzowski.base.RepositoryBase;
 
 import java.util.List;
+import java.util.UUID;
 
 @RequestScoped
 public class PersonRepository extends RepositoryBase {
@@ -24,5 +25,9 @@ public class PersonRepository extends RepositoryBase {
     public void persist(Person person) {
         person.registeredUserId = currentRegisteredUserId();
         person.persist();
+    }
+
+    public UUID currentUserId() {
+        return currentRegisteredUserId();
     }
 }

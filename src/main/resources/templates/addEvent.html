@@ -1,21 +1,63 @@
 {#include layouts/main}
-    {#title}Nowe wydarzenie{/title}
-    {#body}
+{#title}Nowe wydarzenie{/title}
+{#body}
 
-    <form action="/web/events" method="post">
-        <label for="name">Nazwa:</label>
-        <input type="text" id="name" name="name" required><br><br>
+<form action="/web/events" method="post">
+    <label for="name">Nazwa:</label>
+    <input type="text" id="name" name="name" required><br><br>
 
-        <label for="location">Miejsce:</label>
-        <input type="text" id="location" name="location" required><br><br>
+    <label for="location">Miejsce:</label>
+    <input type="text" id="location" name="location" required><br><br>
 
-        <label for="localDateTime">Dzień i godzina:</label>
-        <input type="datetime-local" id="localDateTime" name="localDateTime" required><br><br>
+        <label for="datetimeInput">Dzień i godzina:</label>
+        <input type="datetime-local" id="datetimeInput" name="localDateTime" required><br><br>
 
-        <label for="description">Opis:</label>
-        <textarea maxlength="4096" id="description" name="description" placeholder="Opisz wydarzenie..." required></textarea>
+    <label for="description">Opis:</label>
+    <textarea maxlength="4096" id="description" name="description" placeholder="Opisz wydarzenie..."
+              required></textarea>
 
-        <button type="submit">Dodaj</button>
-    </form>
-    {/body}
+    <fieldset>
+        <input type="checkbox" id="withAttendanceList" name="withAttendanceList" value="checked" checked/>
+        <label for="withAttendanceList">Utwórz listę obecności dla tego wydarzenia</label>
+    </fieldset>
+
+    <fieldset id="attendanceOptions" style="display:none; margin-top:10px;">
+        <legend>Opcje listy obecności</legend>
+        <input type="radio" id="chooseGroup" name="attendanceType" value="group"/>
+        <label for="chooseGroup">Wybierz grupę osób</label><br/>
+
+        <input type="radio" id="choosePersons" name="attendanceType" value="person"/>
+        <label for="choosePersons">Wybierz osoby</label><br/>
+
+        <input type="radio" id="chooseAll" name="attendanceType" value="all" checked/>
+        <label for="chooseAll">Przypisz wszystkie</label><br/>
+    </fieldset>
+
+    <fieldset id="groupsSelect" style="display:none; margin-top:10px;">
+        <legend>Wybierz grupy</legend>
+        {#for group in groups}
+        <label>
+            <input type="checkbox" name="groups" value="{group.id}"/>
+            {group.name}
+        </label><br/>
+        {/for}
+    </fieldset>
+
+    <fieldset id="personsSelect" style="display:none; margin-top:10px;">
+        <legend>Wybierz osoby</legend>
+        {#for person in persons}
+        <label>
+            <input type="checkbox" name="persons" value="{person.id}"/>
+            {person.firstName} {person.lastName} ({person.email})
+        </label><br/>
+        {/for}
+    </fieldset>
+
+    <button type="submit">Dodaj</button>
+</form>
+<script src="/js/script_add_event_umbrella.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/pl.js"></script>
+{/body}
 {/include}

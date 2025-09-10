@@ -6,7 +6,6 @@ import io.quarkus.security.runtime.QuarkusIdentityProviderManagerImpl;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
