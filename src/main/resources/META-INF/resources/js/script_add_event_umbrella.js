@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateVisibility(); // initial
     flatpickr("#datetimeInput", {
+        locale: "pl",
         enableTime: true,
         time_24hr: true,
         dateFormat: "Y-m-d\\TH:i",    // format wysyłany do backendu (value elementu)

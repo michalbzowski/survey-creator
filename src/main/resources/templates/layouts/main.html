@@ -14,31 +14,44 @@
 </head>
 <body>
 <header class="container">
-    <nav>
-        <ul>
-            <li>
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#01aaff" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-contact-round-icon lucide-contact-round"><path d="M16 2v2"/><path d="M17.915 22a6 6 0 0 0-12 0"/><path d="M8 2v2"/><circle cx="12" cy="12" r="4"/><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
+    <nav class="nav">
+        <div class="nav-left">
+            <button id="nav-toggle" class="btn btn-link hide-desktop" aria-label="Toggle navigation menu">
+                &#9776;
+            </button>
+            <a href="/" class="nav-brand" aria-label="Potwierdź obecność">
+                <!-- Ikona SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#01aaff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-contact-round-icon lucide-contact-round" role="img" aria-hidden="true" focusable="false">
+                    <path d="M16 2v2"/>
+                    <path d="M17.915 22a6 6 0 0 0-12 0"/>
+                    <path d="M8 2v2"/>
+                    <circle cx="12" cy="12" r="4"/>
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                </svg>
                 Potwierdź obecność
+            </a>
+        </div>
+        <ul id="nav-menu" class="nav-menu hide-mobile">
+            <li><a href="/web/events" class="btn btn-link secondary">Wydarzenia</a></li>
+            <li><a href="/web/attendance_list" class="btn btn-link secondary">Listy obecności</a></li>
+            <li><a href="/web/persons" class="btn btn-link secondary">Osoby</a></li>
+            <li><a href="/web/groups" class="btn btn-link secondary">Grupy</a></li>
+            <li><a href="/web/tags" class="btn btn-link secondary">Tagi</a></li>
+            <li class="dropdown">
+                <details>
+                    <summary class="btn btn-link secondary" tabindex="0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-user-round-icon lucide-circle-user-round"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </summary>
+                    <ul>
+                        <li id="registered-user"></li>
+                        <li><a href="/sec/logout" class="btn btn-link secondary">Wyloguj</a></li>
+                    </ul>
+                </details>
             </li>
-        </ul>
-        <ul>
-            <li><a href="/web/events" class="secondary">Wydarzenia</a></li>
-            <li><a href="/web/attendance_list" class="secondary">Listy obecności</a></li>
-            <li><a href="/web/persons" class="secondary">Osoby</a></li>
-            <li><a href="/web/groups" class="secondary">Grupy</a></li>
-            <li><a href="/web/tags" class="secondary">Tagi</a></li>
-            <details class="dropdown">
-                <summary>
-                    Ustawienia
-                </summary>
-                <ul dir="rtl">
-                    <li id="registered-user"></li>
-                    <li><a href="/sec/logout">Wyloguj</a></li>
-                </ul>
-            </details>
         </ul>
     </nav>
 </header>
+
 <div class="loader-overlay" id="loader" style="display: none;">
     <div class="loader"></div>
 </div>
@@ -89,6 +102,20 @@
     }
 
     getUsername()
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+    const toggle = document.getElementById("nav-toggle");
+    const menu = document.getElementById("nav-menu");
+
+    toggle.addEventListener("click", () => {
+        menu.classList.toggle("show");
+        // Dla poprawy dostępności aria-expanded:
+        const expanded = toggle.getAttribute("aria-expanded") === "true";
+        toggle.setAttribute("aria-expanded", String(!expanded));
+    });
+});
+
 </script>
 </body>
 </html>

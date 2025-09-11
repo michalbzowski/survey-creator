@@ -129,7 +129,7 @@ public class EventsPageResource {
     }
 
     private static List<Person> getPersonsFromGroups(List<UUID> groupIds) {
-        return Person.find("groups.id in ?1", groupIds).list();
+        return Person.find("select p from Person p join p.groups g where g.id in ?1", groupIds).list();
     }
 
     private AttendanceListDTO persistAttendanceList(EventDto eventDto, Event event) {
