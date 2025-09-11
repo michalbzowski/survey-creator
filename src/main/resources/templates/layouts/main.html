@@ -115,6 +115,24 @@
         toggle.setAttribute("aria-expanded", String(!expanded));
     });
 });
+document.addEventListener('DOMContentLoaded', function() {
+  u('a[href]').on('click', function(event) {
+    const link = event.currentTarget;
+
+    // Możesz tu dodać warunki np. wykluczyć # lub linki z target="_blank"
+    if (!link.target || link.target === '_self') {
+      showLoader();
+      // Zezwól na normalne przejście, loader zostanie pokazany
+      // Nie blokujemy zdarzenia, nie wywołujemy preventDefault
+    }
+  });
+});
+window.addEventListener('pageshow', function(event) {
+  // jeśli strona ładowana z cache, ukryj loader
+  if (event.persisted) {
+    hideLoader();
+  }
+});
 
 </script>
 </body>
