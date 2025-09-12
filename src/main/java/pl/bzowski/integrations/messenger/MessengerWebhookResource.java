@@ -5,8 +5,12 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.util.logging.Logger;
+
 @Path("/api/messenger/webhook")
 public class MessengerWebhookResource {
+
+  Logger logger = Logger.getLogger(MessengerWebhookResource.class.getName());
 
   @ConfigProperty(name = "messenger.token")
   String messengerToken;
@@ -27,7 +31,8 @@ public class MessengerWebhookResource {
     // Parsuj JSON wiadomości przychodzących od Messengera,
     // obsłuż quick replies ("tak", "nie", "później") i inne eventy,
     // np. zapisz odpowiedzi do bazy lub podjęcie akcji
-    System.out.println("Received from messenger: " + payload);
+    logger.info("Received from messenger: " + payload);
+
     return Response.ok().build();
   }
 }
