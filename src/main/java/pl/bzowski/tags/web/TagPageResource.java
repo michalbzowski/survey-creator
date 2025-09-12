@@ -7,7 +7,6 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
-import pl.bzowski.persons.Person;
 import pl.bzowski.tags.Tag;
 import pl.bzowski.tags.TagsRepository;
 
