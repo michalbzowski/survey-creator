@@ -1,6 +1,6 @@
 {
   "name": "Potwierdź Obecność",
-  "short_name": "potwierdz",
+  "short_name": "Potwierdź Obecność",
   "start_url": "/web/events",
   "display": "standalone",
   "background_color": "#c2c7d0",
