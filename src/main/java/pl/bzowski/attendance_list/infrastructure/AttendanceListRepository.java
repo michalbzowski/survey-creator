@@ -1,4 +1,4 @@
-package pl.bzowski.attendance_list.service;
+package pl.bzowski.attendance_list.infrastructure;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.transaction.Transactional;

@@ -11,7 +11,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.attendance_list.api.AttendanceListDTO;
-import pl.bzowski.attendance_list.service.AttendanceListRepository;
+import pl.bzowski.attendance_list.infrastructure.AttendanceListRepository;
 import pl.bzowski.events.Event;
 import pl.bzowski.events.EventRepository;
 import pl.bzowski.group.GroupsRepository;

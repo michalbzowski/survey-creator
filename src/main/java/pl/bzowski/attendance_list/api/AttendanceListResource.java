@@ -7,7 +7,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.attendance_list.AttendanceList;
-import pl.bzowski.attendance_list.service.AttendanceListRepository;
+import pl.bzowski.attendance_list.infrastructure.AttendanceListRepository;
 import pl.bzowski.links.LinkGenerationResource;
 
 import java.util.List;

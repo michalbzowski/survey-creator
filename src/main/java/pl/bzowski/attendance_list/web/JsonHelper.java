@@ -5,7 +5,7 @@ import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 
 @Singleton
-public class JsonHelper {
+class JsonHelper {
     private final Jsonb jsonb = JsonbBuilder.create();
 
     public String toJson(Object obj) {
