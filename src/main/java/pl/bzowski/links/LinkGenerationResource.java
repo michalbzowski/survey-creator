@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.email.EmailService;
+import pl.bzowski.integrations.messenger.MessengerClient;
 import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.persons.Person;
 
@@ -28,14 +29,21 @@ public class LinkGenerationResource {
 
     private final EmailService emailService;
     private final PersonRepository personRepository;
+    private final MessengerClient messengerClient;
+
     Logger logger = Logger.getLogger(LinkGenerationResource.class.getName());
 
     @ConfigProperty(name = "app.host")
     String appHost;
 
-    public LinkGenerationResource(EmailService emailService, PersonRepository personRepository) {
+
+    @ConfigProperty(name = "messenger.psid")
+    String messengerPSID;
+
+    public LinkGenerationResource(EmailService emailService, PersonRepository personRepository, MessengerClient messengerClient) {
         this.emailService = emailService;
         this.personRepository = personRepository;
+        this.messengerClient = messengerClient;
     }
 
     @GET
@@ -109,6 +117,7 @@ public class LinkGenerationResource {
             String email = getEmailContent(personAttendanceListLink);
             try {
                 Uni<Void> ret = emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email);
+                messengerClient.sendMessage(messengerPSID, "Koty nie spia");
                 logger.info(String.format("E-mail with link %s sent", email));
                 personAttendanceListLink.sent();
                 personAttendanceListLink.persist();
