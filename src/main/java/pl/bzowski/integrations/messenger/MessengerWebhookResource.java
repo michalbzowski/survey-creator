@@ -8,6 +8,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.LoggerFactory;
 import pl.bzowski.integrations.Integrations;
 
 import java.io.StringReader;
@@ -23,6 +24,7 @@ import static pl.bzowski.integrations.messenger.MyParser.parseUuidFromText;
 public class MessengerWebhookResource {
 
     private static final Logger logger = Logger.getLogger(MessengerWebhookResource.class.getName());
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(MessengerWebhookResource.class);
 
     @ConfigProperty(name = "messenger.token")
     String messengerToken;
@@ -55,18 +57,22 @@ public class MessengerWebhookResource {
     }
 
     private void manageActions(String psid, String trimmedText) {
+        logger.info(trimmedText);
         if (trimmedText.startsWith("ZAPISZ MNIE:")) {
             // Wyciągnij UUID z tekstu (np. regex)
+            logger.info("Parsowanie - start");
             UUID messengerRegistrationKey = parseUuidFromText(trimmedText);
+            logger.info("messengerRegistrationKey: " + messengerRegistrationKey);
             String email = parseEmailFromText(trimmedText);
-
+            logger.info("email: " + email);
             if (messengerRegistrationKey != null) {
                 // Zapisz powiązanie psid <-> uuid w bazie
                 if (saveUserMapping(psid, email, messengerRegistrationKey, true)) {
-                    // Odpowiedz potwierdzeniem
+                    logger.info("Zapisano ZAPISZ MNIE: " + psid + email + messengerRegistrationKey );
                     messengerService.sendMessage(psid, "Zgoda zapisana. Będziesz otrzymywać powiadomienia.");
                 }
             } else if (trimmedText.startsWith("WYPISZ MNIE: ")) {
+                logger.info("Zapisano WYPISZ MNIE: " + psid + email + messengerRegistrationKey );
                 if (saveUserMapping(psid, email, messengerRegistrationKey, false)){
                     messengerService.sendMessage(psid, "Zgoda anulowana. Nie będziesz otrzymywać powiadomienia.");
                 }
@@ -74,6 +80,9 @@ public class MessengerWebhookResource {
                 logger.info("Nie ma słów kluczowych. Wysylam instrukcje!");
                 messengerService.sendMessage(psid, INSTRUKCJA);
             }
+        } else {
+            logger.info("Nie ma słów kluczowych. Wysylam instrukcje!");
+            messengerService.sendMessage(psid, INSTRUKCJA);
         }
     }
 
