@@ -114,14 +114,18 @@ public class LinkGenerationResource {
             PersonAttendanceListLink personAttendanceListLink = personAttendanceListLinkOptional.get();
             String email = getEmailContent(personAttendanceListLink);
             try {
-                Uni<Void> ret = integrationsRepository.findIntegration(person.email, attendanceList.events, () ->
-                        emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email)
+                integrationsRepository.findIntegration(person.email, attendanceList.events, () ->
+                        {
+                            logger.info("Fallback: " + person.email);
+                            emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email);
+
+                        }
                 );
 
                 logger.info(String.format("Band member %s notified", email));
                 personAttendanceListLink.sent();
                 personAttendanceListLink.persist();
-                return ret;
+                return Uni.createFrom().voidItem();
             } catch (RuntimeException ex) {
                 String format = String.format("E-mail with link %s NOT SENT", email);
                 personAttendanceListLink.sendingError();

@@ -12,12 +12,16 @@ import pl.bzowski.integrations.messenger.MessengerUserAgreement;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 import static pl.bzowski.integrations.api.IntegrationsResource.MESSENGER;
 
 @Singleton
 public class IntegrationsRepository extends RepositoryBase {
+
+    private static final Logger logger = Logger.getLogger(IntegrationsRepository.class.getName());
 
     MessengerService messengerService;
 
@@ -46,18 +50,24 @@ public class IntegrationsRepository extends RepositoryBase {
                         });
     }
 
-    public Uni<Void> findIntegration(String email, List<Event> events, Runnable falback) {
-        Integrations.find("registeredUserId = ?1", currentRegisteredUserId())
+    public void findIntegration(String email, List<Event> events, Runnable falback) {
+        logger.info(String.format("findIntegreation: %s", email));
+        UUID uuid = currentRegisteredUserId();
+        logger.info(String.format("registeredUserId: %s", uuid));
+        Integrations.find("registeredUserId = ?1", uuid)
                 .firstResultOptional()
                 .ifPresentOrElse(integrations -> {
                     Integrations cast = (Integrations) integrations;
+                    logger.info("Found: " + cast.id + cast.registeredUserId);
                     if (isMessenger(cast)) {
-                        MessengerUserAgreement.find("email = ?1 and registeredUserId = ?2 and agree = true ", email, currentRegisteredUserId())
+                        MessengerUserAgreement.find("email = ?1 and registeredUserId = ?2 and agree = true ", email, uuid)
                                 .firstResultOptional()
-                                .ifPresentOrElse(agreement -> extracted(events, (MessengerUserAgreement) agreement), falback);
+                                .ifPresentOrElse(agreement -> {
+                                    logger.info("Messenger agreement: " + ((MessengerUserAgreement) agreement).agree);
+                                    extracted(events, (MessengerUserAgreement) agreement);
+                                }, falback);
                     }
                 }, falback);
-        return Uni.createFrom().nullItem();
     }
 
     private void extracted(List<Event> events, MessengerUserAgreement agreement) {
@@ -73,11 +83,14 @@ public class IntegrationsRepository extends RepositoryBase {
         return event -> {
             String format = String.format("Nazwa: %s\n\nOpis: %s\n\n Kiedy: %s\n\nGdzie: %s",
                     event.name, event.description, event.formatedLocalDateTime(), event.location);
+            logger.info("getEventConsumer:" + format);
             messengerService.sendMessage(mua.psid, format);
         };
     }
 
     private static boolean isMessenger(Integrations integrations) {
-        return integrations.configuration.containsKey(MESSENGER);
+        boolean b = integrations.configuration.containsKey(MESSENGER);
+        logger.info("isMessenger: " + b);
+        return b;
     }
 }
