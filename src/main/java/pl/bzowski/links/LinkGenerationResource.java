@@ -1,7 +1,6 @@
 package pl.bzowski.links;
 
 import io.smallrye.mutiny.Uni;
-import jakarta.transaction.SystemException;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -13,7 +12,8 @@ import java.util.logging.Level;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.email.EmailService;
-import pl.bzowski.integrations.messenger.MessengerClient;
+import pl.bzowski.integrations.infrastructure.IntegrationsRepository;
+import pl.bzowski.integrations.messenger.MessengerService;
 import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.persons.Person;
 
@@ -29,21 +29,19 @@ public class LinkGenerationResource {
 
     private final EmailService emailService;
     private final PersonRepository personRepository;
-    private final MessengerClient messengerClient;
+    private final MessengerService messengerService;
+    private final IntegrationsRepository integrationsRepository;
 
     Logger logger = Logger.getLogger(LinkGenerationResource.class.getName());
 
     @ConfigProperty(name = "app.host")
     String appHost;
 
-
-    @ConfigProperty(name = "messenger.psid")
-    String messengerPSID;
-
-    public LinkGenerationResource(EmailService emailService, PersonRepository personRepository, MessengerClient messengerClient) {
+    public LinkGenerationResource(EmailService emailService, PersonRepository personRepository, MessengerService messengerService, IntegrationsRepository integrationsRepository) {
         this.emailService = emailService;
         this.personRepository = personRepository;
-        this.messengerClient = messengerClient;
+        this.messengerService = messengerService;
+        this.integrationsRepository = integrationsRepository;
     }
 
     @GET
@@ -116,9 +114,11 @@ public class LinkGenerationResource {
             PersonAttendanceListLink personAttendanceListLink = personAttendanceListLinkOptional.get();
             String email = getEmailContent(personAttendanceListLink);
             try {
-                Uni<Void> ret = emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email);
-                messengerClient.sendMessage(messengerPSID, "Koty nie spia");
-                logger.info(String.format("E-mail with link %s sent", email));
+                Uni<Void> ret = integrationsRepository.findIntegration(person.email, attendanceList.events, () ->
+                        emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email)
+                );
+
+                logger.info(String.format("Band member %s notified", email));
                 personAttendanceListLink.sent();
                 personAttendanceListLink.persist();
                 return ret;
@@ -135,72 +135,72 @@ public class LinkGenerationResource {
 
     private String getEmailContent(PersonAttendanceListLink personAttendanceListLink) {
         var lol = String.format("""
-                <!DOCTYPE html>
-                <html lang="pl">
-                <head>
-                  <meta charset="UTF-8" />
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-                  <title>Potwierdzenie obecności</title>
-                  <style>
-                    body {
-                      font-family: Arial, sans-serif;
-                      background-color: #f9f9f9;
-                      margin: 0; padding: 0;
-                    }
-                    .container {
-                      max-width: 600px;
-                      margin: 30px auto;
-                      background-color: #ffffff;
-                      padding: 20px;
-                      border: 1px solid #ddd;
-                      text-align: center;
-                      color: #333333;
-                    }
-                    a {
-                      color: #0078d7;
-                      text-decoration: none;
-                    }
-                    a:hover {
-                      text-decoration: underline;
-                    }
-                    h1 {
-                      margin-bottom: 10px;
-                    }
-                    h2 {
-                      color: #555555;
-                      margin-bottom: 20px;
-                    }
-                    .button {
-                      display: inline-block;
-                      background-color: #0078d7;
-                      color: white;
-                      padding: 12px 25px;
-                      border-radius: 5px;
-                      font-weight: bold;
-                      margin-bottom: 30px;
-                      text-decoration: none;
-                    }
-                    .footer {
-                      font-size: 0.9em;
-                      color: #777777;
-                      margin-top: 30px;
-                    }
-                  </style>
-                </head>
-                <body>
-                  <div class="container">
-                    <h1><a href="https://potwierdzobecnosc.pl" target="_blank" rel="noopener">PotwierdzObecnosc.pl</a></h1>
-                
-                    <h2>Prosimy o potwierdzenie obecności lub zgłoszenie nieobecności na wydarzeniu.</h2>
-                    <p>%s</p>
-                    <a href="%s" class="button" target="_blank" rel="noopener">Wypełnij ankietę</a>
-                    <p>Ta wiadomość przeznaczona jest dla %s</p>
-                    <p class="footer">Dziękuje za poświęcony czas i zaangażowanie!</p>
-                  </div>
-                </body>
-                </html>
-                
-                """,
+                        <!DOCTYPE html>
+                        <html lang="pl">
+                        <head>
+                          <meta charset="UTF-8" />
+                          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                          <title>Potwierdzenie obecności</title>
+                          <style>
+                            body {
+                              font-family: Arial, sans-serif;
+                              background-color: #f9f9f9;
+                              margin: 0; padding: 0;
+                            }
+                            .container {
+                              max-width: 600px;
+                              margin: 30px auto;
+                              background-color: #ffffff;
+                              padding: 20px;
+                              border: 1px solid #ddd;
+                              text-align: center;
+                              color: #333333;
+                            }
+                            a {
+                              color: #0078d7;
+                              text-decoration: none;
+                            }
+                            a:hover {
+                              text-decoration: underline;
+                            }
+                            h1 {
+                              margin-bottom: 10px;
+                            }
+                            h2 {
+                              color: #555555;
+                              margin-bottom: 20px;
+                            }
+                            .button {
+                              display: inline-block;
+                              background-color: #0078d7;
+                              color: white;
+                              padding: 12px 25px;
+                              border-radius: 5px;
+                              font-weight: bold;
+                              margin-bottom: 30px;
+                              text-decoration: none;
+                            }
+                            .footer {
+                              font-size: 0.9em;
+                              color: #777777;
+                              margin-top: 30px;
+                            }
+                          </style>
+                        </head>
+                        <body>
+                          <div class="container">
+                            <h1><a href="https://potwierdzobecnosc.pl" target="_blank" rel="noopener">PotwierdzObecnosc.pl</a></h1>
+                        
+                            <h2>Prosimy o potwierdzenie obecności lub zgłoszenie nieobecności na wydarzeniu.</h2>
+                            <p>%s</p>
+                            <a href="%s" class="button" target="_blank" rel="noopener">Wypełnij ankietę</a>
+                            <p>Ta wiadomość przeznaczona jest dla %s</p>
+                            <p class="footer">Dziękuje za poświęcony czas i zaangażowanie!</p>
+                          </div>
+                        </body>
+                        </html>
+                        
+                        """,
                 personAttendanceListLink.attendanceList.joinedEventsName(),
                 appHost + "/web/responses/" + personAttendanceListLink.linkToken.toString(),
                 personAttendanceListLink.personEmail);

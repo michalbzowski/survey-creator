@@ -1,0 +1,12 @@
+{#include layouts/main}
+{#title}Integracje{/title}
+{#body}
+
+<form action="/api/v1/integrations/messengerRegistrationKey" method="post">
+    <label for="messengerRegistrationKey">Klucz rejestracji Messenger:</label>
+    <input type="text" id="messengerRegistrationKey" name="messengerRegistrationKey" value="{integrations.messengerRegistrationKey ? integrations.messengerRegistrationKey : ''}" required><br><br>
+
+    <button type="submit">Zapisz</button>
+</form>
+{/body}
+{/include}

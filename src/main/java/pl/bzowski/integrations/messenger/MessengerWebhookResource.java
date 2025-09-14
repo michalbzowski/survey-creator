@@ -1,38 +1,134 @@
 package pl.bzowski.integrations.messenger;
 
+import jakarta.inject.Inject;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import pl.bzowski.integrations.Integrations;
 
+import java.io.StringReader;
+import java.util.UUID;
 import java.util.logging.Logger;
+
+import static pl.bzowski.integrations.api.IntegrationsResource.MESSENGER;
+import static pl.bzowski.integrations.messenger.MessengerRestClient.INSTRUKCJA;
+import static pl.bzowski.integrations.messenger.MyParser.parseEmailFromText;
+import static pl.bzowski.integrations.messenger.MyParser.parseUuidFromText;
 
 @Path("/api/messenger/webhook")
 public class MessengerWebhookResource {
 
-  Logger logger = Logger.getLogger(MessengerWebhookResource.class.getName());
+    private static final Logger logger = Logger.getLogger(MessengerWebhookResource.class.getName());
 
-  @ConfigProperty(name = "messenger.token")
-  String messengerToken;
+    @ConfigProperty(name = "messenger.token")
+    String messengerToken;
 
-  @GET
-  public Response verifyWebhook(@QueryParam("hub.mode") String mode,
-                                @QueryParam("hub.verify_token") String verifyToken,
-                                @QueryParam("hub.challenge") String challenge) {
-    if ("subscribe".equals(mode) && messengerToken.equals(verifyToken)) {
-      return Response.ok(challenge).build(); // potwierdzenie weryfikacji
+    @Inject
+    MessengerService messengerService;
+
+
+    @GET
+    public Response verifyWebhook(@QueryParam("hub.mode") String mode,
+                                  @QueryParam("hub.verify_token") String verifyToken,
+                                  @QueryParam("hub.challenge") String challenge) {
+        if ("subscribe".equals(mode) && messengerToken.equals(verifyToken)) {
+            return Response.ok(challenge).build(); // potwierdzenie weryfikacji
+        }
+        return Response.status(403).build();
     }
-    return Response.status(403).build();
-  }
 
-  @POST
-  @Consumes(MediaType.APPLICATION_JSON)
-  public Response receiveMessage(String payload) {
-    // Parsuj JSON wiadomości przychodzących od Messengera,
-    // obsłuż quick replies ("tak", "nie", "później") i inne eventy,
-    // np. zapisz odpowiedzi do bazy lub podjęcie akcji
-    logger.info("Received from messenger: " + payload);
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response receiveMessage(String payload) {
+        // Parsuj JSON i wyciągnij sender.id oraz text message
+        String psid = MessengerPayloadParser.extractPsidFromPayload(payload);
+        String text = MessengerPayloadParser.extractMessageText(payload);
 
-    return Response.ok().build();
-  }
+        if (text != null) {
+            manageActions(psid, text.trim());
+        }
+        return Response.ok().build();
+    }
+
+    private void manageActions(String psid, String trimmedText) {
+        if (trimmedText.startsWith("ZAPISZ MNIE:")) {
+            // Wyciągnij UUID z tekstu (np. regex)
+            UUID messengerRegistrationKey = parseUuidFromText(trimmedText);
+            String email = parseEmailFromText(trimmedText);
+
+            if (messengerRegistrationKey != null) {
+                // Zapisz powiązanie psid <-> uuid w bazie
+                if (saveUserMapping(psid, email, messengerRegistrationKey, true)) {
+                    // Odpowiedz potwierdzeniem
+                    messengerService.sendMessage(psid, "Zgoda zapisana. Będziesz otrzymywać powiadomienia.");
+                }
+            } else if (trimmedText.startsWith("WYPISZ MNIE: ")) {
+                if (saveUserMapping(psid, email, messengerRegistrationKey, false)){
+                    messengerService.sendMessage(psid, "Zgoda anulowana. Nie będziesz otrzymywać powiadomienia.");
+                }
+            } else {
+                logger.info("Nie ma słów kluczowych. Wysylam instrukcje!");
+                messengerService.sendMessage(psid, INSTRUKCJA);
+            }
+        }
+    }
+
+    private boolean saveUserMapping(String psid, String email, UUID messengerRegistrationKey, boolean agree) {
+        return Integrations.find("configuration." + MESSENGER + " = ?1", messengerRegistrationKey)
+                .firstResultOptional()
+                .map(integrations -> {
+                    Integrations casted = (Integrations) integrations;
+                    MessengerUserAgreement messengerUserAgreement = new MessengerUserAgreement();
+                    messengerUserAgreement.psid = psid;
+                    messengerUserAgreement.registeredUserId = casted.registeredUserId;
+                    messengerUserAgreement.email = email;
+                    messengerUserAgreement.messengerRegistrationKey = messengerRegistrationKey;
+                    messengerUserAgreement.agree = agree;
+                    messengerUserAgreement.persist();
+                    return true;
+                }).orElseGet(() ->{
+                    messengerService.sendMessage(psid, "Nie znalazłem takiego klucza. Wróć do szefa swojego zespołu");
+                    return false;
+                });
+    }
+
+    static class MessengerPayloadParser {
+
+        public static String extractPsidFromPayload(String payload) {
+            try (JsonReader jsonReader = Json.createReader(new StringReader(payload))) {
+                JsonObject jsonObject = jsonReader.readObject();
+                // Navigujemy po ścieżce -> entry[0] -> messaging[0] -> sender -> id
+                return jsonObject.getJsonArray("entry")
+                        .getJsonObject(0)
+                        .getJsonArray("messaging")
+                        .getJsonObject(0)
+                        .getJsonObject("sender")
+                        .getString("id");
+            }
+        }
+
+        public static String extractMessageText(String payload) {
+            try (JsonReader jsonReader = Json.createReader(new StringReader(payload))) {
+                JsonObject jsonObject = jsonReader.readObject();
+                // Navigujemy po ścieżce -> entry[0] -> messaging[0] -> message -> text
+                JsonObject messagingObj = jsonObject.getJsonArray("entry")
+                        .getJsonObject(0)
+                        .getJsonArray("messaging")
+                        .getJsonObject(0);
+
+                if (messagingObj.containsKey("message")) {
+                    JsonObject messageObj = messagingObj.getJsonObject("message");
+                    if (messageObj.containsKey("text")) {
+                        return messageObj.getString("text");
+                    }
+                }
+                return null; // Brak tekstu w wiadomości
+            }
+        }
+    }
+
 }
