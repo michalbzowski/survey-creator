@@ -20,9 +20,9 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
     public Response toResponse(Throwable exception) {
         LOG.log(Level.ERROR, "Błąd serwera", exception);
 
-        boolean devMode = LaunchMode.current() == LaunchMode.DEVELOPMENT;
+//        boolean devMode = LaunchMode.current() == LaunchMode.DEVELOPMENT;
 
-        String message = devMode ? exception.toString() : "Wystąpił błąd serwera";
+        String message = exception.toString();
 
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .entity("{ \"error\": \"" + message + "\" }")
