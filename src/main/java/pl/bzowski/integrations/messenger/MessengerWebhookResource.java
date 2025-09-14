@@ -12,10 +12,11 @@ import org.slf4j.LoggerFactory;
 import pl.bzowski.integrations.Integrations;
 
 import java.io.StringReader;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-import static pl.bzowski.integrations.api.IntegrationsResource.MESSENGER;
+import static io.quarkus.hibernate.orm.panache.Panache.getEntityManager;
 import static pl.bzowski.integrations.messenger.MessengerRestClient.INSTRUKCJA;
 import static pl.bzowski.integrations.messenger.MyParser.parseEmailFromText;
 import static pl.bzowski.integrations.messenger.MyParser.parseUuidFromText;
@@ -68,12 +69,12 @@ public class MessengerWebhookResource {
             if (messengerRegistrationKey != null) {
                 // Zapisz powiązanie psid <-> uuid w bazie
                 if (saveUserMapping(psid, email, messengerRegistrationKey, true)) {
-                    logger.info("Zapisano ZAPISZ MNIE: " + psid + email + messengerRegistrationKey );
+                    logger.info("Zapisano ZAPISZ MNIE: " + psid + email + messengerRegistrationKey);
                     messengerService.sendMessage(psid, "Zgoda zapisana. Będziesz otrzymywać powiadomienia.");
                 }
             } else if (trimmedText.startsWith("WYPISZ MNIE: ")) {
-                logger.info("Zapisano WYPISZ MNIE: " + psid + email + messengerRegistrationKey );
-                if (saveUserMapping(psid, email, messengerRegistrationKey, false)){
+                logger.info("Zapisano WYPISZ MNIE: " + psid + email + messengerRegistrationKey);
+                if (saveUserMapping(psid, email, messengerRegistrationKey, false)) {
                     messengerService.sendMessage(psid, "Zgoda anulowana. Nie będziesz otrzymywać powiadomienia.");
                 }
             } else {
@@ -87,22 +88,29 @@ public class MessengerWebhookResource {
     }
 
     private boolean saveUserMapping(String psid, String email, UUID messengerRegistrationKey, boolean agree) {
-        return Integrations.find("configuration." + MESSENGER + " = ?1", messengerRegistrationKey)
-                .firstResultOptional()
-                .map(integrations -> {
-                    Integrations casted = (Integrations) integrations;
+        List<Integrations> results = getEntityManager()
+                .createNativeQuery(
+                        "SELECT * FROM integrations WHERE configuration->>'MESSENGER' = :key", Integrations.class)
+                .setParameter("key", messengerRegistrationKey.toString())
+                .getResultList();
+
+        boolean found = results.stream()
+                .peek(integrations -> {
                     MessengerUserAgreement messengerUserAgreement = new MessengerUserAgreement();
                     messengerUserAgreement.psid = psid;
-                    messengerUserAgreement.registeredUserId = casted.registeredUserId;
+                    messengerUserAgreement.registeredUserId = integrations.registeredUserId;
                     messengerUserAgreement.email = email;
                     messengerUserAgreement.messengerRegistrationKey = messengerRegistrationKey;
                     messengerUserAgreement.agree = agree;
                     messengerUserAgreement.persist();
-                    return true;
-                }).orElseGet(() ->{
-                    messengerService.sendMessage(psid, "Nie znalazłem takiego klucza. Wróć do szefa swojego zespołu");
-                    return false;
-                });
+                })
+                .count() > 0;
+
+        if (!found) {
+            messengerService.sendMessage(psid, "Nie znalazłem takiego klucza. Wróć do szefa swojego zespołu");
+        }
+
+        return found;
     }
 
     static class MessengerPayloadParser {
