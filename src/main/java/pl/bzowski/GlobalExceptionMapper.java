@@ -21,8 +21,10 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
         LOG.log(Level.ERROR, "Błąd serwera", exception);
 
 //        boolean devMode = LaunchMode.current() == LaunchMode.DEVELOPMENT;
-
-        String message = exception.toString();
+        exception.printStackTrace();
+        System.out.println(exception.getCause());
+        System.out.println(exception.getMessage());
+        String message = exception.getCause().toString();
 
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .entity("{ \"error\": \"" + message + "\" }")
