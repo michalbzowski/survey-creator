@@ -1,5 +1,6 @@
 package pl.bzowski.links;
 
+import io.smallrye.mutiny.Uni;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -83,44 +84,50 @@ public class LinkGenerationResource {
     @POST
     @Path("/{attendanceListId}/send/{personId}")
     @Transactional
-    public void saveAttendanceListMessageToPerson(@PathParam("attendanceListId") UUID attendanceListId, @PathParam("personId") UUID personId) {
+    public Uni<Void> saveAttendanceListMessageToPerson(@PathParam("attendanceListId") UUID attendanceListId, @PathParam("personId") UUID personId) {
         logger.info(String.format("Start saving message for attendanceList %s for person %s", attendanceListId, personId));
         AttendanceList attendanceList = AttendanceList.findById(attendanceListId);
         if (attendanceList == null) {
             logger.info("attendanceList is null");
-            throw new NotFoundException("Zapytanie nie istnieje");
+            return Uni.createFrom().failure(new NotFoundException("Zapytanie nie istnieje"));
         }
 
         Person person = Person.findById(personId);
         if (person == null) {
             logger.info("Person is null");
-            throw new NotFoundException("Osoba nie istnieje");
+            return Uni.createFrom().failure(new NotFoundException("Osoba nie istnieje"));
         }
         Optional<PersonAttendanceListLink> personAttendanceListLinkOptional = PersonAttendanceListLink.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id).firstResultOptional();
         boolean exists = personAttendanceListLinkOptional.isPresent();
         if (!exists) {
             String format = String.format("Can not send link. Link doesn't exists for: %s - %s", person.email, attendanceListId);
             logger.info(format);
-            throw new RuntimeException(format);
+            return Uni.createFrom().failure(new RuntimeException(format));
         } else {
             PersonAttendanceListLink personAttendanceListLink = personAttendanceListLinkOptional.get();
             String email = getEmailContent(personAttendanceListLink);
-            try {
-                emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email);
-                logger.info(String.format("Band member %s notified", email));
-                personAttendanceListLink.sent();
-                personAttendanceListLink.persist();
-            } catch (RuntimeException ex) {
-                String format = String.format("E-mail with link %s NOT SENT", email);
-                personAttendanceListLink.sendingError();
-                personAttendanceListLink.persist();
-                logger.log(Level.WARNING, format);
-                logger.log(Level.INFO, ex.getMessage());
-                throw new RuntimeException();
-            }
-        }
 
-        logger.info(String.format("Finished saving message for attendanceList %s for person %s", attendanceListId, personId));
+            return emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email)
+                    .onItem().invoke(() -> {
+                        logger.info(String.format("Band member %s notified", email));
+                        personAttendanceListLink.sent();
+                        personAttendanceListLink.persist();
+                        logger.info(String.format("Finished saving message for attendanceList %s for person %s", attendanceListId, personId));
+                    })
+                    .onFailure().invoke(ex -> {
+                        String format = String.format("E-mail with link %s NOT SENT", email);
+                        personAttendanceListLink.sendingError();
+                        personAttendanceListLink.persist();
+                        logger.log(Level.WARNING, format);
+                        logger.log(Level.INFO, ex.getMessage());
+                        throw new RuntimeException();
+                    })
+                    .replaceWithVoid()
+                    .onFailure().transform(throwable -> {
+                        // Możesz tutaj zalogować lub opakować wyjątek, jeśli chcesz
+                        return throwable;
+                    });
+        }
     }
 
     private String getEmailContent(PersonAttendanceListLink personAttendanceListLink) {
