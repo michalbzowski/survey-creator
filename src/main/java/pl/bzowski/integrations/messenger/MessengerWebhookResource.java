@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import static io.quarkus.hibernate.orm.panache.Panache.getEntityManager;
+import static pl.bzowski.integrations.api.IntegrationsResource.MESSENGER;
 import static pl.bzowski.integrations.messenger.MessengerRestClient.INSTRUKCJA;
 import static pl.bzowski.integrations.messenger.MyParser.parseEmailFromText;
 import static pl.bzowski.integrations.messenger.MyParser.parseUuidFromText;
@@ -90,7 +91,7 @@ public class MessengerWebhookResource {
     private boolean saveUserMapping(String psid, String email, UUID messengerRegistrationKey, boolean agree) {
         List<Integrations> results = getEntityManager()
                 .createNativeQuery(
-                        "SELECT * FROM integrations WHERE configuration->>'MESSENGER' = :key", Integrations.class)
+                        "SELECT * FROM integrations WHERE configuration->>'" + MESSENGER + "' = :key", Integrations.class)
                 .setParameter("key", messengerRegistrationKey.toString())
                 .getResultList();
 
