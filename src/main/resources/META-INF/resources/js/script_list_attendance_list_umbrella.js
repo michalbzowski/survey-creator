@@ -41,9 +41,9 @@ u(document).on('click', 'a.send-email-button', async function(e) {
     const linkPersonId = u(this).data('link-person-id');
 
     try {
-        const response = await fetchWithLoader(`/api/v1/links/${attendanceListId}/email/${linkPersonId}`, {
+        const response = await fetchWithLoader(`/api/v1/links/${attendanceListId}/send/${linkPersonId}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: { 'Content-Type': 'application/json' },
         });
 
         if (response.ok) {
@@ -72,16 +72,16 @@ u(document).on('click', '#send-to-all', async function(event) {
         return;
     }
 
-    // Wysyłamy emaile kolejno do każdej osoby
+    // Wysyłamy wiadomosc kolejno do każdej osoby
     for (let i = 0; i < buttons.length; i++) {
         const btn = u(buttons.nodes[i]);
         const attendanceListId = btn.data('attendance-list-id');
         const linkPersonId = btn.data('link-person-id');
 
         try {
-            const response = await fetchWithLoader(`/api/v1/links/${attendanceListId}/email/${linkPersonId}`, {
+            const response = await fetchWithLoader(`/api/v1/links/${attendanceListId}/send/${linkPersonId}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: { 'Content-Type': 'application/json' },
             });
 
             if (!response.ok) {

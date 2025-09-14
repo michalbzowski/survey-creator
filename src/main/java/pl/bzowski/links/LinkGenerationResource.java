@@ -27,17 +27,15 @@ public class LinkGenerationResource {
 
     private final EmailService emailService;
     private final PersonRepository personRepository;
-    private final IntegrationsRepository integrationsRepository;
 
     Logger logger = Logger.getLogger(LinkGenerationResource.class.getName());
 
     @ConfigProperty(name = "app.host")
     String appHost;
 
-    public LinkGenerationResource(EmailService emailService, PersonRepository personRepository, IntegrationsRepository integrationsRepository) {
+    public LinkGenerationResource(EmailService emailService, PersonRepository personRepository) {
         this.emailService = emailService;
         this.personRepository = personRepository;
-        this.integrationsRepository = integrationsRepository;
     }
 
     @GET
@@ -83,11 +81,10 @@ public class LinkGenerationResource {
     }
 
     @POST
-    @Path("/{attendanceListId}/email/{personId}")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Path("/{attendanceListId}/send/{personId}")
     @Transactional
-    public void sendLinkByEmail(@PathParam("attendanceListId") UUID attendanceListId, @PathParam("personId") UUID personId) {
-        logger.info(String.format("Start sending link by email for attendanceList %s for person %s", attendanceListId, personId));
+    public void saveAttendanceListMessageToPerson(@PathParam("attendanceListId") UUID attendanceListId, @PathParam("personId") UUID personId) {
+        logger.info(String.format("Start saving message for attendanceList %s for person %s", attendanceListId, personId));
         AttendanceList attendanceList = AttendanceList.findById(attendanceListId);
         if (attendanceList == null) {
             logger.info("attendanceList is null");
@@ -100,7 +97,6 @@ public class LinkGenerationResource {
             throw new NotFoundException("Osoba nie istnieje");
         }
         Optional<PersonAttendanceListLink> personAttendanceListLinkOptional = PersonAttendanceListLink.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id).firstResultOptional();
-
         boolean exists = personAttendanceListLinkOptional.isPresent();
         if (!exists) {
             String format = String.format("Can not send link. Link doesn't exists for: %s - %s", person.email, attendanceListId);
@@ -110,14 +106,7 @@ public class LinkGenerationResource {
             PersonAttendanceListLink personAttendanceListLink = personAttendanceListLinkOptional.get();
             String email = getEmailContent(personAttendanceListLink);
             try {
-                integrationsRepository.findIntegration(person.email, attendanceList.events, () ->
-                        {
-                            logger.info("Fallback: " + person.email);
-                            emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email);
-
-                        }
-                );
-
+                emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email);
                 logger.info(String.format("Band member %s notified", email));
                 personAttendanceListLink.sent();
                 personAttendanceListLink.persist();
@@ -130,6 +119,8 @@ public class LinkGenerationResource {
                 throw new RuntimeException();
             }
         }
+
+        logger.info(String.format("Finished saving message for attendanceList %s for person %s", attendanceListId, personId));
     }
 
     private String getEmailContent(PersonAttendanceListLink personAttendanceListLink) {
