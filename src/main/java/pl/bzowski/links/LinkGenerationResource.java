@@ -1,6 +1,5 @@
 package pl.bzowski.links;
 
-import io.smallrye.mutiny.Uni;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -13,7 +12,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.email.EmailService;
 import pl.bzowski.integrations.infrastructure.IntegrationsRepository;
-import pl.bzowski.integrations.messenger.MessengerService;
 import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.persons.Person;
 
@@ -29,7 +27,6 @@ public class LinkGenerationResource {
 
     private final EmailService emailService;
     private final PersonRepository personRepository;
-    private final MessengerService messengerService;
     private final IntegrationsRepository integrationsRepository;
 
     Logger logger = Logger.getLogger(LinkGenerationResource.class.getName());
@@ -37,10 +34,9 @@ public class LinkGenerationResource {
     @ConfigProperty(name = "app.host")
     String appHost;
 
-    public LinkGenerationResource(EmailService emailService, PersonRepository personRepository, MessengerService messengerService, IntegrationsRepository integrationsRepository) {
+    public LinkGenerationResource(EmailService emailService, PersonRepository personRepository, IntegrationsRepository integrationsRepository) {
         this.emailService = emailService;
         this.personRepository = personRepository;
-        this.messengerService = messengerService;
         this.integrationsRepository = integrationsRepository;
     }
 
@@ -90,7 +86,7 @@ public class LinkGenerationResource {
     @Path("/{attendanceListId}/email/{personId}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
-    public Uni<Void> sendLinkByEmail(@PathParam("attendanceListId") UUID attendanceListId, @PathParam("personId") UUID personId) {
+    public void sendLinkByEmail(@PathParam("attendanceListId") UUID attendanceListId, @PathParam("personId") UUID personId) {
         logger.info(String.format("Start sending link by email for attendanceList %s for person %s", attendanceListId, personId));
         AttendanceList attendanceList = AttendanceList.findById(attendanceListId);
         if (attendanceList == null) {
@@ -125,7 +121,6 @@ public class LinkGenerationResource {
                 logger.info(String.format("Band member %s notified", email));
                 personAttendanceListLink.sent();
                 personAttendanceListLink.persist();
-                return Uni.createFrom().voidItem();
             } catch (RuntimeException ex) {
                 String format = String.format("E-mail with link %s NOT SENT", email);
                 personAttendanceListLink.sendingError();

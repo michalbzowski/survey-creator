@@ -1,7 +1,5 @@
 package pl.bzowski.email;
 
-import io.quarkus.mailer.Mail;
-import io.quarkus.mailer.Mailer;
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.mail.MailMessage;
 import jakarta.enterprise.context.ApplicationScoped;
