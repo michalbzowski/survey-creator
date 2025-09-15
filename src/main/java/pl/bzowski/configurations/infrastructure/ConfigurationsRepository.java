@@ -1,11 +1,11 @@
-package pl.bzowski.integrations.infrastructure;
+package pl.bzowski.configurations.infrastructure;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.inject.Singleton;
 import jakarta.transaction.Transactional;
 import pl.bzowski.base.RepositoryBase;
+import pl.bzowski.configurations.Configurations;
 import pl.bzowski.events.Event;
-import pl.bzowski.integrations.Integrations;
 import pl.bzowski.communication.messenger.MessengerService;
 import pl.bzowski.communication.messenger.MessengerUserAgreement;
 
@@ -15,37 +15,37 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
-import static pl.bzowski.integrations.Integrations.MESSENGER;
+import static pl.bzowski.configurations.Configurations.MESSENGER;
 
 @Singleton
-public class IntegrationsRepository extends RepositoryBase {
+public class ConfigurationsRepository extends RepositoryBase {
 
-    private static final Logger logger = Logger.getLogger(IntegrationsRepository.class.getName());
+    private static final Logger logger = Logger.getLogger(ConfigurationsRepository.class.getName());
 
     MessengerService messengerService;
 
-    public Map<String, Object> getConfiguration() {
-        PanacheQuery<Integrations> panacheEntityBasePanacheQuery = Integrations.find("registeredUserId = ?1", currentRegisteredUserId());
+    public Map<String, Object> getConfigurations() {
+        PanacheQuery<Configurations> panacheEntityBasePanacheQuery = Configurations.find("registeredUserId = ?1", currentRegisteredUserId());
         return panacheEntityBasePanacheQuery
                 .firstResultOptional()
-                .map((Integrations value) -> value.configuration)
+                .map((Configurations value) -> value.configuration)
                 .orElse(Map.of());
     }
 
     @Transactional
     public void save(String jsonKey, Object jsonValue) {
-        Integrations.find("registeredUserId = ?1", currentRegisteredUserId())
+        Configurations.find("registeredUserId = ?1", currentRegisteredUserId())
                 .firstResultOptional().
                 ifPresentOrElse(
                         value -> {
-                            ((Integrations) value).configuration.put(jsonKey, jsonValue);
+                            ((Configurations) value).configuration.put(jsonKey, jsonValue);
                             value.persist();
                         },
                         () -> {
-                            Integrations integrations = new Integrations();
-                            integrations.registeredUserId = currentRegisteredUserId();
-                            integrations.configuration = Map.of(jsonKey, jsonValue);
-                            integrations.persist();
+                            Configurations configurations = new Configurations();
+                            configurations.registeredUserId = currentRegisteredUserId();
+                            configurations.configuration = Map.of(jsonKey, jsonValue);
+                            configurations.persist();
                         });
     }
 
@@ -53,10 +53,10 @@ public class IntegrationsRepository extends RepositoryBase {
         logger.info(String.format("findIntegreation: %s", email));
         UUID uuid = currentRegisteredUserId();
         logger.info(String.format("registeredUserId: %s", uuid));
-        Integrations.find("registeredUserId = ?1", uuid)
+        Configurations.find("registeredUserId = ?1", uuid)
                 .firstResultOptional()
                 .ifPresentOrElse(integrations -> {
-                    Integrations cast = (Integrations) integrations;
+                    Configurations cast = (Configurations) integrations;
                     logger.info("Found: " + cast.id + cast.registeredUserId);
                     if (isMessenger(cast)) {
                         MessengerUserAgreement.find("email = ?1 and registeredUserId = ?2 and agree = true ", email, uuid)
@@ -87,8 +87,8 @@ public class IntegrationsRepository extends RepositoryBase {
         };
     }
 
-    private static boolean isMessenger(Integrations integrations) {
-        boolean b = integrations.configuration.containsKey(MESSENGER);
+    private static boolean isMessenger(Configurations configurations) {
+        boolean b = configurations.configuration.containsKey(MESSENGER);
         logger.info("isMessenger: " + b);
         return b;
     }

@@ -1,0 +1,16 @@
+{#include layouts/main}
+{#title}Ustawienia{/title}
+{#body}
+
+<form action="/api/v1/configurations/email_from" method="post">
+    <label for="email_from">Etykietka e-mail</label>
+    <input type="text" id="email_from" name="email_from" value="{configurations.email_from ? configurations.email_from : ''}"><br><br>
+    <button type="submit">Zapisz</button>
+</form>
+<form action="/api/v1/configurations/messengerRegistrationKey" method="post">
+    <label for="messengerRegistrationKey">Klucz rejestracji Messenger:</label>
+    <input type="text" id="messengerRegistrationKey" name="messengerRegistrationKey" value="{configurations.messengerRegistrationKey ? configurations.messengerRegistrationKey : ''}"><br><br>
+    <button type="submit">Zapisz</button>
+</form>
+{/body}
+{/include}

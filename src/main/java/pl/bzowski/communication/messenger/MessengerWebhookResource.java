@@ -9,7 +9,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.LoggerFactory;
-import pl.bzowski.integrations.Integrations;
+import pl.bzowski.configurations.Configurations;
 
 import java.io.StringReader;
 import java.util.List;
@@ -17,7 +17,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import static io.quarkus.hibernate.orm.panache.Panache.getEntityManager;
-import static pl.bzowski.integrations.Integrations.MESSENGER;
+import static pl.bzowski.configurations.Configurations.MESSENGER;
 import static pl.bzowski.communication.messenger.MessengerRestClient.INSTRUKCJA;
 import static pl.bzowski.communication.messenger.MyParser.parseEmailFromText;
 import static pl.bzowski.communication.messenger.MyParser.parseUuidFromText;
@@ -89,17 +89,17 @@ public class MessengerWebhookResource {
     }
 
     private boolean saveUserMapping(String psid, String email, UUID messengerRegistrationKey, boolean agree) {
-        List<Integrations> results = getEntityManager()
+        List<Configurations> results = getEntityManager()
                 .createNativeQuery(
-                        "SELECT * FROM integrations WHERE configuration->>'" + MESSENGER + "' = :key", Integrations.class)
+                        "SELECT * FROM integrations WHERE configuration->>'" + MESSENGER + "' = :key", Configurations.class)
                 .setParameter("key", messengerRegistrationKey.toString())
                 .getResultList();
 
         boolean found = results.stream()
-                .peek(integrations -> {
+                .peek(configurations -> {
                     MessengerUserAgreement messengerUserAgreement = new MessengerUserAgreement();
                     messengerUserAgreement.psid = psid;
-                    messengerUserAgreement.registeredUserId = integrations.registeredUserId;
+                    messengerUserAgreement.registeredUserId = configurations.registeredUserId;
                     messengerUserAgreement.email = email;
                     messengerUserAgreement.messengerRegistrationKey = messengerRegistrationKey;
                     messengerUserAgreement.agree = agree;

@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 
 import java.util.UUID;
 
-import static pl.bzowski.integrations.Integrations.MESSENGER;
+import static pl.bzowski.configurations.Configurations.MESSENGER;
 
 @Entity
 @Table(name = "messenger_user_agreement")

@@ -1,4 +1,4 @@
-package pl.bzowski.integrations;
+package pl.bzowski.configurations;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
@@ -10,8 +10,9 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "integrations")
-public class Integrations extends PanacheEntityBase {
+public class Configurations extends PanacheEntityBase {
 
+    public static final String EMAIL_FROM = "email_from";
     public static final String MESSENGER = "messengerRegistrationKey";
 
     @Id
