@@ -1,4 +1,4 @@
-package pl.bzowski.integrations.messenger;
+package pl.bzowski.communication.messenger;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

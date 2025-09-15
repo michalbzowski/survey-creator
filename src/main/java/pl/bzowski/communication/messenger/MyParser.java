@@ -1,4 +1,4 @@
-package pl.bzowski.integrations.messenger;
+package pl.bzowski.communication.messenger;
 
 import java.util.UUID;
 import java.util.regex.Matcher;

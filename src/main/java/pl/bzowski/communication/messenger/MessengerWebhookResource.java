@@ -1,4 +1,4 @@
-package pl.bzowski.integrations.messenger;
+package pl.bzowski.communication.messenger;
 
 import jakarta.inject.Inject;
 import jakarta.json.Json;
@@ -17,10 +17,10 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import static io.quarkus.hibernate.orm.panache.Panache.getEntityManager;
-import static pl.bzowski.integrations.api.IntegrationsResource.MESSENGER;
-import static pl.bzowski.integrations.messenger.MessengerRestClient.INSTRUKCJA;
-import static pl.bzowski.integrations.messenger.MyParser.parseEmailFromText;
-import static pl.bzowski.integrations.messenger.MyParser.parseUuidFromText;
+import static pl.bzowski.integrations.Integrations.MESSENGER;
+import static pl.bzowski.communication.messenger.MessengerRestClient.INSTRUKCJA;
+import static pl.bzowski.communication.messenger.MyParser.parseEmailFromText;
+import static pl.bzowski.communication.messenger.MyParser.parseUuidFromText;
 
 @Path("/api/messenger/webhook")
 public class MessengerWebhookResource {

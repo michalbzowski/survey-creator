@@ -1,11 +1,11 @@
-package pl.bzowski.integrations.messenger;
+package pl.bzowski.communication.messenger;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 
 import java.util.UUID;
 
-import static pl.bzowski.integrations.api.IntegrationsResource.MESSENGER;
+import static pl.bzowski.integrations.Integrations.MESSENGER;
 
 @Entity
 @Table(name = "messenger_user_agreement")

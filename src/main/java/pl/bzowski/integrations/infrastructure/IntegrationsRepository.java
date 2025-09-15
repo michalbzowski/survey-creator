@@ -1,14 +1,13 @@
 package pl.bzowski.integrations.infrastructure;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
-import io.smallrye.mutiny.Uni;
 import jakarta.inject.Singleton;
 import jakarta.transaction.Transactional;
 import pl.bzowski.base.RepositoryBase;
 import pl.bzowski.events.Event;
 import pl.bzowski.integrations.Integrations;
-import pl.bzowski.integrations.messenger.MessengerService;
-import pl.bzowski.integrations.messenger.MessengerUserAgreement;
+import pl.bzowski.communication.messenger.MessengerService;
+import pl.bzowski.communication.messenger.MessengerUserAgreement;
 
 import java.util.List;
 import java.util.Map;
@@ -16,7 +15,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
-import static pl.bzowski.integrations.api.IntegrationsResource.MESSENGER;
+import static pl.bzowski.integrations.Integrations.MESSENGER;
 
 @Singleton
 public class IntegrationsRepository extends RepositoryBase {

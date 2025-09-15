@@ -12,6 +12,8 @@ import java.util.UUID;
 @Table(name = "integrations")
 public class Integrations extends PanacheEntityBase {
 
+    public static final String MESSENGER = "messengerRegistrationKey";
+
     @Id
     @GeneratedValue
     public UUID id;

@@ -1,4 +1,4 @@
-package pl.bzowski;
+package pl.bzowski.exceptions;
 
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;

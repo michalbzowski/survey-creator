@@ -12,7 +12,6 @@ import java.util.logging.Level;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.email.EmailService;
-import pl.bzowski.integrations.infrastructure.IntegrationsRepository;
 import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.persons.Person;
 
@@ -109,7 +108,7 @@ public class LinkGenerationResource {
 
             return emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email)
                     .onItem().invoke(() -> {
-                        logger.info(String.format("Band member %s notified", email));
+                        logger.info(String.format("Band member %s notified", person.email));
                         personAttendanceListLink.sent();
                         personAttendanceListLink.persist();
                         logger.info(String.format("Finished saving message for attendanceList %s for person %s", attendanceListId, personId));

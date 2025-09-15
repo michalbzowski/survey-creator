@@ -5,10 +5,10 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import pl.bzowski.integrations.infrastructure.IntegrationsRepository;
 
+import static pl.bzowski.integrations.Integrations.MESSENGER;
+
 @Path("/api/v1/integrations/")
 public class IntegrationsResource {
-
-    public static final String MESSENGER = "messengerRegistrationKey";
 
     private final IntegrationsRepository integrationsRepository;
 
