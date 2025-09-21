@@ -8,7 +8,7 @@ import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.events.Event;
-import pl.bzowski.links.PersonAttendanceListLink;
+import pl.bzowski.message_template.MessageTemplate;
 import pl.bzowski.persons.Person;
 import pl.bzowski.events.PersonEventAnswer;
 
@@ -36,7 +36,7 @@ public class ResponsePageResource {
     @Path("/{token}")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance showForm(@PathParam("token") UUID token) {
-        PersonAttendanceListLink link = PersonAttendanceListLink.find("linkToken", token).firstResult();
+        MessageTemplate link = MessageTemplate.find("linkToken", token).firstResult();
         if (link == null) {
             throw new NotFoundException("Nie znaleziono linku");
         }
@@ -50,7 +50,7 @@ public class ResponsePageResource {
     @Transactional
     public TemplateInstance submitAnswer(@PathParam("token") UUID token, @RequestBody Map<String, String> answers) {
         logger.info(String.format("Submit answer for %s - %d", token.toString(), answers.size()));
-        PersonAttendanceListLink link = PersonAttendanceListLink.find("linkToken", token).firstResult();
+        MessageTemplate link = MessageTemplate.find("linkToken", token).firstResult();
         if (link == null) {
             throw new NotFoundException("Nie znaleziono linku " + link);
         }

@@ -1,15 +1,21 @@
-package pl.bzowski.links;
+package pl.bzowski.message_template;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import pl.bzowski.attendance_list.AttendanceList;
+import pl.bzowski.communication.CommunicationDto;
+import pl.bzowski.communication.SendingStatus;
+import pl.bzowski.events.web.EventDto;
 import pl.bzowski.persons.Person;
 
+import javax.swing.plaf.ComponentUI;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
 @Table(name = "person_attendance_list_links")
-public class PersonAttendanceListLink extends PanacheEntityBase {
+public class MessageTemplate extends PanacheEntityBase {
 
     @Id
     @GeneratedValue
@@ -46,17 +52,24 @@ public class PersonAttendanceListLink extends PanacheEntityBase {
         this.status = SendingStatus.ERROR;
     }
 
-    public enum SendingStatus {
-        TO_SEND, SENT, ERROR
-    }
+//    public CommunicationDto toCommunicationDto() {
+//        return new CommunicationDto(
+//                this.personId,
+//                this.personFirstName,
+//                this.personLastName,
+//                this.personEmail,
+//                this.status,
+//                Map.of("attendanceListId", attendanceListId)
+//        );
+//    }
 
     @Enumerated(EnumType.STRING)
     public SendingStatus status;
 
-    public PersonAttendanceListLink() {
+    public MessageTemplate() {
     }
 
-    public PersonAttendanceListLink(Person person, AttendanceList attendanceList) {
+    public MessageTemplate(Person person, AttendanceList attendanceList) {
         this.personId = person.id;
         this.personFirstName = person.firstName;
         this.personLastName = person.lastName;

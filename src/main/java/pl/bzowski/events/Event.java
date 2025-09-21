@@ -1,6 +1,6 @@
 package pl.bzowski.events;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.events.web.EventDto;

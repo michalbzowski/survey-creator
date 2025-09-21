@@ -20,7 +20,7 @@
     <tbody>
     {#for tag in tags}
     <tr>
-        <td>{tag.name}</td>
+        <td id="{tag.name}">{tag.name}</td>
         <td>
             <div role="group">
                 <a href="#" class="delete-tag" data-id="{tag.id}" aria-label="Usuń ten tag" title="Usuń ten tag">

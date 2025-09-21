@@ -12,11 +12,12 @@ import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.attendance_list.api.AttendanceListDTO;
 import pl.bzowski.attendance_list.infrastructure.AttendanceListRepository;
+import pl.bzowski.communication.SendingStatus;
 import pl.bzowski.events.Event;
 import pl.bzowski.events.EventRepository;
 import pl.bzowski.group.GroupsRepository;
-import pl.bzowski.links.LinkGenerationResource;
-import pl.bzowski.links.PersonAttendanceListLink;
+import pl.bzowski.message_template.LinkGenerationResource;
+import pl.bzowski.message_template.MessageTemplate;
 import pl.bzowski.events.PersonEventAnswer;
 import pl.bzowski.persons.Person;
 import pl.bzowski.persons.PersonRepository;
@@ -91,7 +92,7 @@ public class EventsPageResource {
                     if (groupIds != null && !groupIds.isEmpty()) {
                         // Pobierz osoby z wybranych grup i dodaj do listy obecności
                         List<Person> personsFromGroups = getPersonsFromGroups(groupIds);
-                        linkGenerationResource.generateLinksFor(attendanceList.id, personsFromGroups);
+                        linkGenerationResource.generateMessageTemplateFor(attendanceList.id, personsFromGroups);
                     }
                 }
                 case "person" -> {
@@ -99,13 +100,13 @@ public class EventsPageResource {
                         // Dodaj wybrane osoby do listy obecności
                         List<Person> selectedPersons = getSelectedPersonsFromForm(personIds);
                         logger.info("Kot: " + selectedPersons.size());
-                        linkGenerationResource.generateLinksFor(attendanceList.id, selectedPersons);
+                        linkGenerationResource.generateMessageTemplateFor(attendanceList.id, selectedPersons);
                     }
                 }
                 case "all" -> {
                     // Pobierz wszystkich dostępnych użytkownikowi (tu uproszczone - wszyscy)
                     List<Person> allPersons = personRepository.listAll();
-                    linkGenerationResource.generateLinksFor(attendanceList.id, allPersons);
+                    linkGenerationResource.generateMessageTemplateFor(attendanceList.id, allPersons);
                 }
                 default -> {
                     // brak akcji
@@ -118,14 +119,6 @@ public class EventsPageResource {
 
     private static List<Person> getSelectedPersonsFromForm(List<UUID> personIds) {
         return Person.find("id in ?1", personIds).list();
-    }
-
-    private static void createLinsk(List<Person> personsFromGroups, AttendanceList attendanceList) {
-
-        for (Person p : personsFromGroups) {
-            PersonAttendanceListLink ai = new PersonAttendanceListLink(p, attendanceList);
-            ai.persist();
-        }
     }
 
     private static List<Person> getPersonsFromGroups(List<UUID> groupIds) {
@@ -153,8 +146,8 @@ public class EventsPageResource {
 
         // Ładujemy statystyki
         boolean noAttendanceListYet = event.attendanceList == null;
-        long linkCount = event.attendanceList == null ? 0 : PersonAttendanceListLink.count("attendanceListId = ?1", event.attendanceList.id);
-        long sentLinkCount = event.attendanceList == null ? 0 : PersonAttendanceListLink.count("attendanceListId = ?1 and status = ?2", event.attendanceList.id, PersonAttendanceListLink.SendingStatus.SENT);
+        long linkCount = event.attendanceList == null ? 0 : MessageTemplate.count("attendanceListId = ?1", event.attendanceList.id);
+        long sentLinkCount = event.attendanceList == null ? 0 : MessageTemplate.count("attendanceListId = ?1 and status = ?2", event.attendanceList.id, SendingStatus.SENT);
         PersonEventAnswer.Answer tak = PersonEventAnswer.Answer.TAK;
         long answerYesCount = PersonEventAnswer.count("event = ?1 and answer = ?2", event, tak);
         long answerNoCount = PersonEventAnswer.count("event = ?1 and answer = ?2", event, PersonEventAnswer.Answer.NIE);

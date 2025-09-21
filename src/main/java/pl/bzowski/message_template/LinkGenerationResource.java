@@ -1,6 +1,7 @@
-package pl.bzowski.links;
+package pl.bzowski.message_template;
 
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -27,20 +28,22 @@ public class LinkGenerationResource {
 
     private final EmailService emailService;
     private final PersonRepository personRepository;
+    private final EventBus eventBus;
 
     Logger logger = Logger.getLogger(LinkGenerationResource.class.getName());
 
     @ConfigProperty(name = "app.host")
     String appHost;
 
-    public LinkGenerationResource(EmailService emailService, PersonRepository personRepository) {
+    public LinkGenerationResource(EmailService emailService, PersonRepository personRepository, EventBus eventBus) {
         this.emailService = emailService;
         this.personRepository = personRepository;
+        this.eventBus = eventBus;
     }
 
     @GET
-    public List<PersonAttendanceListLink> listAllLinks() {
-        return PersonAttendanceListLink.listAll();
+    public List<MessageTemplate> listAllLinks() {
+        return MessageTemplate.listAll();
     }
 
     @GET
@@ -48,15 +51,15 @@ public class LinkGenerationResource {
     @Transactional
     public Response generateLinks(@PathParam("attendanceListId") UUID attendanceListId) {
         List<Person> persons = personRepository.listAll();
-        if (generateLinksFor(attendanceListId, persons))
+        if (generateMessageTemplateFor(attendanceListId, persons))
             return Response.status(Response.Status.NOT_FOUND).entity("Zapytanie nie istnieje").build();
 
         // Przekierowanie do widoku szczegółów zapytania
         return Response.seeOther(UriBuilder.fromPath("/web/attendance_list/{id}/details").build(attendanceListId)).build();
     }
 
-    public boolean generateLinksFor(UUID attendanceListId, List<Person> persons) {
-        logger.info("Generate links for " + attendanceListId.toString());
+    public boolean generateMessageTemplateFor(UUID attendanceListId, List<Person> persons) {
+        logger.info("Generate message template for " + attendanceListId.toString());
         AttendanceList attendanceList = AttendanceList.findById(attendanceListId);
         if (attendanceList == null) {
             logger.info("AttendanceList is null");
@@ -66,15 +69,16 @@ public class LinkGenerationResource {
         logger.info("Persons found: " + (long) persons.size());
         for (Person person : persons) {
             // Sprawdź, czy link już istnieje
-            Optional<PersonAttendanceListLink> personAttendanceListLink = PersonAttendanceListLink.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id).firstResultOptional();
+            Optional<MessageTemplate> personMessageTemplate = MessageTemplate.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id).firstResultOptional();
 
-            boolean exists = personAttendanceListLink.isPresent();
+            boolean exists = personMessageTemplate.isPresent();
             if (!exists) {
-                logger.info("Link doesn't exists for: " + person.email + " - " + attendanceListId);
-                PersonAttendanceListLink link = new PersonAttendanceListLink(person, attendanceList);
+                logger.info("Creating Message Template  for: " + person.email + " - " + attendanceListId);
+                MessageTemplate link = new MessageTemplate(person, attendanceList);
                 link.persist();
+//                eventBus.publish(PERSIST_COMMUNICATION, link.toCommunicationDto());
             } else {
-                logger.info("Person " + person.email + " has already link!");
+                logger.info("Person " + person.email + " has already message template for attendance list " + attendanceListId);
             }
         }
         return false;
@@ -96,27 +100,27 @@ public class LinkGenerationResource {
             logger.info("Person is null");
             return Uni.createFrom().failure(new NotFoundException("Osoba nie istnieje"));
         }
-        Optional<PersonAttendanceListLink> personAttendanceListLinkOptional = PersonAttendanceListLink.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id).firstResultOptional();
+        Optional<MessageTemplate> personAttendanceListLinkOptional = MessageTemplate.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id).firstResultOptional();
         boolean exists = personAttendanceListLinkOptional.isPresent();
         if (!exists) {
             String format = String.format("Can not send link. Link doesn't exists for: %s - %s", person.email, attendanceListId);
             logger.info(format);
             return Uni.createFrom().failure(new RuntimeException(format));
         } else {
-            PersonAttendanceListLink personAttendanceListLink = personAttendanceListLinkOptional.get();
-            String email = getEmailContent(personAttendanceListLink);
+            MessageTemplate messageTemplate = personAttendanceListLinkOptional.get();
+            String email = getEmailContent(messageTemplate);
 
             return emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email)
                     .onItem().invoke(() -> {
                         logger.info(String.format("Band member %s notified", person.email));
-                        personAttendanceListLink.sent();
-                        personAttendanceListLink.persist();
+                        messageTemplate.sent();
+                        messageTemplate.persist();
                         logger.info(String.format("Finished saving message for attendanceList %s for person %s", attendanceListId, personId));
                     })
                     .onFailure().invoke(ex -> {
                         String format = String.format("E-mail with link %s NOT SENT", email);
-                        personAttendanceListLink.sendingError();
-                        personAttendanceListLink.persist();
+                        messageTemplate.sendingError();
+                        messageTemplate.persist();
                         logger.log(Level.WARNING, format);
                         logger.log(Level.INFO, ex.getMessage());
                         throw new RuntimeException();
@@ -129,7 +133,7 @@ public class LinkGenerationResource {
         }
     }
 
-    private String getEmailContent(PersonAttendanceListLink personAttendanceListLink) {
+    private String getEmailContent(MessageTemplate messageTemplate) {
         var lol = String.format("""
                         <!DOCTYPE html>
                         <html lang="pl">
@@ -197,9 +201,9 @@ public class LinkGenerationResource {
                         </html>
                         
                         """,
-                personAttendanceListLink.attendanceList.joinedEventsName(),
-                appHost + "/web/responses/" + personAttendanceListLink.linkToken.toString(),
-                personAttendanceListLink.personEmail);
+                messageTemplate.attendanceList.joinedEventsName(),
+                appHost + "/web/responses/" + messageTemplate.linkToken.toString(),
+                messageTemplate.personEmail);
         return lol;
 
     }

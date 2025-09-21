@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Potwierdzenie dodania adresu</title>
+  <style>
+    body {
+      background-color: #f9f9fb;
+      color: #333;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    p {
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    strong {
+      color: #2a2a72;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 24px;
+      color: #2a2a72;
+      font-weight: 700;
+    }
+    a.confirm-button {
+      display: inline-block;
+      background-color: #2a2a72;
+      color: white !important;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-top: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    a.confirm-button:hover {
+      background-color: #454599;
+    }
+    footer {
+      margin-top: 3rem;
+      font-size: 14px;
+      color: #777;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="header">Potwierdzenie dodania adresu</div>
+
+<p>Witaj <strong>{firstName} {lastName}</strong>,</p>
+
+<p>Twój adres e-mail został dodany do aplikacji <strong>Potwierdź Obecność</strong> przez:</p>
+
+<p><strong>{userEmail}</strong></p>
+
+<p>Celem dodania tego adresu jest wysyłanie ankiet z pytaniem o obecność na wydarzeniach organizowanych przez tą osobę.</p>
+
+<p>Aby zgodzić się na otrzymywanie tych wiadomości, kliknij przycisk poniżej:</p>
+<p><a target="_blank" class="confirm-button" href="{confirmationLink}">Potwierdź zgodę</a></p>
+
+<footer>
+  Dziękujemy za zaufanie i zapraszamy do korzystania z naszej aplikacji!
+</footer>
+</body>
+</html>

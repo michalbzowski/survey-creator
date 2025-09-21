@@ -33,4 +33,5 @@ public class EmailServiceImpl implements EmailService {
         }
         return reactiveMailer.send(mail);
     }
+
 }

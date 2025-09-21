@@ -1,6 +1,6 @@
 package pl.bzowski.persons;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import pl.bzowski.group.Group;
 import pl.bzowski.tags.Tag;

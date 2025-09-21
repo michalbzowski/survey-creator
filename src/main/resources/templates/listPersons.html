@@ -23,7 +23,7 @@
     <tbody>
     {#for person in persons}
     <tr>
-        <td>{person.firstName}</td>
+        <td data-fist-name="{person.firstName}">{person.firstName}</td>
         <td>{person.lastName}</td>
         <td>{person.email}</td>
         <td>{person.defaultTag.name}</td>

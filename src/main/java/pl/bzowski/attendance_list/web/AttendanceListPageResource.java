@@ -13,7 +13,7 @@ import pl.bzowski.events.Event;
 import pl.bzowski.attendance_list.api.AttendanceListDTO;
 import pl.bzowski.attendance_list.infrastructure.AttendanceListRepository;
 import pl.bzowski.events.EventRepository;
-import pl.bzowski.links.PersonAttendanceListLink;
+import pl.bzowski.message_template.MessageTemplate;
 
 import java.util.List;
 import java.util.UUID;
@@ -46,7 +46,7 @@ public class AttendanceListPageResource {
             throw new NotFoundException("Nie znaleziono zapytania");
         }
 
-        List<PersonAttendanceListLink> links = PersonAttendanceListLink.find("attendanceListId", Sort.by("personLastName"), attendanceList.id).list();
+        List<MessageTemplate> links = MessageTemplate.find("attendanceListId", Sort.by("personLastName"), attendanceList.id).list();
 
         return attendanceListDetails
                 .data("attendanceList", attendanceList)

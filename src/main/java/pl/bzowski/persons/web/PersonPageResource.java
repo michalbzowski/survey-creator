@@ -3,39 +3,56 @@ package pl.bzowski.persons.web;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logmanager.Level;
+import pl.bzowski.base.CurrentUserRepository;
+import pl.bzowski.communication.*;
 import pl.bzowski.group.Group;
-import pl.bzowski.group.GroupCreateRequest;
 import pl.bzowski.group.GroupsRepository;
 import pl.bzowski.persons.Person;
 import pl.bzowski.persons.PersonRepository;
+import pl.bzowski.persons.PersonService;
 import pl.bzowski.tags.Tag;
 import pl.bzowski.tags.TagsRepository;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
+
+import static pl.bzowski.communication.CommunicationEventListener.PERSIST_COMMUNICATION;
 
 @Path("/web/persons")
 public class PersonPageResource {
 
+    @ConfigProperty(name = "app.host")
+    String appHost;
+
+    Logger logger = Logger.getLogger(PersonPageResource.class.getName());
+
     private final Template addPerson;
     private final Template listPersons;
     private final TagsRepository tagsRepository;
-    private final PersonRepository personRepository;
+    private final PersonService personService;
     private final GroupsRepository groupsRepository;
+    private final CurrentUserRepository currentUserRepository;
+    private final EventBus eventBus;
 
-    public PersonPageResource(Template addPerson, Template listPersons, TagsRepository tagsRepository, PersonRepository personRepository, GroupsRepository groupsRepository) {
+    public PersonPageResource(Template addPerson, Template listPersons, TagsRepository tagsRepository, PersonService personService, GroupsRepository groupsRepository, CurrentUserRepository currentUserRepository, EventBus eventBus) {
         this.addPerson = addPerson;
         this.listPersons = listPersons;
         this.tagsRepository = tagsRepository;
-        this.personRepository = personRepository;
+        this.personService = personService;
         this.groupsRepository = groupsRepository;
+        this.currentUserRepository = currentUserRepository;
+        this.eventBus = eventBus;
     }
 
     @GET
@@ -59,31 +76,46 @@ public class PersonPageResource {
                               @FormParam("defaultTag") String defaultTag,
                               @FormParam("groups") List<UUID> groupsIds
     ) {
-        Tag tag = Tag.find("name", defaultTag).firstResult();
-        Person person = new Person(firstName, lastName, email, tag);
-        addGroupsToPerson(groupsIds, person);
-        personRepository.persist(person);
+        Person person;
+        CommunicationPersonAgreement cpa;
+        try {
+            person = personService.persist(firstName, lastName, email, defaultTag, groupsIds);
+            cpa = new CommunicationPersonAgreement();
+            cpa.channel = Channel.EMAIL;
+            cpa.personId = person.id;
+            cpa.personEmail = email;
+            cpa.registeredUserId = currentUserRepository.currentRegisteredUserId();
+            cpa.persist();
+        } catch (Exception ex) {
+            logger.log(Level.ERROR, ex.toString());
+            return Response.serverError().build();
+        }
+        logger.info("start \"save-communication\"");
+        eventBus.publish(PERSIST_COMMUNICATION,
+                new CommunicationDto(
+                        Channel.EMAIL,
+                        CommunicationTemplate.EMAIL_NEW_PERSON_ADDED,
+                        person,
+                        Map.of(
+                                "userEmail", currentUserRepository.currentRegisteredUserEmail(),
+                                "confirmationLink", appHost + "/web/communication/confirm/" + cpa.id
+                        )));
+        logger.info("finished \"save-communication\"");
         return Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build();
     }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance listPersons() {
-        List<Person> persons = personRepository.listAll(Sort.by("lastName"));
+        List<Person> persons = personService.listAll(Sort.by("lastName"));
         return listPersons.data("persons", persons);
     }
 
     @POST
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
     public Response deletePerson(@PathParam("id") UUID id, @FormParam("_method") String method) {
-        if ("delete".equalsIgnoreCase(method)) {
-            Person person = Person.findById(id);
-            if (person != null) {
-                person.delete();
-            }
-        }
+        personService.deletePerson(id, method);
         return Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build();
     }
 
@@ -106,42 +138,13 @@ public class PersonPageResource {
     @POST
     @Path("/edit/{id}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
     public Response editPerson(@PathParam("id") UUID id,
                                @FormParam("firstName") String firstName,
                                @FormParam("lastName") String lastName,
                                @FormParam("email") String email,
                                @FormParam("defaultTag") String defaultTag,
                                @FormParam("groups") List<UUID> groupsIds) {
-        Person person = Person.findById(id);
-        if (person == null) {
-            throw new WebApplicationException("Person not found", 404);
-        }
-        Tag tag = Tag.find("name", defaultTag).firstResult();
-        person.firstName = firstName;
-        person.lastName = lastName;
-        person.email = email;
-        person.defaultTag = tag;
-
-        addGroupsToPerson(groupsIds, person);
-
+        personService.editPerson(id, firstName, lastName, email, defaultTag, groupsIds);
         return Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build();
     }
-
-    private static void addGroupsToPerson(List<UUID> groupsIds, Person person) {
-        person.groups = new HashSet<>();
-        if (groupsIds != null && !groupsIds.isEmpty()) {
-            List<Group> groups = Group.find("id in ?1", groupsIds).list();
-            person.groups.addAll(groups);
-
-            // Dodatkowo dodaj osobę do grup po drugiej stronie relacji
-            for (Group g : groups) {
-                if (g.members == null) {
-                    g.members = new HashSet<>();
-                }
-                g.members.add(person);
-            }
-        }
-    }
-
 }

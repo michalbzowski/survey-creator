@@ -1,18 +1,21 @@
 package pl.bzowski.attendance_list.api;
 
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.attendance_list.infrastructure.AttendanceListRepository;
-import pl.bzowski.links.LinkGenerationResource;
+import pl.bzowski.message_template.LinkGenerationResource;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
+
+import static jakarta.ws.rs.core.Response.Status.CREATED;
 
 @Path("/api/v1/attendance_list")
 public class AttendanceListResource {
@@ -39,22 +42,27 @@ public class AttendanceListResource {
         try {
             logger.info("createAttendanceList");
             AttendanceListDTO created = attendanceListRepository.createAttendanceList(attendanceListDTO);
-            return Response.status(Response.Status.CREATED).entity(created).build();
+            return Response.status(CREATED).entity(created).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
 
-    @DELETE
+    @DELETE //Response.status(Response.Status.NOT_FOUND).build()
     @Path("/{id}")
-    @Transactional
-    public Response deleteAttendanceList(@PathParam("id") UUID id) {
-        AttendanceList attendanceList = AttendanceList.findById(id);
-        if (attendanceList == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("Query nie została znaleziona").build();
-        }
-
-        attendanceList.delete();
-        return Response.seeOther(UriBuilder.fromPath("/web/attendance_list").build()).build();
+    @WithTransaction
+    public Uni<Response> deleteAttendanceList(@PathParam("id") UUID id) {
+        return AttendanceList.deleteById(id)
+                .onItem().transform(deleted -> {
+                    if (deleted) {
+                        return Response.noContent().build();
+                    } else {
+                        return Response.status(Response.Status.NOT_FOUND).build();
+                    }
+                })
+                .onFailure().recoverWithItem(throwable ->
+                        Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                .entity("Failed to delete: " + throwable.getMessage())
+                                .build());
     }
 }
