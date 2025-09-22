@@ -1,5 +1,6 @@
 package pl.bzowski.message_template;
 
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.transaction.Transactional;
@@ -42,95 +43,112 @@ public class LinkGenerationResource {
     }
 
     @GET
-    public List<MessageTemplate> listAllLinks() {
+    public Uni<List<MessageTemplate>> listAllLinks() {
         return MessageTemplate.listAll();
     }
 
     @GET
     @Path("/{attendanceListId}")
-    @Transactional
-    public Response generateLinks(@PathParam("attendanceListId") UUID attendanceListId) {
-        List<Person> persons = personRepository.listAll();
-        if (generateMessageTemplateFor(attendanceListId, persons))
-            return Response.status(Response.Status.NOT_FOUND).entity("Zapytanie nie istnieje").build();
-
-        // Przekierowanie do widoku szczegółów zapytania
-        return Response.seeOther(UriBuilder.fromPath("/web/attendance_list/{id}/details").build(attendanceListId)).build();
+    @WithTransaction
+    public Uni<Response> generateLinks(@PathParam("attendanceListId") UUID attendanceListId) {
+        return personRepository.listAll()
+                .flatMap(persons -> generateMessageTemplateFor(attendanceListId, persons)
+                        .flatMap(generated -> {
+                            if (generated) {
+                                return Uni.createFrom().item(
+                                        Response.status(Response.Status.NOT_FOUND)
+                                                .entity("Zapytanie nie istnieje")
+                                                .build()
+                                );
+                            } else {
+                                return Uni.createFrom().item(
+                                        Response.seeOther(UriBuilder.fromPath("/web/attendance_list/{id}/details").build(attendanceListId))
+                                                .build()
+                                );
+                            }
+                        })
+                );
     }
 
-    public boolean generateMessageTemplateFor(UUID attendanceListId, List<Person> persons) {
-        logger.info("Generate message template for " + attendanceListId.toString());
-        AttendanceList attendanceList = AttendanceList.findById(attendanceListId);
-        if (attendanceList == null) {
-            logger.info("AttendanceList is null");
-            return true;
-        }
+    public Uni<Boolean> generateMessageTemplateFor(UUID attendanceListId, List<Person> persons) {
+        return AttendanceList.<AttendanceList>findById(attendanceListId)
+                .flatMap(attendanceList -> {
+                    if (attendanceList == null) {
+                        logger.info("AttendanceList is null");
+                        return Uni.createFrom().item(true);
+                    }
+                    logger.info("Persons found: " + persons.size());
 
-        logger.info("Persons found: " + (long) persons.size());
-        for (Person person : persons) {
-            // Sprawdź, czy link już istnieje
-            Optional<MessageTemplate> personMessageTemplate = MessageTemplate.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id).firstResultOptional();
+                    // Dla każdego person sprawdzamy i potencjalnie tworzymy MessageTemplate
+                    List<Uni<Void>> createLinksUnis = persons.stream()
+                            .map(person -> MessageTemplate.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id)
+                                    .firstResult()
+                                    .flatMap(existingTemplate -> {
+                                        if (existingTemplate == null) {
+                                            logger.info("Creating Message Template for: " + person.email + " - " + attendanceListId);
+                                            MessageTemplate link = new MessageTemplate(person, attendanceList);
+                                            return link.persistAndFlush().replaceWithVoid();
+                                            // eventBus.publish(PERSIST_COMMUNICATION, link.toCommunicationDto()); // opcjonalnie w invoke()
+                                        } else {
+                                            logger.info("Person " + person.email + " already has message template for attendance list " + attendanceListId);
+                                            return Uni.createFrom().voidItem();
+                                        }
+                                    })
+                            ).toList();
 
-            boolean exists = personMessageTemplate.isPresent();
-            if (!exists) {
-                logger.info("Creating Message Template  for: " + person.email + " - " + attendanceListId);
-                MessageTemplate link = new MessageTemplate(person, attendanceList);
-                link.persist();
-//                eventBus.publish(PERSIST_COMMUNICATION, link.toCommunicationDto());
-            } else {
-                logger.info("Person " + person.email + " has already message template for attendance list " + attendanceListId);
-            }
-        }
-        return false;
+                    return Uni.combine().all().unis(createLinksUnis).discardItems()
+                            .map(i -> false);
+                });
     }
 
     @POST
     @Path("/{attendanceListId}/send/{personId}")
-    @Transactional
+    @WithTransaction
     public Uni<Void> saveAttendanceListMessageToPerson(@PathParam("attendanceListId") UUID attendanceListId, @PathParam("personId") UUID personId) {
         logger.info(String.format("Start saving message for attendanceList %s for person %s", attendanceListId, personId));
-        AttendanceList attendanceList = AttendanceList.findById(attendanceListId);
-        if (attendanceList == null) {
-            logger.info("attendanceList is null");
-            return Uni.createFrom().failure(new NotFoundException("Zapytanie nie istnieje"));
-        }
 
-        Person person = Person.findById(personId);
-        if (person == null) {
-            logger.info("Person is null");
-            return Uni.createFrom().failure(new NotFoundException("Osoba nie istnieje"));
-        }
-        Optional<MessageTemplate> personAttendanceListLinkOptional = MessageTemplate.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id).firstResultOptional();
-        boolean exists = personAttendanceListLinkOptional.isPresent();
-        if (!exists) {
-            String format = String.format("Can not send link. Link doesn't exists for: %s - %s", person.email, attendanceListId);
-            logger.info(format);
-            return Uni.createFrom().failure(new RuntimeException(format));
-        } else {
-            MessageTemplate messageTemplate = personAttendanceListLinkOptional.get();
-            String email = getEmailContent(messageTemplate);
-
-            return emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email)
-                    .onItem().invoke(() -> {
-                        logger.info(String.format("Band member %s notified", person.email));
-                        messageTemplate.sent();
-                        messageTemplate.persist();
-                        logger.info(String.format("Finished saving message for attendanceList %s for person %s", attendanceListId, personId));
-                    })
-                    .onFailure().invoke(ex -> {
-                        String format = String.format("E-mail with link %s NOT SENT", email);
-                        messageTemplate.sendingError();
-                        messageTemplate.persist();
-                        logger.log(Level.WARNING, format);
-                        logger.log(Level.INFO, ex.getMessage());
-                        throw new RuntimeException();
-                    })
-                    .replaceWithVoid()
-                    .onFailure().transform(throwable -> {
-                        // Możesz tutaj zalogować lub opakować wyjątek, jeśli chcesz
-                        return throwable;
-                    });
-        }
+        return AttendanceList.<AttendanceList>findById(attendanceListId)
+                .flatMap(attendanceList -> {
+                    if (attendanceList == null) {
+                        logger.info("attendanceList is null");
+                        return Uni.createFrom().failure(new NotFoundException("Zapytanie nie istnieje"));
+                    }
+                    return Person.<Person>findById(personId)
+                            .flatMap(person -> {
+                                if (person == null) {
+                                    logger.info("Person is null");
+                                    return Uni.createFrom().failure(new NotFoundException("Osoba nie istnieje"));
+                                }
+                                return MessageTemplate.<MessageTemplate>find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id)
+                                        .firstResult()
+                                        .flatMap(messageTemplate -> {
+                                            if (messageTemplate == null) {
+                                                String format = String.format("Can not send link. Link doesn't exist for: %s - %s", person.email, attendanceListId);
+                                                logger.info(format);
+                                                return Uni.createFrom().failure(new RuntimeException(format));
+                                            }
+                                            String email = getEmailContent(messageTemplate);
+                                            return emailService.sendEmail(person.email, "Czy będziesz na wydarzeniu?", email)
+                                                    .onItem().invoke(() -> {
+                                                        logger.info(String.format("Band member %s notified", person.email));
+                                                        messageTemplate.sent();
+                                                        messageTemplate.persistAndFlush().subscribe().with(__ -> {
+                                                        });
+                                                        logger.info(String.format("Finished saving message for attendanceList %s for person %s", attendanceListId, personId));
+                                                    })
+                                                    .onFailure().invoke(ex -> {
+                                                        String format = String.format("E-mail with link %s NOT SENT", email);
+                                                        messageTemplate.sendingError();
+                                                        messageTemplate.persistAndFlush().subscribe().with(__ -> {
+                                                        });
+                                                        logger.log(Level.WARNING, format);
+                                                        logger.log(Level.INFO, ex.getMessage());
+                                                        throw new RuntimeException();
+                                                    })
+                                                    .replaceWithVoid();
+                                        });
+                            });
+                });
     }
 
     private String getEmailContent(MessageTemplate messageTemplate) {

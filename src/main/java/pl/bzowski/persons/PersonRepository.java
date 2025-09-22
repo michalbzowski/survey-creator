@@ -1,6 +1,7 @@
 package pl.bzowski.persons;
 
 import io.quarkus.panache.common.Sort;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.RequestScoped;
 import pl.bzowski.base.RepositoryBase;
 
@@ -14,20 +15,25 @@ public class PersonRepository extends RepositoryBase {
         //
     }
 
-    public List<Person> listAll() {
-        return Person.list("registeredUserId", currentRegisteredUserId());
+    public Uni<List<Person>> listAll() {
+        return currentRegisteredUserId()
+                .flatMap(uuid -> Person.list("registeredUserId", uuid));
     }
 
-    public List<Person> listAll(Sort lastName) {
-        return Person.list("registeredUserId", lastName, currentRegisteredUserId());
+    public Uni<List<Person>> listAll(Sort lastName) {
+        return currentRegisteredUserId()
+                .flatMap(uuid -> Person.list("registeredUserId", lastName, uuid));
     }
 
-    public void persist(Person person) {
-        person.registeredUserId = currentRegisteredUserId();
-        person.persist();
+    public Uni<Person> persist(Person person) {
+        return currentRegisteredUserId()
+                .flatMap(u -> {
+                    person.registeredUserId = u;
+                    return person.persist();
+                });
     }
 
-    public UUID currentUserId() {
+    public Uni<UUID> currentUserId() {
         return currentRegisteredUserId();
     }
 }

@@ -2,11 +2,10 @@ package pl.bzowski.configurations.web;
 
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
+import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import pl.bzowski.configurations.infrastructure.ConfigurationsRepository;
-
-import java.util.Map;
 
 @Path("/web/configurations")
 public class ConfigurationsPageResource {
@@ -20,8 +19,9 @@ public class ConfigurationsPageResource {
     }
 
     @GET
-    public TemplateInstance getConfigurations() {
-        Map<String, Object> configurations = configurationsRepository.getConfigurations();
-        return this.configurations.data("configurations", configurations);
+    public Uni<TemplateInstance> getConfigurations() {
+        return configurationsRepository
+                .getConfigurations()
+                .flatMap(c -> (Uni<? extends TemplateInstance>) this.configurations.data("configurations", c));
     }
 }

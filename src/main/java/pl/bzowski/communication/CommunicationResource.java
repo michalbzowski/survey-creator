@@ -1,13 +1,12 @@
 package pl.bzowski.communication;
 
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.*;
 import pl.bzowski.persons.Person;
 
 import java.util.UUID;
@@ -21,13 +20,18 @@ public class CommunicationResource {
 
     @GET
     @Path("confirm/{id}")
-    public TemplateInstance confirm(@PathParam("id") UUID id) {
-        CommunicationPersonAgreement cpa = CommunicationPersonAgreement.findById(id);
-        Person person = Person.findById(cpa.personId);
-        cpa.confirm();
-        cpa.persist();
-        return confirmed.instance()
-                .data("firstName", person.firstName)
-                .data("lastName", person.lastName);
+    @WithTransaction
+    public Uni<TemplateInstance> confirm(@PathParam("id") UUID id) {
+        return CommunicationPersonAgreement.<CommunicationPersonAgreement>findById(id)
+                .onItem().ifNull().failWith(() -> new NotFoundException("Nie znaleziono potwierdzenia"))
+                .flatMap(cpa -> Person.<Person>findById(cpa.personId)
+                        .flatMap(person -> {
+                            cpa.confirm();
+                            return cpa.persistAndFlush()
+                                    .replaceWith(() -> confirmed.instance()
+                                            .data("firstName", person.firstName)
+                                            .data("lastName", person.lastName));
+                        })
+                );
     }
 }

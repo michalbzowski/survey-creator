@@ -1,8 +1,10 @@
 package pl.bzowski.persons.web;
 
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
+import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -67,48 +69,54 @@ public class PersonPageResource {
                 "groups", groups);
     }
 
+
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
-    public Response addPerson(@FormParam("firstName") String firstName,
-                              @FormParam("lastName") String lastName,
-                              @FormParam("email") String email,
-                              @FormParam("defaultTag") String defaultTag,
-                              @FormParam("groups") List<UUID> groupsIds
-    ) {
-        Person person;
-        CommunicationPersonAgreement cpa;
-        try {
-            person = personService.persist(firstName, lastName, email, defaultTag, groupsIds);
-            cpa = new CommunicationPersonAgreement();
-            cpa.channel = Channel.EMAIL;
-            cpa.personId = person.id;
-            cpa.personEmail = email;
-            cpa.registeredUserId = currentUserRepository.currentRegisteredUserId();
-            cpa.persist();
-        } catch (Exception ex) {
-            logger.log(Level.ERROR, ex.toString());
-            return Response.serverError().build();
-        }
-        logger.info("start \"save-communication\"");
-        eventBus.publish(PERSIST_COMMUNICATION,
-                new CommunicationDto(
-                        Channel.EMAIL,
-                        CommunicationTemplate.EMAIL_NEW_PERSON_ADDED,
-                        person,
-                        Map.of(
-                                "userEmail", currentUserRepository.currentRegisteredUserEmail(),
-                                "confirmationLink", appHost + "/web/communication/confirm/" + cpa.id
-                        )));
-        logger.info("finished \"save-communication\"");
-        return Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build();
+    @WithTransaction
+    public Uni<Response> addPerson(@FormParam("firstName") String firstName,
+                                   @FormParam("lastName") String lastName,
+                                   @FormParam("email") String email,
+                                   @FormParam("defaultTag") String defaultTag,
+                                   @FormParam("groups") List<UUID> groupsIds) {
+        return personService.persist(firstName, lastName, email, defaultTag, groupsIds)
+                .flatMap(person -> {
+                    CommunicationPersonAgreement cpa = new CommunicationPersonAgreement();
+                    cpa.channel = Channel.EMAIL;
+                    cpa.personId = person.id;
+                    cpa.personEmail = email;
+
+                    return currentUserRepository.currentRegisteredUserId()
+                            .flatMap(registeredUserId -> {
+                                cpa.registeredUserId = registeredUserId;
+                                return cpa.persistAndFlush();
+                            })
+                            .invoke(() -> {
+                                logger.info("start \"save-communication\"");
+                                eventBus.publish(PERSIST_COMMUNICATION,
+                                        new CommunicationDto(Channel.EMAIL,
+                                                CommunicationTemplate.EMAIL_NEW_PERSON_ADDED,
+                                                person,
+                                                Map.of(
+                                                        "userEmail", currentUserRepository.currentRegisteredUserEmail(),
+                                                        "confirmationLink", appHost + "/web/communication/confirm/" + cpa.id
+                                                )));
+                                logger.info("finished \"save-communication\"");
+                            })
+                            .replaceWith(Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build());
+                })
+                .onFailure().recoverWithItem(throwable -> {
+                    logger.log(Level.ERROR, throwable.toString());
+                    return Response.serverError().build();
+                });
     }
+
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance listPersons() {
-        List<Person> persons = personService.listAll(Sort.by("lastName"));
-        return listPersons.data("persons", persons);
+    public Uni<TemplateInstance> listPersons() {
+        return personService.listAll(Sort.by("lastName")).flatMap(persons ->
+                (Uni<? extends TemplateInstance>) listPersons.data("persons", persons));
+
     }
 
     @POST
@@ -122,18 +130,31 @@ public class PersonPageResource {
     @GET
     @Path("/edit/{id}")
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance showEditForm(@PathParam("id") UUID id) {
-        Person person = Person.findById(id);
-        if (person == null) {
-            throw new WebApplicationException("Person not found", 404);
-        }
-        var tags = tagsRepository.listAll();
-        var groups = groupsRepository.listAll();
-        return addPerson.data("person", person)
-                .data("tags", tags)
-                .data("groups", groups)
-                .data("edit", true);  // Flaga, by zmienić formularz z dodawania na edycję
+    public Uni<TemplateInstance> showEditForm(@PathParam("id") UUID id) {
+        Uni<Person> personUni = Person.findById(id);
+        Uni<List<Tag>> tagsUni = tagsRepository.listAll();
+        Uni<List<Group>> groupsUni = groupsRepository.listAll();
+
+        return Uni.combine().all().unis(personUni, tagsUni, groupsUni)
+                .asTuple()
+                .map(tuple -> {
+                    Person person = tuple.getItem1();
+                    List<Tag> tags = tuple.getItem2();
+                    List<Group> groups = tuple.getItem3();
+
+                    if (person == null) {
+                        throw new WebApplicationException("Person not found", 404);
+                    }
+
+                    return addPerson
+                            .data("person", person)
+                            .data("tags", tags)
+                            .data("groups", groups)
+                            .data("edit", true);
+                });
+
     }
+
 
     @POST
     @Path("/edit/{id}")

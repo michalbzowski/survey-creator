@@ -1,5 +1,6 @@
 package pl.bzowski.communication.messenger;
 
+import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -21,5 +22,5 @@ public interface MessengerRestClient {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    Response sendMessage(String messagePayload, @QueryParam("access_token") String accessToken);
+    Uni<Response> sendMessage(String messagePayload, @QueryParam("access_token") String accessToken);
 }

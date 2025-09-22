@@ -1,6 +1,7 @@
 package pl.bzowski.base;
 
 import io.quarkus.security.identity.SecurityIdentity;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.eclipse.microprofile.context.ThreadContext;
@@ -34,11 +35,14 @@ public class RepositoryBase {
         return username;
     }
 
-    public UUID currentRegisteredUserId() {
-        String sub = jwt.getClaim("sub").toString();
-        logger.info("sub: " + sub);
-        return UUID.fromString(sub);
+    public Uni<UUID> currentRegisteredUserId() {
+        return Uni.createFrom().item(() -> {
+            String sub = jwt.getClaim("sub").toString();
+            logger.info("sub: " + sub);
+            return UUID.fromString(sub);
+        });
     }
+
 
     public CompletionStage<UUID> completionCurrentRegisteredUserId() {
         CompletableFuture<UUID> future = CompletableFuture.supplyAsync(() -> {

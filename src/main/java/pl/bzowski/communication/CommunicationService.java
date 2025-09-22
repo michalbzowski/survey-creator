@@ -3,7 +3,6 @@ package pl.bzowski.communication;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Vertx;
 import jakarta.inject.Singleton;
-import jakarta.transaction.Transactional;
 import org.jboss.logmanager.Level;
 
 import java.util.UUID;
@@ -42,20 +41,13 @@ public class CommunicationService {
                 .invoke(id -> logger.info("Communication persisted with id: " + id));
     }
 
-    public void send(UUID id) {
-        Uni.createFrom().completionStage(
-                vertx.executeBlocking(() -> doBlocking(id))
-                        .toCompletionStage()
-        ).subscribe().with(communication -> {
-            logger.info("Success");
-            CommunicationSender communicationSender = communicationSenderFactory.create(communication.getCommunicationTemplate());
-            communicationSender.send(communication);
-        }, f -> logger.info(f.toString()));
+    public Uni<Void> send(UUID id) {
+        return Communication.<Communication>findById(id)
+                .flatMap(communication -> {
+                    logger.info("Success");
+                    CommunicationSender communicationSender = communicationSenderFactory.create(communication.getCommunicationTemplate());
+                    communicationSender.send(communication);
+                    return Uni.createFrom().voidItem();
+                });
     }
-
-    @Transactional
-    public Communication doBlocking(UUID id) {
-        return Communication.findById(id);
-    }
-
 }

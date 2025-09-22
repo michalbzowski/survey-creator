@@ -1,5 +1,7 @@
 package pl.bzowski.communication.messenger;
 
+import io.quarkus.hibernate.reactive.panache.Panache;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -16,7 +18,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-import static io.quarkus.hibernate.orm.panache.Panache.getEntityManager;
 import static pl.bzowski.configurations.Configurations.MESSENGER;
 import static pl.bzowski.communication.messenger.MessengerRestClient.INSTRUKCJA;
 import static pl.bzowski.communication.messenger.MyParser.parseEmailFromText;
@@ -58,60 +59,76 @@ public class MessengerWebhookResource {
         return Response.ok().build();
     }
 
-    private void manageActions(String psid, String trimmedText) {
+    public Uni<Void> manageActions(String psid, String trimmedText) {
         logger.info(trimmedText);
+
         if (trimmedText.startsWith("ZAPISZ MNIE:")) {
-            // Wyciągnij UUID z tekstu (np. regex)
             logger.info("Parsowanie - start");
             UUID messengerRegistrationKey = parseUuidFromText(trimmedText);
             logger.info("messengerRegistrationKey: " + messengerRegistrationKey);
             String email = parseEmailFromText(trimmedText);
             logger.info("email: " + email);
+
             if (messengerRegistrationKey != null) {
-                // Zapisz powiązanie psid <-> uuid w bazie
-                if (saveUserMapping(psid, email, messengerRegistrationKey, true)) {
-                    logger.info("Zapisano ZAPISZ MNIE: " + psid + email + messengerRegistrationKey);
-                    messengerService.sendMessage(psid, "Zgoda zapisana. Będziesz otrzymywać powiadomienia.");
-                }
-            } else if (trimmedText.startsWith("WYPISZ MNIE: ")) {
-                logger.info("Zapisano WYPISZ MNIE: " + psid + email + messengerRegistrationKey);
-                if (saveUserMapping(psid, email, messengerRegistrationKey, false)) {
-                    messengerService.sendMessage(psid, "Zgoda anulowana. Nie będziesz otrzymywać powiadomienia.");
-                }
+                // Zapisz powiązanie psid <-> uuid w bazie reaktywnie
+                return saveUserMapping(psid, email, messengerRegistrationKey, true)
+                        .flatMap(saved -> {
+                            if (saved) {
+                                logger.info("Zapisano ZAPISZ MNIE: " + psid + email + messengerRegistrationKey);
+                                messengerService.sendMessage(psid, "Zgoda zapisana. Będziesz otrzymywać powiadomienia.");
+                            }
+                            return Uni.createFrom().voidItem();
+                        });
             } else {
-                logger.info("Nie ma słów kluczowych. Wysylam instrukcje!");
                 messengerService.sendMessage(psid, INSTRUKCJA);
+                return Uni.createFrom().voidItem();
             }
+        } else if (trimmedText.startsWith("WYPISZ MNIE:")) {
+            logger.info("WYPISZ MNIE command recognized");
+            UUID messengerRegistrationKey = parseUuidFromText(trimmedText);
+            String email = parseEmailFromText(trimmedText);
+            return saveUserMapping(psid, email, messengerRegistrationKey, false)
+                    .flatMap(saved -> {
+                        if (saved) {
+                            messengerService.sendMessage(psid, "Zgoda anulowana. Nie będziesz otrzymywać powiadomienia.");
+                        }
+                        return Uni.createFrom().voidItem();
+                    });
         } else {
             logger.info("Nie ma słów kluczowych. Wysylam instrukcje!");
             messengerService.sendMessage(psid, INSTRUKCJA);
+            return Uni.createFrom().voidItem();
         }
     }
 
-    private boolean saveUserMapping(String psid, String email, UUID messengerRegistrationKey, boolean agree) {
-        List<Configurations> results = getEntityManager()
-                .createNativeQuery(
-                        "SELECT * FROM integrations WHERE configuration->>'" + MESSENGER + "' = :key", Configurations.class)
-                .setParameter("key", messengerRegistrationKey.toString())
-                .getResultList();
 
-        boolean found = results.stream()
-                .peek(configurations -> {
-                    MessengerUserAgreement messengerUserAgreement = new MessengerUserAgreement();
-                    messengerUserAgreement.psid = psid;
-                    messengerUserAgreement.registeredUserId = configurations.registeredUserId;
-                    messengerUserAgreement.email = email;
-                    messengerUserAgreement.messengerRegistrationKey = messengerRegistrationKey;
-                    messengerUserAgreement.agree = agree;
-                    messengerUserAgreement.persist();
-                })
-                .count() > 0;
+    public Uni<Boolean> saveUserMapping(String psid, String email, UUID messengerRegistrationKey, boolean agree) {
+        String nativeQuery = "SELECT * FROM integrations WHERE configuration->>'" + MESSENGER + "' = :key";
+        return Panache.getSession().flatMap(session ->
+                session.createNativeQuery(nativeQuery, Configurations.class)
+                        .setParameter("key", messengerRegistrationKey.toString())
+                        .getResultList()
+                        .flatMap(configurationsList -> {
+                            if (configurationsList.isEmpty()) {
+                                // brak wyników - wyślij wiadomość i zwróć false
+                                messengerService.sendMessage(psid, "Nie znalazłem takiego klucza. Wróć do szefa swojego zespołu");
+                                return Uni.createFrom().item(false);
+                            }
+                            // dla każdego znalezionego Configurations utwórz MessengerUserAgreement i zapisz
+                            List<Uni<Void>> persistUnis = configurationsList.stream().map(config -> {
+                                MessengerUserAgreement agreement = new MessengerUserAgreement();
+                                agreement.psid = psid;
+                                agreement.registeredUserId = config.registeredUserId;
+                                agreement.email = email;
+                                agreement.messengerRegistrationKey = messengerRegistrationKey;
+                                agreement.agree = agree;
+                                return agreement.persistAndFlush().replaceWithVoid();
+                            }).toList();
 
-        if (!found) {
-            messengerService.sendMessage(psid, "Nie znalazłem takiego klucza. Wróć do szefa swojego zespołu");
-        }
-
-        return found;
+                            // Po zapisaniu wszystkich zwróć true
+                            return Uni.combine().all().unis(persistUnis).discardItems().replaceWith(true);
+                        })
+        );
     }
 
     static class MessengerPayloadParser {

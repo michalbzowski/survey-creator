@@ -1,10 +1,12 @@
 package pl.bzowski.persons.api;
 
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pl.bzowski.base.ReactiveDelete;
 import pl.bzowski.persons.Person;
 import pl.bzowski.persons.PersonRepository;
 
@@ -24,7 +26,7 @@ public class PersonResource {
     }
 
     @GET
-    public List<Person> listAllPersons() {
+    public Uni<List<Person>> listAllPersons() {
         return personRepository.listAll();
     }
 
@@ -42,13 +44,8 @@ public class PersonResource {
     @DELETE
     @Path("/{id}")
     @Transactional
-    public Response deletePerson(@PathParam("id") UUID id) {
-        Person person = Person.findById(id);
-        if (person == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("Osoba nie została znaleziona").build();
-        }
-
-        person.delete();
-        return Response.noContent().build(); // 204 No Content
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Uni<Response> deletePerson(@PathParam("id") UUID id, @FormParam("_method") String method) {
+        return ReactiveDelete.reactiveDelete(id, method, Person::findById, "/web/persons");
     }
 }

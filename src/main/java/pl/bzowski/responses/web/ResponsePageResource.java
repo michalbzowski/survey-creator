@@ -1,7 +1,9 @@
 package pl.bzowski.responses.web;
 
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
+import io.smallrye.mutiny.Uni;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -35,69 +37,72 @@ public class ResponsePageResource {
     @GET
     @Path("/{token}")
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance showForm(@PathParam("token") UUID token) {
-        MessageTemplate link = MessageTemplate.find("linkToken", token).firstResult();
-        if (link == null) {
-            throw new NotFoundException("Nie znaleziono linku");
-        }
-
-        return responseForm.data("link", link);
+    public Uni<TemplateInstance> showForm(@PathParam("token") UUID token) {
+        return MessageTemplate.find("linkToken", token)
+                .firstResult()
+                .onItem().ifNull().failWith(() -> new NotFoundException("Nie znaleziono linku"))
+                .map(link -> responseForm.data("link", link));
     }
+
 
     @POST
     @Path("/{token}")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
-    public TemplateInstance submitAnswer(@PathParam("token") UUID token, @RequestBody Map<String, String> answers) {
+    @WithTransaction
+    public Uni<TemplateInstance> submitAnswer(@PathParam("token") UUID token, Map<String, String> answers) {
         logger.info(String.format("Submit answer for %s - %d", token.toString(), answers.size()));
-        MessageTemplate link = MessageTemplate.find("linkToken", token).firstResult();
-        if (link == null) {
-            throw new NotFoundException("Nie znaleziono linku " + link);
-        }
-        try {
-            Person person = Person.findById(link.personId);
-            AttendanceList attendanceList = link.attendanceList;
-            for (String key : answers.keySet()) {
-                String value = answers.get(key);
-                logger.info(String.format("Key: %s, value: %s", key, value));
-                Event event;
 
+        return MessageTemplate.find("linkToken", token)
+                .firstResult()
+                .onItem().ifNull().failWith(() -> new NotFoundException("Nie znaleziono linku " + token))
+                .flatMap(link -> Person.findById(((MessageTemplate) link).personId)
+                        .flatMap(www -> {
+                            Person person = (Person) www;
+                            AttendanceList attendanceList = ((MessageTemplate) link).attendanceList;
+                            // Przetwarzamy kolejne odpowiedzi sekwencyjnie reaktywnie
+                            Uni<Void> allUpdates = Uni.createFrom().voidItem();
 
-                event = Event.findById(UUID.fromString(key));
+                            for (Map.Entry<String, String> entry : answers.entrySet()) {
+                                UUID eventId = UUID.fromString(entry.getKey());
+                                PersonEventAnswer.Answer answer;
+                                try {
+                                    answer = PersonEventAnswer.Answer.valueOf(entry.getValue());
+                                } catch (IllegalArgumentException e) {
+                                    return Uni.createFrom().failure(new IllegalArgumentException("Invalid answer value"));
+                                }
 
-                logger.info("Event: " + event.name);
-                try {
-                    Optional<PersonEventAnswer> pqa = PersonEventAnswer
-                            .find("person = ?1 and attendanceList = ?2 and event = ?3 ", person, attendanceList, event)
-                            .firstResultOptional();
+                                final PersonEventAnswer.Answer finalAnswer = answer;
+                                final UUID finalEventId = eventId;
 
-                    PersonEventAnswer.Answer answer = PersonEventAnswer.Answer.valueOf(value);
-                    if (pqa.isPresent()) {
-                        logger.info("PQA present");
-                        PersonEventAnswer personEventAnswer = pqa.get();
-                        personEventAnswer.answer = answer;
-                        logger.info(String.format("Updated %s", personEventAnswer.id));
-                    } else {
-                        logger.info("PQA absent");
-                        PersonEventAnswer personEventAnswer = new PersonEventAnswer();
-                        personEventAnswer.person = person;
-                        personEventAnswer.attendanceList = attendanceList;
-                        link.attendanceListAnswered = Boolean.TRUE;
-                        personEventAnswer.event = event;
-                        personEventAnswer.answer = answer;
-                        personEventAnswer.persist();
-                        logger.info(String.format("Persisted new %s", personEventAnswer.id));
-                    }
-                } catch (RuntimeException ex) {
-                    logger.info("Exception:" + ex.getMessage());
-                    throw new RuntimeException("lol");
+                                allUpdates = allUpdates
+                                        .flatMap(v -> Event.findById(finalEventId)
+                                                .flatMap(event -> {
+                                                    if (event == null) {
+                                                        return Uni.createFrom().voidItem();
+                                                    }
+                                                    return PersonEventAnswer.find("person = ?1 and attendanceList = ?2 and event = ?3", person, attendanceList, event)
+                                                            .firstResult()
+                                                            .flatMap(aaa -> {
+                                                                PersonEventAnswer pqa = (PersonEventAnswer) aaa;
+                                                                if (pqa != null) {
+                                                                    pqa.answer = finalAnswer;
+                                                                    return pqa.persistAndFlush().replaceWithVoid();
+                                                                } else {
+                                                                    PersonEventAnswer newAnswer = new PersonEventAnswer();
+                                                                    newAnswer.person = person;
+                                                                    newAnswer.attendanceList = attendanceList;
+                                                                    newAnswer.event = (Event) event;
+                                                                    newAnswer.answer = finalAnswer;
+                                                                    ((MessageTemplate) link).attendanceListAnswered = Boolean.TRUE;
+                                                                    return newAnswer.persistAndFlush().replaceWithVoid();
+                                                                }
+                                                            });
+                                                }));
+                            }
 
-                }
-
-            }
-            return thankYou.instance();
-        } catch (IllegalArgumentException e) {
-            return error.instance();
-        }
+                            return allUpdates.map(v -> thankYou.instance());
+                        })
+                )
+                .onFailure(IllegalArgumentException.class).recoverWithItem(() -> error.instance());
     }
 }

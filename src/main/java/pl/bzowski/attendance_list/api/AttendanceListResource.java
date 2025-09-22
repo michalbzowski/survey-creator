@@ -3,7 +3,6 @@ package pl.bzowski.attendance_list.api;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -14,8 +13,6 @@ import pl.bzowski.message_template.LinkGenerationResource;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
-
-import static jakarta.ws.rs.core.Response.Status.CREATED;
 
 @Path("/api/v1/attendance_list")
 public class AttendanceListResource {
@@ -30,23 +27,26 @@ public class AttendanceListResource {
     }
 
     @GET
-    public List<AttendanceList> listAllAttendanceList() {
+    public Uni<List<AttendanceList>> listAllAttendanceList() {
         return attendanceListRepository.listAll();
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
-    public Response createAttendanceList(AttendanceListDTO attendanceListDTO) {
-        try {
-            logger.info("createAttendanceList");
-            AttendanceListDTO created = attendanceListRepository.createAttendanceList(attendanceListDTO);
-            return Response.status(CREATED).entity(created).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+    public Uni<Response> createAttendanceList(AttendanceListDTO attendanceListDTO) {
+        logger.info("createAttendanceList");
+        return attendanceListRepository.createAttendanceList(attendanceListDTO)
+                .onItem()
+                .transform(created ->
+                        Response.status(Response.Status.CREATED).entity(created).build()
+                )
+                .onFailure(IllegalArgumentException.class)
+                .recoverWithItem(e ->
+                        Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build()
+                );
     }
+
 
     @DELETE //Response.status(Response.Status.NOT_FOUND).build()
     @Path("/{id}")

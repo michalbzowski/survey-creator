@@ -1,14 +1,17 @@
 package pl.bzowski.attendance_list.web;
 
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
+import io.smallrye.mutiny.Uni;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.attendance_list.AttendanceList;
+import pl.bzowski.base.ReactiveDelete;
 import pl.bzowski.events.Event;
 import pl.bzowski.attendance_list.api.AttendanceListDTO;
 import pl.bzowski.attendance_list.infrastructure.AttendanceListRepository;
@@ -40,35 +43,44 @@ public class AttendanceListPageResource {
     @GET
     @Path("/{id}/details")
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance showQueryDetails(@PathParam("id") UUID id) {
-        AttendanceList attendanceList = AttendanceList.findById(id);
-        if (attendanceList == null) {
-            throw new NotFoundException("Nie znaleziono zapytania");
-        }
-
-        List<MessageTemplate> links = MessageTemplate.find("attendanceListId", Sort.by("personLastName"), attendanceList.id).list();
-
-        return attendanceListDetails
-                .data("attendanceList", attendanceList)
-                .data("links", links);
+    public Uni<TemplateInstance> showQueryDetails(@PathParam("id") UUID id) {
+        return AttendanceList.<AttendanceList>findById(id)
+                .flatMap(
+                        attendanceList -> MessageTemplate.<MessageTemplate>find("attendanceListId", Sort.by("personLastName"), attendanceList.id)
+                                .list()
+                                .flatMap(links -> {
+                                    if (attendanceList == null) {
+                                        throw new NotFoundException("Nie znaleziono zapytania");
+                                    }
+                                    return (Uni<TemplateInstance>) attendanceListDetails
+                                            .data("attendanceList", attendanceList)
+                                            .data("links", links);
+                                }));
     }
 
     @GET
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance createAttendanceListForm(@QueryParam("name") String name, @QueryParam("eventId") UUID eventId) {
-        List<Event> availableEvents = eventRepository.findAvailableEvents();
-        if (availableEvents.isEmpty()) {
-            throw new RuntimeException("Stwórz wydarzenie!");
-        }
-        List<Event> first = List.of(availableEvents.getFirst());
-        String availableEventsJson = jsonHelper.toJson(availableEvents);
-        return createAttendanceList.data("attendanceList", new AttendanceList("", first),
-                "availableEvents", availableEvents,
-                "availableEventsJson", availableEventsJson,
-                "name", name,
-                "eventId", eventId);
+    public Uni<TemplateInstance> createAttendanceListForm(@QueryParam("name") String name, @QueryParam("eventId") UUID eventId) {
+        return eventRepository.findAvailableEvents()
+                .onItem()
+                .transformToUni(availableEvents -> {
+                    if (availableEvents.isEmpty()) {
+                        return Uni.createFrom().failure(new RuntimeException("Stwórz wydarzenie!"));
+                    }
+                    List<Event> first = List.of(availableEvents.getFirst());
+                    String availableEventsJson = jsonHelper.toJson(availableEvents);
+                    return Uni.createFrom().item(
+                            createAttendanceList.data("attendanceList", new AttendanceList("", first),
+                                    "availableEvents", availableEvents,
+                                    "availableEventsJson", availableEventsJson,
+                                    "name", name,
+                                    "eventId", eventId
+                            )
+                    );
+                });
     }
+
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -85,22 +97,18 @@ public class AttendanceListPageResource {
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance listQueries() {
-        List<AttendanceList> attendanceList = attendanceListRepository.listAll();
-        return listAttendanceList.data("attendanceList", attendanceList);
+    public Uni<TemplateInstance> listQueries() {
+        return attendanceListRepository
+                .listAll()
+                .onItem()
+                .transform(attendanceLists -> listAttendanceList.data("attendanceList", attendanceLists));
     }
 
     @POST
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
-    public Response deletePerson(@PathParam("id") UUID id, @FormParam("_method") String method) {
-        if ("delete".equalsIgnoreCase(method)) {
-            AttendanceList attendanceList = AttendanceList.findById(id);
-            if (attendanceList != null) {
-                attendanceList.delete();
-            }
-        }
-        return Response.seeOther(UriBuilder.fromPath("/web/attendance_list").build()).build();
+    public Uni<Response> deletePersonDDD(@PathParam("id") UUID id, @FormParam("_method") String method) {
+        return ReactiveDelete.reactiveDelete(id, method, AttendanceList::findById, "/web/attendance_list");
     }
 }

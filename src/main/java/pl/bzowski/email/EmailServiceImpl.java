@@ -25,13 +25,15 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public Uni<Void> sendEmail(String to, String subject, String body) {
         Mail mail = Mail.withHtml(to, subject, body);
-        String emailFrom = (String) configurationsRepository.getConfigurations().get(EMAIL_FROM);
-        if (emailFrom != null && !emailFrom.isEmpty()) {
-            mail.setFrom(String.format("\"%s\" <%s>", emailFrom, username));
-        } else {
-            mail.setFrom(username);
-        }
-        return reactiveMailer.send(mail);
+        return configurationsRepository.getConfigurations()
+                .flatMap(c -> {
+                    String emailFrom = (String) c.get(EMAIL_FROM);
+                    if (emailFrom != null && !emailFrom.isEmpty()) {
+                        mail.setFrom(String.format("\"%s\" <%s>", emailFrom, username));
+                    } else {
+                        mail.setFrom(username);
+                    }
+                    return reactiveMailer.send(mail);
+                });
     }
-
 }
