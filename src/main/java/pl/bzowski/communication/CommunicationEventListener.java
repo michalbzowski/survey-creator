@@ -19,7 +19,7 @@ public class CommunicationEventListener {
 
     private final Logger logger = Logger.getLogger(CommunicationEventListener.class.getName());
 
-    private CommunicationService communicationService;
+    private final CommunicationService communicationService;
     private final EventBus eventBus;
 
     public CommunicationEventListener(CommunicationService communicationService, EventBus eventBus) {

@@ -13,7 +13,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 @RegisterRestClient(configKey="messenger-api")
 public interface MessengerRestClient {
 
-    public static final String INSTRUKCJA = """
+    String INSTRUKCJA = """
             Nie rozumiem Twojego polecenia. Nie jestem inteligenty. Potrzebuję precyzyjnego komunikatu:
             "ZAPISZ MNIE: tu_klucz_twojego_zespolu"
             lub
