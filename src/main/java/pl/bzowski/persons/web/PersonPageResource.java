@@ -60,13 +60,17 @@ public class PersonPageResource {
     @GET
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance showAddForm() {
-        var tags = tagsRepository.listAll();
-        var groups = groupsRepository.listAll();
-        return addPerson.data(
-                "person", new Person(),
-                "tags", tags,
-                "groups", groups);
+    @WithTransaction
+    public Uni<TemplateInstance> showAddForm() {
+        return tagsRepository.listAll()
+                .flatMap(
+                        tags -> groupsRepository
+                                .listAll()
+                                .flatMap(groups -> Uni.createFrom().item(addPerson.data(
+                                        "person", new Person(),
+                                        "tags", tags,
+                                        "groups", groups)))
+                );
     }
 
 
@@ -113,10 +117,10 @@ public class PersonPageResource {
 
     @GET
     @Produces(MediaType.TEXT_HTML)
+    @WithTransaction
     public Uni<TemplateInstance> listPersons() {
-        return personService.listAll(Sort.by("lastName")).flatMap(persons ->
-                (Uni<? extends TemplateInstance>) listPersons.data("persons", persons));
-
+        return personService.listAll(Sort.by("lastName"))
+                .flatMap(persons -> Uni.createFrom().item(listPersons.data("persons", persons)));
     }
 
     @POST

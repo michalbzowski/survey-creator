@@ -2,57 +2,87 @@ package pl.bzowski.attendance_list.infrastructure;
 
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.RequestScoped;
-import jakarta.ws.rs.POST;
+import jakarta.inject.Singleton;
+import org.hibernate.reactive.mutiny.Mutiny;
 import pl.bzowski.attendance_list.AttendanceList;
 import pl.bzowski.base.RepositoryBase;
 import pl.bzowski.events.Event;
 import pl.bzowski.attendance_list.api.AttendanceListDTO;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-@RequestScoped
+@Singleton
 public class AttendanceListRepository extends RepositoryBase {
 
-    @POST
     @WithTransaction
     public Uni<AttendanceListDTO> createAttendanceList(AttendanceListDTO attendanceListDTO) {
-        List<Uni<Event>> eventUnis = attendanceListDTO.events.stream()
-                .map(id -> Event.<Event>findById(id)
-                        .onItem().ifNull().failWith(() -> new IllegalArgumentException("Nie znaleziono wydarzenia o id: " + id))
-                        .onItem().invoke(event -> {
-                            if (event.attendanceList != null) {
-                                throw new IllegalArgumentException("Wydarzenie jest już przypisane do listy obecności");
-                            }
-                        }))
-                .collect(Collectors.toList());
+        List<UUID> eventIds = attendanceListDTO.events;
 
-        return Uni.combine().all().unis(eventUnis)
-                .with(list -> (List<Event>) list)
-                .flatMap(events -> {
-                    return currentRegisteredUserId().flatMap(uuid -> {
-                        AttendanceList attendanceList = new AttendanceList();
-                        attendanceList.name = attendanceListDTO.name;
-                        attendanceList.events = events;
-                        attendanceList.registeredUserId = uuid;
-                        return Panache.withTransaction(attendanceList::persist)
-                                .onItem().transform(v -> {
-                                    attendanceListDTO.id = attendanceList.id;
-                                    for (Event ev : events) {
-                                        ev.attendanceList = attendanceList;
-                                    }
-                                    return attendanceList;
-                                });
-                    });
+        // Start with an initial Uni emitting an empty list of Event
+        Uni<List<Event>> eventsUni = Uni.createFrom().item(new ArrayList<>());
 
-                })
+        // Sequentially process event IDs one by one, accumulating validated Event instances
+        for (UUID eventId : eventIds) {
+            eventsUni = eventsUni.flatMap(events ->
+                    Event.<Event>findById(eventId)
+                            .onItem().ifNull().failWith(() -> new IllegalArgumentException("Nie znaleziono wydarzenia o id: " + eventId))
+                            .onItem().invoke(event -> {
+                                if (event.attendanceList != null) {
+                                    throw new IllegalArgumentException("Wydarzenie jest już przypisane do listy obecności");
+                                }
+                            })
+                            .map(event -> {
+                                events.add(event);
+                                return events;
+                            })
+            );
+        }
+
+        return eventsUni
+                .flatMap(events ->
+                        currentRegisteredUserId().flatMap(uuid -> {
+                            AttendanceList attendanceList = new AttendanceList();
+                            attendanceList.name = attendanceListDTO.name;
+                            attendanceList.events = events;
+                            attendanceList.registeredUserId = uuid;
+                            return Panache.withTransaction(attendanceList::persist)
+                                    .onItem().transform(v -> {
+                                        attendanceListDTO.id = attendanceList.id;
+                                        for (Event ev : events) {
+                                            ev.attendanceList = attendanceList;
+                                        }
+                                        return attendanceList;
+                                    });
+                        })
+                )
                 .onFailure().recoverWithNull()
                 .onItem().transform(AttendanceList::toDTO);
     }
 
+
     public Uni<List<AttendanceList>> listAll() {
-        return AttendanceList.list("registeredUserId", currentRegisteredUserId());
+        return currentRegisteredUserId().flatMap(uuid -> AttendanceList.list("registeredUserId", uuid));
     }
+
+    public Uni<List<AttendanceList>> listAllWithEvents() {
+        return currentRegisteredUserId().flatMap(userId ->
+                AttendanceList.<AttendanceList>list("registeredUserId", userId)
+                        .flatMap(attendanceLists -> {
+                            // Jawnie dla każdej listy wykonujemy fetch events
+                            return Multi.createFrom().iterable(attendanceLists)
+                                    .onItem().transformToUniAndConcatenate(attendanceList ->
+                                            Mutiny.fetch(attendanceList.events)
+                                                    .replaceWith(attendanceList)
+                                    )
+                                    .collect().asList();
+                        })
+        );
+    }
+
 }

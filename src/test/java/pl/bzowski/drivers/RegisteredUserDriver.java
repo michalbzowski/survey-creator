@@ -55,7 +55,7 @@ public class RegisteredUserDriver implements Driver {
             WebElement loginButton = driver.findElement(By.id("kc-login"));
             loginButton.click();
             // Teraz po zalogowaniu powinieneś wrócić na właściwą stronę
-            while (!driver.getCurrentUrl().contains(appHost + "")) {
+            while (!driver.getCurrentUrl().contains(appHost)) {
                 Thread.sleep(500);
             }
             // Tutaj możesz wykonać dalsze akcje np. sprawdzenie, czy tag się pojawił

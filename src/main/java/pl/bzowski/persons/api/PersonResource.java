@@ -1,5 +1,6 @@
 package pl.bzowski.persons.api;
 
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -31,19 +32,22 @@ public class PersonResource {
     }
 
     @POST
-    @Transactional
-    public Response addPerson(Person person) {
+    @WithTransaction
+    public Uni<Response> addPerson(Person person) {
         if (person == null || person.email == null || person.firstName == null || person.lastName == null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("Brakuje wymaganych danych!").build();
+            return Uni.createFrom()
+                    .item(Response.status(Response.Status.BAD_REQUEST).entity("Brakuje wymaganych danych!").build());
         }
-        personRepository.persist(person);
 
-        return Response.status(Response.Status.CREATED).entity(person).build();
+        return personRepository.persist(person)
+                .onItem()
+                .transform(v -> Response.status(Response.Status.CREATED).entity(person).build());
     }
+
 
     @DELETE
     @Path("/{id}")
-    @Transactional
+    @WithTransaction
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Uni<Response> deletePerson(@PathParam("id") UUID id, @FormParam("_method") String method) {
         return ReactiveDelete.reactiveDelete(id, method, Person::findById, "/web/persons");

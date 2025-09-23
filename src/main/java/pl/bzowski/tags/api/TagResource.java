@@ -1,5 +1,7 @@
 package pl.bzowski.tags.api;
 
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -22,9 +24,9 @@ public class TagResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
-    public Response createTag(@FormParam("name") String name) {
-        tagsRepository.createTag(name);
-        return Response.seeOther(UriBuilder.fromPath("/web/tags").build()).build();
+    @WithTransaction
+    public Uni<Response> createTag(@FormParam("name") String name) {
+        return tagsRepository.createTag(name)
+                .flatMap(p -> Uni.createFrom().item(Response.seeOther(UriBuilder.fromPath("/web/tags").build()).build()));
     }
 }

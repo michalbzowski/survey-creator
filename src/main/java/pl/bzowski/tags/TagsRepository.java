@@ -2,12 +2,12 @@ package pl.bzowski.tags;
 
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Singleton;
 import pl.bzowski.base.RepositoryBase;
 
 import java.util.List;
 
-@RequestScoped
+@Singleton
 public class TagsRepository extends RepositoryBase {
 
     @WithTransaction

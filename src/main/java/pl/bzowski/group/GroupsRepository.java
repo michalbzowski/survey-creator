@@ -1,5 +1,6 @@
 package pl.bzowski.group;
 
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Singleton;
@@ -9,6 +10,8 @@ import java.util.List;
 
 @Singleton
 public class GroupsRepository extends RepositoryBase {
+
+    @WithTransaction
     public Uni<List<Group>> listAll() {
         return currentRegisteredUserId()
                 .onItem()

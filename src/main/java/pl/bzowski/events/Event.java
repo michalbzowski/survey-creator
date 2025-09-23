@@ -40,11 +40,12 @@ public class Event extends PanacheEntityBase {
     public Event() {
     }
 
-    public Event(String name, String location, LocalDateTime localDateTime, String description) {
+    public Event(String name, String location, LocalDateTime localDateTime, String description, UUID registeredUserId) {
         this.name = name;
         this.location = location;
         this.localDateTime = localDateTime;
         this.description = description;
+        this.registeredUserId = registeredUserId;
     }
 
     public String formatedLocalDateTime() {

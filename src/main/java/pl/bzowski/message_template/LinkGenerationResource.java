@@ -1,6 +1,7 @@
 package pl.bzowski.message_template;
 
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.transaction.Transactional;
@@ -52,59 +53,53 @@ public class LinkGenerationResource {
     @WithTransaction
     public Uni<Response> generateLinks(@PathParam("attendanceListId") UUID attendanceListId) {
         return personRepository.listAll()
-                .flatMap(persons -> generateMessageTemplateFor(attendanceListId, persons)
-                        .flatMap(generated -> {
-                            if (generated) {
-                                return Uni.createFrom().item(
-                                        Response.status(Response.Status.NOT_FOUND)
-                                                .entity("Zapytanie nie istnieje")
-                                                .build()
-                                );
-                            } else {
-                                return Uni.createFrom().item(
-                                        Response.seeOther(UriBuilder.fromPath("/web/attendance_list/{id}/details").build(attendanceListId))
-                                                .build()
-                                );
-                            }
-                        })
-                );
+                .flatMap(persons -> processAttendanceList(attendanceListId, persons)
+                        .onItem()
+                        .transformToUni(d -> Uni.createFrom().item(
+                                Response.seeOther(UriBuilder.fromPath("/web/attendance_list/{id}/details").build(attendanceListId))
+                                        .build()
+                        ))
+                        .onFailure()
+                        .recoverWithItem(d ->
+                                Response.status(Response.Status.NOT_FOUND)
+                                        .entity("Zapytanie nie istnieje")
+                                        .build()));
     }
 
-    public Uni<Boolean> generateMessageTemplateFor(UUID attendanceListId, List<Person> persons) {
+
+    public Uni<Void> processAttendanceList(UUID attendanceListId, List<Person> persons) {
         return AttendanceList.<AttendanceList>findById(attendanceListId)
+                .onItem().ifNull().failWith(() -> new WebApplicationException("AttendanceList not found", 404))
                 .flatMap(attendanceList -> {
-                    if (attendanceList == null) {
-                        logger.info("AttendanceList is null");
-                        return Uni.createFrom().item(true);
-                    }
-                    logger.info("Persons found: " + persons.size());
+                    logger.info("Found AttendanceList with id: " + attendanceListId);
 
-                    // Dla każdego person sprawdzamy i potencjalnie tworzymy MessageTemplate
-                    List<Uni<Void>> createLinksUnis = persons.stream()
-                            .map(person -> MessageTemplate.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id)
-                                    .firstResult()
-                                    .flatMap(existingTemplate -> {
-                                        if (existingTemplate == null) {
-                                            logger.info("Creating Message Template for: " + person.email + " - " + attendanceListId);
-                                            MessageTemplate link = new MessageTemplate(person, attendanceList);
-                                            return link.persistAndFlush().replaceWithVoid();
-                                            // eventBus.publish(PERSIST_COMMUNICATION, link.toCommunicationDto()); // opcjonalnie w invoke()
-                                        } else {
-                                            logger.info("Person " + person.email + " already has message template for attendance list " + attendanceListId);
-                                            return Uni.createFrom().voidItem();
-                                        }
-                                    })
-                            ).toList();
+                    return Multi.createFrom().iterable(persons)
+                            .onItem().transformToUniAndConcatenate(person ->
+                                    MessageTemplate.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id)
+                                            .firstResult()
+                                            .flatMap(messageTemplate -> {
+                                                if (messageTemplate != null) {
+                                                    logger.info("Found existing MessageTemplate for person: " + person.id);
+                                                    return Uni.createFrom().voidItem();
+                                                } else {
+                                                    logger.info("Creating new MessageTemplate for person: " + person.id);
+                                                    MessageTemplate newTemplate = new MessageTemplate(person, attendanceList);
+                                                    return newTemplate.persist()
+                                                            .replaceWithVoid();
+                                                }
+                                            })
+                            )
+                            .collect().last()
+                            .replaceWithVoid();
 
-                    return Uni.combine().all().unis(createLinksUnis).discardItems()
-                            .map(i -> false);
                 });
     }
 
     @POST
     @Path("/{attendanceListId}/send/{personId}")
     @WithTransaction
-    public Uni<Void> saveAttendanceListMessageToPerson(@PathParam("attendanceListId") UUID attendanceListId, @PathParam("personId") UUID personId) {
+    public Uni<Void> saveAttendanceListMessageToPerson(@PathParam("attendanceListId") UUID
+                                                               attendanceListId, @PathParam("personId") UUID personId) {
         logger.info(String.format("Start saving message for attendanceList %s for person %s", attendanceListId, personId));
 
         return AttendanceList.<AttendanceList>findById(attendanceListId)

@@ -40,58 +40,60 @@ public class GroupsPageResource {
 
     @GET
     @Produces(MediaType.TEXT_HTML)
+    @WithTransaction
     public Uni<TemplateInstance> list() {
-        return Group.listAll().flatMap(groups -> (Uni<? extends TemplateInstance>) listGroups.data("groups", groups));
+        return Group.listAll()
+                .flatMap(groups -> Uni.createFrom()
+                        .item(listGroups.data("groups", groups)));
     }
 
     @GET
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
     public Uni<TemplateInstance> createForm() {
-        // Pobierz listę osób do wyboru w formularzu
         return personRepository.listAll()
-                .flatMap(persons -> {
-                    return (Uni<? extends TemplateInstance>) createGroup.data("group", new Group(),
-                            "persons", persons);
-                });
+                .flatMap(persons -> Uni.createFrom()
+                        .item(createGroup.data("group", new Group(),
+                                "persons", persons)));
 
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
+    @WithTransaction
     public Uni<Response> create(@BeanParam GroupCreateRequest request) {
-        return personRepository.currentUserId()
-                .flatMap(uuid -> {
-                    // Tworzymy nową grupę
-                    Group group = new Group();
-                    group.name = request.name;
-                    group.registeredUserId = uuid;
-                    group.persist();
-
-                    // Pobieramy osoby po ID z requestu i przypisujemy do grupy
-                    if (request.persons != null && !request.persons.isEmpty()) {
-                        return Person
-                                .find("id in ?1", request.persons)
-                                .list()
-                                .flatMap(
-                                        selectedPersons -> {
-                                            selectedPersons.forEach(pp -> {
-                                                Person p = (Person) pp;
-                                                if (p.groups == null) {
-                                                    p.groups = new HashSet<>();
-                                                }
-                                                p.groups.add(group);
-                                                p.persist();
-                                            });
-                                            return Uni.createFrom().item(Response.status(Response.Status.SEE_OTHER)
-                                                    .location(java.net.URI.create("/web/groups"))
-                                                    .build());
-                                        }
-                                );
-                    }
-                    return null;
-                });
+        return Uni.createFrom().item(Response.ok().build());
+//        return personRepository.currentUserId()
+//                .flatMap(uuid -> {
+//                    // Tworzymy nową grupę
+//                    Group group = new Group();
+//                    group.name = request.name;
+//                    group.registeredUserId = uuid;
+//                    group.persist();
+//
+//                    // Pobieramy osoby po ID z requestu i przypisujemy do grupy
+//                    if (request.persons != null && !request.persons.isEmpty()) {
+//                        return Person
+//                                .find("id in ?1", request.persons)
+//                                .list()
+//                                .flatMap(
+//                                        selectedPersons -> {
+//                                            selectedPersons.forEach(pp -> {
+//                                                Person p = (Person) pp;
+//                                                if (p.groups == null) {
+//                                                    p.groups = new HashSet<>();
+//                                                }
+//                                                p.groups.add(group);
+//                                                p.persist();
+//                                            });
+//                                            return Uni.createFrom().item(Response.status(Response.Status.SEE_OTHER)
+//                                                    .location(java.net.URI.create("/web/groups"))
+//                                                    .build());
+//                                        }
+//                                );
+//                    }
+//                    return null;
+//                });
     }
 
     @GET
@@ -176,7 +178,7 @@ public class GroupsPageResource {
     @POST
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
+    @WithTransaction
     public Uni<Response> deleteGroup(@PathParam("id") UUID id, @FormParam("_method") String method) {
         return ReactiveDelete.reactiveDelete(id, method, Group::findById, "/web/groups");
     }

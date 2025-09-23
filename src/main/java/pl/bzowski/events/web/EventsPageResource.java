@@ -6,29 +6,36 @@ import io.quarkus.panache.common.Sort;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Uni;
-import jakarta.transaction.Transactional;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
+import org.jboss.logmanager.Level;
 import pl.bzowski.attendance_list.api.AttendanceListDTO;
 import pl.bzowski.attendance_list.infrastructure.AttendanceListRepository;
 import pl.bzowski.base.ReactiveDelete;
 import pl.bzowski.communication.SendingStatus;
 import pl.bzowski.events.Event;
 import pl.bzowski.events.EventRepository;
+import pl.bzowski.group.Group;
 import pl.bzowski.group.GroupsRepository;
-import pl.bzowski.message_template.LinkGenerationResource;
+import pl.bzowski.message_template.AttendanceCreatedDto;
 import pl.bzowski.message_template.MessageTemplate;
 import pl.bzowski.events.PersonEventAnswer;
 import pl.bzowski.persons.Person;
 import pl.bzowski.persons.PersonRepository;
+import pl.bzowski.tags.Tag;
 import pl.bzowski.tags.TagsRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.logging.Logger;
+
+import static pl.bzowski.message_template.AttendanceCreatedDto.EVENT_WITH_ATTENDANCE_CREATED;
 
 @Path("/web/events")
 public class EventsPageResource {
@@ -43,9 +50,9 @@ public class EventsPageResource {
     private final GroupsRepository groupsRepository;
     private final PersonRepository personRepository;
     private final AttendanceListRepository attendanceListRepository;
-    private final LinkGenerationResource linkGenerationResource;
+    private final EventBus eventBus;
 
-    public EventsPageResource(Template addEvent, Template listEvents, Template eventDetails, TagsRepository tagsRepository, EventRepository eventRepository, GroupsRepository groupsRepository, PersonRepository personRepository, AttendanceListRepository attendanceListRepository, LinkGenerationResource linkGenerationResource) {
+    public EventsPageResource(Template addEvent, Template listEvents, Template eventDetails, TagsRepository tagsRepository, EventRepository eventRepository, GroupsRepository groupsRepository, PersonRepository personRepository, AttendanceListRepository attendanceListRepository, EventBus eventBus) {
         this.addEvent = addEvent;
         this.listEvents = listEvents;
         this.eventDetails = eventDetails;
@@ -54,7 +61,7 @@ public class EventsPageResource {
         this.groupsRepository = groupsRepository;
         this.personRepository = personRepository;
         this.attendanceListRepository = attendanceListRepository;
-        this.linkGenerationResource = linkGenerationResource;
+        this.eventBus = eventBus;
     }
 
     @GET
@@ -62,88 +69,87 @@ public class EventsPageResource {
     public Uni<TemplateInstance> listEvents() {
         return eventRepository
                 .listAll(Sort.by("localDateTime"))
-                .flatMap(
-                        events -> (Uni<? extends TemplateInstance>) listEvents.data("events", events));
+                .flatMap(events -> Uni.createFrom().item(listEvents.data("events", events)));
+    }
+
+    private Uni<List<Tag>> loadTags() {
+        return tagsRepository.listAll();
+    }
+
+    private Uni<List<Group>> loadGroups() {
+        return groupsRepository.listAll();
+    }
+
+    private Uni<List<Person>> loadPersons() {
+        return personRepository.listAll();
     }
 
     @GET
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance showAddForm() {
-        var tags = tagsRepository.listAll();
-        var groups = groupsRepository.listAll();
-        var persons = personRepository.listAll();
-        return addEvent.data("tags", tags,
-                "groups", groups,
-                "persons", persons);
+    @WithTransaction
+    public Uni<TemplateInstance> showAddForm() {
+        return loadTags()
+                .flatMap(tags -> loadGroups()
+                        .flatMap(groups -> loadPersons()
+                                .map(persons -> addEvent.data(
+                                        "tags", tags,
+                                        "groups", groups,
+                                        "persons", persons
+                                ))));
     }
+
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @WithTransaction
-    public Uni<Response> addEvent(@BeanParam EventDto eventDto,
-                                  @FormParam("withAttendanceList") String withAttendanceList,
-                                  @FormParam("attendanceType") String attendanceType,
-                                  @FormParam("groups") List<UUID> groupIds,
-                                  @FormParam("persons") List<UUID> personIds) {
+    public Uni<Response> createEvent(@BeanParam EventDto eventDto,
+                                     @FormParam("withAttendanceList") String withAttendanceList,
+                                     @FormParam("attendanceType") String attendanceType,
+                                     @FormParam("groups") List<UUID> groupIds,
+                                     @FormParam("persons") List<UUID> personIds) {
         return eventRepository.persist(eventDto)
-                .flatMap(event -> {
-                    logger.info("withAttendanceList: " + withAttendanceList);
-                    if ("checked".equals(withAttendanceList)) {
-                        return persistAttendanceList(eventDto, event)
-                                .flatMap(attendanceList -> {
-
-                                    Uni<Boolean> generateLinksUni;
-
-                                    switch (attendanceType) {
-                                        case "group":
-                                            if (groupIds != null && !groupIds.isEmpty()) {
-                                                generateLinksUni = getPersonsFromGroups(groupIds)
-                                                        .flatMap(personsFromGroups -> linkGenerationResource.generateMessageTemplateFor(attendanceList.id, personsFromGroups));
-                                            } else {
-                                                generateLinksUni = Uni.createFrom().item(false);
-                                            }
-                                            break;
-                                        case "person":
-                                            if (personIds != null && !personIds.isEmpty()) {
-                                                generateLinksUni = getSelectedPersonsFromForm(personIds)
-                                                        .flatMap(selectedPersons -> {
-                                                            logger.info("Kot: " + selectedPersons.size());
-                                                            return linkGenerationResource.generateMessageTemplateFor(attendanceList.id, selectedPersons);
-                                                        });
-                                            } else {
-                                                generateLinksUni = Uni.createFrom().item(false);
-                                            }
-                                            break;
-                                        case "all":
-                                            generateLinksUni = personRepository.listAll()
-                                                    .flatMap(allPersons -> linkGenerationResource.generateMessageTemplateFor(attendanceList.id, allPersons));
-                                            break;
-                                        default:
-                                            generateLinksUni = Uni.createFrom().item(false);
-                                    }
-
-                                    return generateLinksUni
-                                            .map(generated ->
-                                                    Response.seeOther(UriBuilder.fromPath("/web/attendance_list/" + attendanceList.id + "/details").build())
-                                                            .build());
-                                });
-                    } else {
-                        return Uni.createFrom().item(
-                                Response.seeOther(UriBuilder.fromPath("/web/events/" + event.id + "/details").build())
-                                        .build()
-                        );
-                    }
-                });
+                .invoke(withAttendanceListLogger(withAttendanceList))
+                .call(eventIfWithAttendanceListChecked(eventDto, withAttendanceList, attendanceType, groupIds, personIds))
+                .map(redirectToEventDetails())
+                .onFailure().invoke(logFailure())
+                .onFailure().recoverWithItem(returnServerError());
     }
 
-
-    private static Uni<List<Person>> getSelectedPersonsFromForm(List<UUID> personIds) {
-        return Person.find("id in ?1", personIds).list();
+    private static Function<Event, Response> redirectToEventDetails() {
+        return event -> Response.seeOther(UriBuilder.fromPath("/web/events/" + event.id + "/details").build()).build();
     }
 
-    private static Uni<List<Person>> getPersonsFromGroups(List<UUID> groupIds) {
-        return Person.find("select p from Person p join p.groups g where g.id in ?1", groupIds).list();
+    private Function<Event, Uni<?>> eventIfWithAttendanceListChecked(EventDto eventDto, String withAttendanceList, String attendanceType, List<UUID> groupIds, List<UUID> personIds) {
+        return event -> {
+            if ("checked".equals(withAttendanceList)) {
+                return attendanceListRepository.createAttendanceList(new AttendanceListDTO(event.id))
+                        .onItem()
+                        .invoke(publish(eventDto, withAttendanceList, attendanceType, groupIds, personIds, event));
+            }
+            return Uni.createFrom().voidItem();
+        };
+    }
+
+    private Consumer<AttendanceListDTO> publish(EventDto eventDto, String withAttendanceList, String attendanceType, List<UUID> groupIds, List<UUID> personIds, Event event) {
+        return attendanceListDTO -> {
+            eventBus.publish(EVENT_WITH_ATTENDANCE_CREATED,
+                    new AttendanceCreatedDto(withAttendanceList, attendanceType, groupIds, personIds, attendanceListDTO.id, event.registeredUserId, eventDto));
+        };
+    }
+
+    private Consumer<Event> withAttendanceListLogger(String withAttendanceList) {
+        return event -> logger.info("Created event withAttendanceList: " + withAttendanceList);
+    }
+
+    private static Function<Throwable, Response> returnServerError() {
+        return throwable -> Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity("Unable to create event: " + throwable.getMessage())
+                .build();
+    }
+
+    private Consumer<Throwable> logFailure() {
+        return ex -> logger.log(Level.ERROR, "Failed to create event", ex);
     }
 
     private Uni<AttendanceListDTO> persistAttendanceList(EventDto eventDto, Event event) {
@@ -158,86 +164,137 @@ public class EventsPageResource {
     @Path("/{id}/details")
     @Produces(MediaType.TEXT_HTML)
     public Uni<TemplateInstance> eventDetails(@PathParam("id") UUID id) {
-        logger.info("Kot:" + id.toString());
+        return findEventById(id)
+                .flatMap(this::loadLinkCount)
+                .flatMap(this::loadSentLinkCount)
+                .flatMap(this::loadAnswerYesCount)
+                .flatMap(this::loadAnswerNoCount)
+                .flatMap(this::loadAnswerLaterCount)
+                .flatMap(this::loadStats)
+                .map(this::buildTemplateInstance);
+    }
+
+    private Uni<EventContext> findEventById(UUID id) {
         return Event.<Event>findById(id)
                 .onItem().ifNull().failWith(() -> new WebApplicationException("Event not found", 404))
-                .onItem().transformToUni(event -> {
-                    boolean noAttendanceListYet = event.attendanceList == null;
-                    UUID attendanceListId = noAttendanceListYet ? null : event.attendanceList.id;
+                .map(event -> new EventContext(event));
+    }
 
-                    Uni<Long> linkCount = noAttendanceListYet ?
-                            Uni.createFrom().item(0L) :
-                            MessageTemplate.count("attendanceListId = ?1", attendanceListId);
-
-                    Uni<Long> sentLinkCount = noAttendanceListYet ?
-                            Uni.createFrom().item(0L) :
-                            MessageTemplate.count("attendanceListId = ?1 and status = ?2", attendanceListId, SendingStatus.SENT);
-
-                    Uni<Long> answerYesCount = PersonEventAnswer.count("event = ?1 and answer = ?2", event, PersonEventAnswer.Answer.TAK);
-                    Uni<Long> answerNoCount = PersonEventAnswer.count("event = ?1 and answer = ?2", event, PersonEventAnswer.Answer.NIE);
-                    Uni<Long> answerLaterCount = PersonEventAnswer.count("event = ?1 and answer = ?2", event, PersonEventAnswer.Answer.ODPOWIEM_POZNIEJ);
-
-                    return Uni.combine().all().unis(linkCount, sentLinkCount, answerYesCount, answerNoCount, answerLaterCount)
-                            .asTuple()
-                            .onItem().transformToUni(tuple -> {
-                                long linkCountVal = tuple.getItem1();
-                                long sentLinkCountVal = tuple.getItem2();
-                                long answerYesCountVal = tuple.getItem3();
-                                long answerNoCountVal = tuple.getItem4();
-                                long answerLaterCountVal = tuple.getItem5();
-
-                                long answerSum = answerYesCountVal + answerNoCountVal + answerLaterCountVal;
-                                long unansweredCount = linkCountVal - answerSum;
-
-                                PersonEventAnswer.Answer tak = PersonEventAnswer.Answer.TAK;
-
-                                Uni<List<Object[]>> takStatsUni = getResultListReactive(event, tak);
-                                Uni<List<Object[]>> nieStatsUni = getResultListReactive(event, PersonEventAnswer.Answer.NIE);
-                                Uni<List<Object[]>> laterStatsUni = getResultListReactive(event, PersonEventAnswer.Answer.ODPOWIEM_POZNIEJ);
-
-                                return Uni.combine().all().unis(takStatsUni, nieStatsUni, laterStatsUni)
-                                        .asTuple()
-                                        .onItem().transform(tupleStats -> {
-                                            List<Object[]> takStats = tupleStats.getItem1();
-                                            List<Object[]> nieStats = tupleStats.getItem2();
-                                            List<Object[]> laterStats = tupleStats.getItem3();
-
-                                            record Stats(String tag, Long yes, Long no, Long later) {
-                                            }
-
-                                            List<Stats> fullStats = new ArrayList<>();
-                                            for (Object[] takStat : takStats) {
-                                                String tag = (String) takStat[0];
-                                                Long yes = (Long) takStat[1];
-                                                Long no = nieStats.stream()
-                                                        .filter(o -> o[0].equals(tag))
-                                                        .findFirst()
-                                                        .map(o -> (Long) o[1])
-                                                        .orElse(0L);
-                                                Long later = laterStats.stream()
-                                                        .filter(o -> o[0].equals(tag))
-                                                        .findFirst()
-                                                        .map(o -> (Long) o[1])
-                                                        .orElse(0L);
-                                                fullStats.add(new Stats(tag, yes, no, later));
-                                            }
-
-                                            // Zakładam, że eventDetails jest polem TemplateInstance dostępnego w klasie
-                                            return eventDetails
-                                                    .data("event", event)
-                                                    .data("linkCount", linkCountVal)
-                                                    .data("sentLinkCount", sentLinkCountVal)
-                                                    .data("answerSum", answerSum)
-                                                    .data("unansweredCount", unansweredCount)
-                                                    .data("answerYesCount", answerYesCountVal)
-                                                    .data("answerNoCount", answerNoCountVal)
-                                                    .data("answerLaterCount", answerLaterCountVal)
-                                                    .data("fullStats", fullStats)
-                                                    .data("noAttendanceListYet", noAttendanceListYet)
-                                                    .data("eventAttendanceListId", attendanceListId);
-                                        });
-                            });
+    private Uni<EventContext> loadLinkCount(EventContext ctx) {
+        if (ctx.noAttendanceListYet) {
+            ctx.linkCount = 0L;
+            return Uni.createFrom().item(ctx);
+        }
+        return MessageTemplate.count("attendanceListId = ?1", ctx.attendanceListId)
+                .map(count -> {
+                    ctx.linkCount = count;
+                    return ctx;
                 });
+    }
+
+    private Uni<EventContext> loadSentLinkCount(EventContext ctx) {
+        if (ctx.noAttendanceListYet) {
+            ctx.sentLinkCount = 0L;
+            return Uni.createFrom().item(ctx);
+        }
+        return MessageTemplate.count("attendanceListId = ?1 and status = ?2", ctx.attendanceListId, SendingStatus.SENT)
+                .map(count -> {
+                    ctx.sentLinkCount = count;
+                    return ctx;
+                });
+    }
+
+    private Uni<EventContext> loadAnswerYesCount(EventContext ctx) {
+        return PersonEventAnswer.count("event = ?1 and answer = ?2", ctx.event, PersonEventAnswer.Answer.TAK)
+                .map(count -> {
+                    ctx.answerYesCount = count;
+                    return ctx;
+                });
+    }
+
+    private Uni<EventContext> loadAnswerNoCount(EventContext ctx) {
+        return PersonEventAnswer.count("event = ?1 and answer = ?2", ctx.event, PersonEventAnswer.Answer.NIE)
+                .map(count -> {
+                    ctx.answerNoCount = count;
+                    return ctx;
+                });
+    }
+
+    private Uni<EventContext> loadAnswerLaterCount(EventContext ctx) {
+        return PersonEventAnswer.count("event = ?1 and answer = ?2", ctx.event, PersonEventAnswer.Answer.ODPOWIEM_POZNIEJ)
+                .map(count -> {
+                    ctx.answerLaterCount = count;
+                    return ctx;
+                });
+    }
+
+    private Uni<EventContext> loadStats(EventContext ctx) {
+        // Sekwencyjne ładowanie statystyk odpowiedzi według tagów
+        return getResultListReactive(ctx.event, PersonEventAnswer.Answer.TAK).flatMap(takStats -> {
+            return getResultListReactive(ctx.event, PersonEventAnswer.Answer.NIE).flatMap(nieStats -> {
+                return getResultListReactive(ctx.event, PersonEventAnswer.Answer.ODPOWIEM_POZNIEJ).map(laterStats -> {
+                    ctx.fullStats = combineStats(takStats, nieStats, laterStats);
+                    return ctx;
+                });
+            });
+        });
+    }
+
+    private List<EventDetails.Stats> combineStats(List<Object[]> takStats, List<Object[]> nieStats, List<Object[]> laterStats) {
+        List<EventDetails.Stats> fullStats = new ArrayList<>();
+        for (Object[] takStat : takStats) {
+            String tag = (String) takStat[0];
+            Long yes = (Long) takStat[1];
+            Long no = nieStats.stream()
+                    .filter(o -> o[0].equals(tag))
+                    .findFirst()
+                    .map(o -> (Long) o[1])
+                    .orElse(0L);
+            Long later = laterStats.stream()
+                    .filter(o -> o[0].equals(tag))
+                    .findFirst()
+                    .map(o -> (Long) o[1])
+                    .orElse(0L);
+            fullStats.add(new EventDetails.Stats(tag, yes, no, later));
+        }
+        return fullStats;
+    }
+
+    private TemplateInstance buildTemplateInstance(EventContext ctx) {
+        long answerSum = ctx.answerYesCount + ctx.answerNoCount + ctx.answerLaterCount;
+        long unansweredCount = ctx.linkCount - answerSum;
+
+        return eventDetails
+                .data("event", ctx.event)
+                .data("linkCount", ctx.linkCount)
+                .data("sentLinkCount", ctx.sentLinkCount)
+                .data("answerSum", answerSum)
+                .data("unansweredCount", unansweredCount)
+                .data("answerYesCount", ctx.answerYesCount)
+                .data("answerNoCount", ctx.answerNoCount)
+                .data("answerLaterCount", ctx.answerLaterCount)
+                .data("fullStats", ctx.fullStats)
+                .data("noAttendanceListYet", ctx.noAttendanceListYet)
+                .data("eventAttendanceListId", ctx.attendanceListId);
+    }
+
+    private static class EventContext {
+        final Event event;
+        final boolean noAttendanceListYet;
+        final UUID attendanceListId;
+
+        long linkCount;
+        long sentLinkCount;
+        long answerYesCount;
+        long answerNoCount;
+        long answerLaterCount;
+        List<EventDetails.Stats> fullStats;
+
+        EventContext(Event event) {
+            this.event = event;
+            this.noAttendanceListYet = event.attendanceList == null;
+            this.attendanceListId = noAttendanceListYet ? null : event.attendanceList.id;
+        }
     }
 
 

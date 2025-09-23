@@ -3,18 +3,13 @@ package pl.bzowski.message_template;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import pl.bzowski.attendance_list.AttendanceList;
-import pl.bzowski.communication.CommunicationDto;
 import pl.bzowski.communication.SendingStatus;
-import pl.bzowski.events.web.EventDto;
 import pl.bzowski.persons.Person;
 
-import javax.swing.plaf.ComponentUI;
-import java.util.Collections;
-import java.util.Map;
 import java.util.UUID;
 
 @Entity
-@Table(name = "person_attendance_list_links")
+@Table(name = "person_attendance_list_links")//TODO: AttendanceEntry
 public class MessageTemplate extends PanacheEntityBase {
 
     @Id

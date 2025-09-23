@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Singleton
-@Transactional
 public class PersonService {
 
     private final PersonRepository personRepository;

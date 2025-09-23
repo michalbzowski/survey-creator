@@ -1,6 +1,7 @@
 package pl.bzowski.attendance_list;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import jakarta.persistence.*;
 import pl.bzowski.events.Event;
 import pl.bzowski.attendance_list.api.AttendanceListDTO;
@@ -10,7 +11,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "attendance_list")
+@Table(name = "attendance_list")//TODO: Attendance -zmien nazwe skasuj list
 public class AttendanceList extends PanacheEntityBase {
 
     @Id
@@ -20,7 +21,7 @@ public class AttendanceList extends PanacheEntityBase {
     @Column
     public String name;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
     @JoinTable(name = "attendance_list_events",
             joinColumns = @JoinColumn(name = "attendance_list_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id"))
@@ -36,10 +37,10 @@ public class AttendanceList extends PanacheEntityBase {
         this.events = events;
     }
 
-    // Przykładowa metoda tworząca DTO z AttendanceList do REST API
     public AttendanceListDTO toDTO() {
         return new AttendanceListDTO(this.id, this.name, this.events.stream().map(e -> e.id).toList());
     }
+
 
     public String joinedEventsName() {
         return events.stream().map(e -> e.name).collect(Collectors.joining(", "));

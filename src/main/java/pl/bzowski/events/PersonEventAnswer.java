@@ -8,7 +8,7 @@ import pl.bzowski.attendance_list.AttendanceList;
 import java.util.UUID;
 
 @Entity
-@Table(name = "person_event_answers")
+@Table(name = "person_event_answers")//TODO: PersonAnswer
 public class PersonEventAnswer extends PanacheEntityBase {
 
     @Id

@@ -52,9 +52,9 @@ public class AttendanceListPageResource {
                                     if (attendanceList == null) {
                                         throw new NotFoundException("Nie znaleziono zapytania");
                                     }
-                                    return (Uni<TemplateInstance>) attendanceListDetails
+                                    return Uni.createFrom().item(attendanceListDetails
                                             .data("attendanceList", attendanceList)
-                                            .data("links", links);
+                                            .data("links", links));
                                 }));
     }
 
@@ -84,22 +84,21 @@ public class AttendanceListPageResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
-    public Response createAttendanceList(AttendanceListDTO attendanceList) {
-        try {
-            var dto = attendanceListRepository.createAttendanceList(attendanceList);
-            return Response.ok(dto).build();
-        } catch (IllegalArgumentException e) {
-            // obsługa błędu, np. zwrócenie strony z komunikatem
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+    @WithTransaction
+    public Uni<Response> createAttendanceList(AttendanceListDTO attendanceList) {
+        return attendanceListRepository.createAttendanceList(attendanceList)
+                .onItem()
+                .transformToUni(list -> Uni.createFrom().item(Response.ok(list).build()))
+                .onFailure()
+                .recoverWithItem(e -> Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build());
     }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
+    @WithTransaction
     public Uni<TemplateInstance> listQueries() {
         return attendanceListRepository
-                .listAll()
+                .listAllWithEvents()
                 .onItem()
                 .transform(attendanceLists -> listAttendanceList.data("attendanceList", attendanceLists));
     }
@@ -107,7 +106,7 @@ public class AttendanceListPageResource {
     @POST
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
+    @WithTransaction
     public Uni<Response> deletePersonDDD(@PathParam("id") UUID id, @FormParam("_method") String method) {
         return ReactiveDelete.reactiveDelete(id, method, AttendanceList::findById, "/web/attendance_list");
     }
