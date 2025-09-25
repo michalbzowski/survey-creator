@@ -50,7 +50,7 @@ public class AttendanceListRepository extends RepositoryBase {
                             attendanceList.events = events;
                             attendanceList.registeredUserId = uuid;
                             return Panache.withTransaction(attendanceList::persist)
-                                    .onItem().transform(v -> {
+                                    .onItem().transform(_ -> {
                                         attendanceListDTO.id = attendanceList.id;
                                         for (Event ev : events) {
                                             ev.attendanceList = attendanceList;

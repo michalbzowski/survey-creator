@@ -40,7 +40,7 @@ public class EmailAttendanceRecordLinkSender implements CommunicationSender {
 
         return emailService.sendEmail(communication.getPersonEmail(), "Czy będziesz obecny?", render)
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .flatMap(v -> {
+                .flatMap(_ -> {
                     logger.info("Confirmation mail sent");
                     communication.statusSent();
                     return communication.persist().replaceWithVoid();

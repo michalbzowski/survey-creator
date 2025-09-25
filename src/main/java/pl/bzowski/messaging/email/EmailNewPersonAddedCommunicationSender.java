@@ -34,7 +34,7 @@ public class EmailNewPersonAddedCommunicationSender implements CommunicationSend
                 .render();
         return emailService.sendEmail(communication.getPersonEmail(), "Potwierdź adres email", body)
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .flatMap(v -> {
+                .flatMap(_ -> {
                     logger.info("Confirmation mail sent");
                     communication.statusSent();
                     return communication.persist().replaceWithVoid();

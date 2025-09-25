@@ -1,6 +1,5 @@
 package pl.bzowski.messaging;
 
-import io.smallrye.mutiny.Uni;
 import pl.bzowski.persons.Person;
 
 import java.util.Map;
@@ -11,6 +10,8 @@ public class PersistCommunicationCommand {
     private final Channel channel;
 
     private final CommunicationTemplate communicationTemplate;
+
+    private final UUID currentUserId;
 
     private final UUID personId;
 
@@ -28,6 +29,7 @@ public class PersistCommunicationCommand {
     public PersistCommunicationCommand(Channel channel, CommunicationTemplate communicationTemplate, UUID currentUserId, Person person, Map<String, Object> properties) {
         this.channel = channel;
         this.communicationTemplate = communicationTemplate;
+        this.currentUserId = currentUserId;
         this.personId = person.id;
         this.personFirstName = person.firstName;
         this.personLastName = person.lastName;
@@ -42,6 +44,10 @@ public class PersistCommunicationCommand {
 
     public CommunicationTemplate getCommunicationTemplate() {
         return communicationTemplate;
+    }
+
+    public UUID getCurrentUserId() {
+        return currentUserId;
     }
 
     public UUID getPersonId() {
