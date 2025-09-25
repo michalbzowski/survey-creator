@@ -7,6 +7,7 @@ import io.vertx.ext.mail.MailMessage;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import pl.bzowski.messaging.infrastructure.EmailService;
 
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -12,16 +12,16 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.jboss.logmanager.Level;
-import pl.bzowski.attendance_list.api.AttendanceListDTO;
-import pl.bzowski.attendance_list.infrastructure.AttendanceListRepository;
+import pl.bzowski.attendances.list.api.AttendanceListDTO;
+import pl.bzowski.attendances.list.infrastructure.AttendanceListRepository;
 import pl.bzowski.base.ReactiveDelete;
-import pl.bzowski.communication.SendingStatus;
+import pl.bzowski.messaging.SendingStatus;
 import pl.bzowski.events.Event;
 import pl.bzowski.events.EventRepository;
-import pl.bzowski.group.Group;
-import pl.bzowski.group.GroupsRepository;
-import pl.bzowski.message_template.AttendanceCreatedDto;
-import pl.bzowski.message_template.MessageTemplate;
+import pl.bzowski.groups.Group;
+import pl.bzowski.groups.GroupsRepository;
+import pl.bzowski.attendances.entry.AttendanceCreatedDto;
+import pl.bzowski.attendances.entry.AttendanceEntry;
 import pl.bzowski.events.PersonEventAnswer;
 import pl.bzowski.persons.Person;
 import pl.bzowski.persons.PersonRepository;
@@ -35,7 +35,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-import static pl.bzowski.message_template.AttendanceCreatedDto.EVENT_WITH_ATTENDANCE_CREATED;
+import static pl.bzowski.attendances.entry.AttendanceCreatedDto.EVENT_WITH_ATTENDANCE_CREATED;
 
 @Path("/web/events")
 public class EventsPageResource {
@@ -185,7 +185,7 @@ public class EventsPageResource {
             ctx.linkCount = 0L;
             return Uni.createFrom().item(ctx);
         }
-        return MessageTemplate.count("attendanceListId = ?1", ctx.attendanceListId)
+        return AttendanceEntry.count("attendanceListId = ?1", ctx.attendanceListId)
                 .map(count -> {
                     ctx.linkCount = count;
                     return ctx;
@@ -197,7 +197,7 @@ public class EventsPageResource {
             ctx.sentLinkCount = 0L;
             return Uni.createFrom().item(ctx);
         }
-        return MessageTemplate.count("attendanceListId = ?1 and status = ?2", ctx.attendanceListId, SendingStatus.SENT)
+        return AttendanceEntry.count("attendanceListId = ?1 and status = ?2", ctx.attendanceListId, SendingStatus.SENT)
                 .map(count -> {
                     ctx.sentLinkCount = count;
                     return ctx;

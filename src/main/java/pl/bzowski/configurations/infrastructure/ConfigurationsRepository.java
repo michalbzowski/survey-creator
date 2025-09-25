@@ -1,19 +1,16 @@
 package pl.bzowski.configurations.infrastructure;
 
-import io.quarkus.hibernate.reactive.panache.PanacheQuery;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Singleton;
-import jakarta.transaction.Transactional;
 import pl.bzowski.base.RepositoryBase;
 import pl.bzowski.configurations.Configurations;
 import pl.bzowski.events.Event;
-import pl.bzowski.communication.messenger.MessengerService;
-import pl.bzowski.communication.messenger.MessengerUserAgreement;
+import pl.bzowski.messaging.messenger.MessengerService;
+import pl.bzowski.messaging.messenger.MessengerUserAgreement;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 

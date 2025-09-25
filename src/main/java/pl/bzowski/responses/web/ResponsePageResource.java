@@ -4,18 +4,15 @@ import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Uni;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
-import pl.bzowski.attendance_list.AttendanceList;
+import pl.bzowski.attendances.list.AttendanceList;
 import pl.bzowski.events.Event;
-import pl.bzowski.message_template.MessageTemplate;
+import pl.bzowski.attendances.entry.AttendanceEntry;
 import pl.bzowski.persons.Person;
 import pl.bzowski.events.PersonEventAnswer;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -38,7 +35,7 @@ public class ResponsePageResource {
     @Path("/{token}")
     @Produces(MediaType.TEXT_HTML)
     public Uni<TemplateInstance> showForm(@PathParam("token") UUID token) {
-        return MessageTemplate.find("linkToken", token)
+        return AttendanceEntry.find("linkToken", token)
                 .firstResult()
                 .onItem().ifNull().failWith(() -> new NotFoundException("Nie znaleziono linku"))
                 .map(link -> responseForm.data("link", link));
@@ -52,13 +49,13 @@ public class ResponsePageResource {
     public Uni<TemplateInstance> submitAnswer(@PathParam("token") UUID token, Map<String, String> answers) {
         logger.info(String.format("Submit answer for %s - %d", token.toString(), answers.size()));
 
-        return MessageTemplate.find("linkToken", token)
+        return AttendanceEntry.find("linkToken", token)
                 .firstResult()
                 .onItem().ifNull().failWith(() -> new NotFoundException("Nie znaleziono linku " + token))
-                .flatMap(link -> Person.findById(((MessageTemplate) link).personId)
+                .flatMap(link -> Person.findById(((AttendanceEntry) link).personId)
                         .flatMap(www -> {
                             Person person = (Person) www;
-                            AttendanceList attendanceList = ((MessageTemplate) link).attendanceList;
+                            AttendanceList attendanceList = ((AttendanceEntry) link).attendanceList;
                             // Przetwarzamy kolejne odpowiedzi sekwencyjnie reaktywnie
                             Uni<Void> allUpdates = Uni.createFrom().voidItem();
 
@@ -93,7 +90,7 @@ public class ResponsePageResource {
                                                                     newAnswer.attendanceList = attendanceList;
                                                                     newAnswer.event = (Event) event;
                                                                     newAnswer.answer = finalAnswer;
-                                                                    ((MessageTemplate) link).attendanceListAnswered = Boolean.TRUE;
+                                                                    ((AttendanceEntry) link).attendanceListAnswered = Boolean.TRUE;
                                                                     return newAnswer.persistAndFlush().replaceWithVoid();
                                                                 }
                                                             });

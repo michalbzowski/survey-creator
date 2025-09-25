@@ -6,7 +6,6 @@ import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -14,22 +13,21 @@ import jakarta.ws.rs.core.UriBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logmanager.Level;
 import pl.bzowski.base.CurrentUserRepository;
-import pl.bzowski.communication.*;
-import pl.bzowski.group.Group;
-import pl.bzowski.group.GroupsRepository;
+import pl.bzowski.messaging.*;
+import pl.bzowski.messaging.agreement.CommunicationPersonAgreement;
+import pl.bzowski.groups.Group;
+import pl.bzowski.groups.GroupsRepository;
 import pl.bzowski.persons.Person;
-import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.persons.PersonService;
 import pl.bzowski.tags.Tag;
 import pl.bzowski.tags.TagsRepository;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-import static pl.bzowski.communication.CommunicationEventListener.PERSIST_COMMUNICATION;
+import static pl.bzowski.messaging.CommunicationEventListener.PERSIST_COMMUNICATION;
 
 @Path("/web/persons")
 public class PersonPageResource {
@@ -97,8 +95,9 @@ public class PersonPageResource {
                             .invoke(() -> {
                                 logger.info("start \"save-communication\"");
                                 eventBus.publish(PERSIST_COMMUNICATION,
-                                        new CommunicationDto(Channel.EMAIL,
+                                        new PersistCommunicationCommand(Channel.EMAIL,
                                                 CommunicationTemplate.EMAIL_NEW_PERSON_ADDED,
+                                                cpa.registeredUserId,
                                                 person,
                                                 Map.of(
                                                         "userEmail", currentUserRepository.currentRegisteredUserEmail(),

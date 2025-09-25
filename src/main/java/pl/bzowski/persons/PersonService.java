@@ -5,13 +5,10 @@ import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
-import pl.bzowski.group.Group;
-import pl.bzowski.group.GroupsPageResource;
+import pl.bzowski.groups.Group;
 import pl.bzowski.tags.Tag;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;

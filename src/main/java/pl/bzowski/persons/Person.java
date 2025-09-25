@@ -2,7 +2,7 @@ package pl.bzowski.persons;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import pl.bzowski.group.Group;
+import pl.bzowski.groups.Group;
 import pl.bzowski.tags.Tag;
 
 import java.util.HashSet;

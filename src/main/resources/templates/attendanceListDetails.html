@@ -40,7 +40,7 @@
         <td><a href="/web/responses/{link.linkToken}" target="_blank">Otwórz</a></td>
 
         <td style="text-align: center;">
-            {#if link.status.name() eq "TO_SEND"}
+            {#if link.communicationLinks}
             <a href="#" id="{link.id}" data-id="{link.id}"  class="send-email-button" data-attendance-list-id="{attendanceList.id}" data-link-person-id="{link.personId}">
                 Wyślij e-mail
             </a>
