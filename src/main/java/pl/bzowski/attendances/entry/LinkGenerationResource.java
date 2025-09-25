@@ -28,7 +28,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import static pl.bzowski.messaging.CommunicationEventListener.PERSIST_COMMUNICATION;
-import static pl.bzowski.messaging.email.EmailAttendanceRecordLinkSender.EMAIL_ATTENDANCE_ENTRY_LINK_SENT;
+import static pl.bzowski.messaging.email.EmailAttendanceEntryLinkSender.EMAIL_ATTENDANCE_ENTRY_LINK_SENT;
 
 @Path("/api/v1/links")
 @Produces(MediaType.APPLICATION_JSON)
@@ -134,7 +134,7 @@ public class LinkGenerationResource {
                                                 }
                                                 Map<String, Object> properties = Map.of("eventTitle", attendanceEntry.attendanceList.joinedEventsName(),
                                                         "appHost", appHost,
-                                                        "attendanceRecordLink", appHost + "/web/responses/" + attendanceEntry.linkToken.toString(),
+                                                        "attendanceEntryLink", appHost + "/web/responses/" + attendanceEntry.linkToken.toString(),
                                                         "personEmail", attendanceEntry.personEmail,
                                                         "attendanceEntryId", attendanceEntry.id);
                                                 this.eventBus.publish(PERSIST_COMMUNICATION, new PersistCommunicationCommand(Channel.EMAIL, CommunicationTemplate.ATTENDANCE_RECORD_LINK, currentUserId, person, properties));

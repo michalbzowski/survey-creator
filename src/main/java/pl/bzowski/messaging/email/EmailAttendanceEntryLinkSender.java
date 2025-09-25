@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Singleton
-public class EmailAttendanceRecordLinkSender implements CommunicationSender {
+public class EmailAttendanceEntryLinkSender implements CommunicationSender {
 
     public static final String EMAIL_ATTENDANCE_ENTRY_LINK_SENT = "EMAIL_ATTENDANCE_RECORD_LINK_SENT";
     private final Logger logger = Logger.getLogger(EmailNewPersonAddedCommunicationSender.class.getName());
@@ -27,14 +27,14 @@ public class EmailAttendanceRecordLinkSender implements CommunicationSender {
     @Inject
     EventBus eventBus;
 
-    @Location("email/attendanceRecordLink")
-    Template attendanceRecordLink;
+    @Location("email/attendanceEntryLink")
+    Template attendanceEntryLink;
 
     @Override
     public Uni<Void> send(Communication communication) {
-        String render = attendanceRecordLink.data("eventTitle", communication.getProperty("eventTitle"))
+        String render = attendanceEntryLink.data("eventTitle", communication.getProperty("eventTitle"))
                 .data("appHost", communication.getProperty("appHost"))
-                .data("attendanceRecordLink", communication.getProperty("attendanceRecordLink"))
+                .data("attendanceEntryLink", communication.getProperty("attendanceEntryLink"))
                 .data("personEmail", communication.getProperty("personEmail"))
                 .render();
 
