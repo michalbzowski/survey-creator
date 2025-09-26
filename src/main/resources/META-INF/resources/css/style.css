@@ -118,3 +118,13 @@
 li.dropdown details {
     margin-bottom: 0px;
 }
+
+.spin-animation {
+  animation: spin 2s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

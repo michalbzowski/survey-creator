@@ -21,7 +21,7 @@ public class Group extends PanacheEntityBase {
     @Column(name = "registered_user_id", nullable = false)
     public UUID registeredUserId;
 
-    @ManyToMany(mappedBy = "groups")
+    @ManyToMany(mappedBy = "groups", fetch = FetchType.EAGER)
     public Set<Person> members;
 
     public Group() {}

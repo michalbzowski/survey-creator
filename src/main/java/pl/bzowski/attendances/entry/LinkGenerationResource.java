@@ -16,15 +16,14 @@ import java.util.Map;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import pl.bzowski.attendances.list.AttendanceList;
-import pl.bzowski.messaging.Channel;
-import pl.bzowski.messaging.CommunicationTemplate;
-import pl.bzowski.messaging.PersistCommunicationCommand;
+import pl.bzowski.messaging.*;
 import pl.bzowski.messaging.email.EmailAttendanceEntryLinkSentEvent;
 import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.persons.Person;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static pl.bzowski.messaging.CommunicationEventListener.PERSIST_COMMUNICATION;
@@ -144,6 +143,30 @@ public class LinkGenerationResource {
                     });
         });
     }
+
+    @Path("/{attendanceEntryId}/status")
+    @WithTransaction
+    @GET
+    public Uni<Response> getStatus(@PathParam("attendanceEntryId") UUID attendanceListId) {
+        logger.info("attendanceEntryId:" + attendanceListId.toString());
+        return CommunicationAttendanceLink.<CommunicationAttendanceLink>find("attendanceEntryId = ?1 ", attendanceListId)
+                .firstResult()
+                .flatMap(cal -> Communication
+                        .<Communication>findById(cal.communicationId)
+                        .flatMap(comm -> {
+                            SendingStatus status = comm.getStatus();
+                            logger.info("KOT: " + status.name());
+                            Response build = Response.ok(Map.of("status", status)).build();
+                            return Uni.createFrom().item(build);
+                        }))
+                .onFailure()
+                .recoverWithItem(a -> {
+                    logger.log(Level.FINEST, a.toString());
+                    logger.info("PIES: " + SendingStatus.TO_SEND.name());
+                    return Response.ok(Map.of("status", SendingStatus.TO_SEND)).build();
+                });
+    }
+
 
     @ConsumeEvent(EMAIL_ATTENDANCE_ENTRY_LINK_SENT)
     public void lol(Message<EmailAttendanceEntryLinkSentEvent> msg) {

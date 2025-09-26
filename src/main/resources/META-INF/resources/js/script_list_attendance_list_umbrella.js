@@ -36,9 +36,24 @@ u(document).on('click', 'a.delete-attendance-list', async function(event) {
 });
 
 u(document).on('click', 'a.send-email-button', async function(e) {
-    e.preventDefault(); // zapobiega domyślnemu wysłaniu formy
-    const attendanceListId = u(this).data('attendance-list-id');
-    const linkPersonId = u(this).data('link-person-id');
+    e.preventDefault();
+
+    const button = this;
+    const attendanceListId = u(button).data('attendance-list-id');
+    const linkPersonId = u(button).data('link-person-id');
+    const attendanceEntryId = u(button).data('id');
+
+    // Zamień link na ikonę klepsydry
+    u(button).html(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+           stroke="#cc2828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           class="lucide lucide-hourglass-icon lucide-hourglass spin-animation">
+           <path d="M5 22h14"/>
+           <path d="M5 2h14"/>
+           <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/>
+           <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>
+      </svg>
+    `);
 
     try {
         const response = await fetchWithLoader(`/api/v1/links/${attendanceListId}/send/${linkPersonId}`, {
@@ -46,15 +61,53 @@ u(document).on('click', 'a.send-email-button', async function(e) {
             headers: { 'Content-Type': 'application/json' },
         });
 
-        if (response.ok) {
-            window.location.reload();
-        } else {
+        if (!response.ok) {
             alert('Błąd przy wysyłaniu e-mail');
+            // Przywróć stan linku
+            u(button).text('Wyślij e-mail');
+            return;
         }
-    } catch {
+
+        // Polling: co sekundę sprawdzaj czy e-mail wysłany
+        const checkInterval = setInterval(async () => {
+            try {
+                const statusResp = await fetch(`/api/v1/links/${attendanceEntryId}/status`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!statusResp.ok) {
+                    throw new Error('Błąd pobierania statusu');
+                }
+                const statusJson = await statusResp.json();
+                if (statusJson.status === 'SENT') {
+                    clearInterval(checkInterval);
+
+                    // Zamień klepsydrę na ikonę zielonego ptaszka
+                    u(button).html(`
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="#13aa2c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-check-icon lucide-check">
+                            <path d="M20 6 9 17l-5-5"/>
+                        </svg>
+                    `);
+                    // Opcjonalnie zdeaktywuj link
+                    u(button).removeClass('send-email-button');
+//                    u(button).removeAttr('href');
+                }
+            } catch (err) {
+                console.error('Błąd podczas sprawdzania statusu e-mail:', err);
+                clearInterval(checkInterval);
+                u(button).text('Wyślij e-mail');
+                alert('Błąd podczas sprawdzania statusu e-mail');
+            }
+        }, 1000);
+
+    } catch (error) {
         alert('Błąd połączenia z serwerem');
+        u(button).text('Wyślij e-mail'); // Przywróć tekst w razie błędu
     }
 });
+
 
 u(document).on('click', '#send-to-all', async function(event) {
     event.preventDefault();

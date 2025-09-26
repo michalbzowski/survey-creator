@@ -1,6 +1,7 @@
 package pl.bzowski.messaging;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
+import io.smallrye.mutiny.Uni;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -98,5 +99,9 @@ public class Communication  extends PanacheEntityBase {
 
     public String getPersonLastName() {
         return personLastName;
+    }
+
+    public SendingStatus getStatus() {
+        return this.status;
     }
 }

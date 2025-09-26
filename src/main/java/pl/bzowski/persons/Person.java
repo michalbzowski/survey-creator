@@ -34,7 +34,7 @@ public class Person extends PanacheEntityBase {
     @Column(nullable = false, name = "registered_user_id")
     public UUID registeredUserId;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "person_group",
             joinColumns = @JoinColumn(name = "person_id"),

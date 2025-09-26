@@ -12,8 +12,10 @@ import pl.bzowski.base.ReactiveDelete;
 import pl.bzowski.persons.Person;
 import pl.bzowski.persons.PersonRepository;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("/web/groups")
@@ -59,38 +61,40 @@ public class GroupsPageResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @WithTransaction
     public Uni<Response> create(@BeanParam GroupCreateRequest request) {
-        return Uni.createFrom().item(Response.ok().build());
-//        return personRepository.currentUserId()
-//                .flatMap(uuid -> {
-//                    // Tworzymy nową grupę
-//                    Group group = new Group();
-//                    group.name = request.name;
-//                    group.registeredUserId = uuid;
-//                    group.persist();
-//
-//                    // Pobieramy osoby po ID z requestu i przypisujemy do grupy
-//                    if (request.persons != null && !request.persons.isEmpty()) {
-//                        return Person
-//                                .find("id in ?1", request.persons)
-//                                .list()
-//                                .flatMap(
-//                                        selectedPersons -> {
-//                                            selectedPersons.forEach(pp -> {
-//                                                Person p = (Person) pp;
-//                                                if (p.groups == null) {
-//                                                    p.groups = new HashSet<>();
-//                                                }
-//                                                p.groups.add(group);
-//                                                p.persist();
-//                                            });
-//                                            return Uni.createFrom().item(Response.status(Response.Status.SEE_OTHER)
-//                                                    .location(java.net.URI.create("/web/groups"))
-//                                                    .build());
-//                                        }
-//                                );
-//                    }
-//                    return null;
-//                });
+        return personRepository.currentUserId()
+                .flatMap(uuid -> {
+                    Group group = new Group();
+                    group.name = request.name;
+                    group.registeredUserId = uuid;
+                    return group.<Group>persist()
+                            .flatMap(persistedGroup -> {
+                                if (request.persons != null && !request.persons.isEmpty()) {
+                                    return Person.<Person>find("id in ?1", request.persons)
+                                            .list()
+
+                                            .flatMap(persons -> {
+                                                Uni<Void> chain = Uni.createFrom().voidItem();
+                                                for (Person p : persons) {
+
+                                                    chain = chain.flatMap(ignored -> {
+                                                        if (p.groups == null) {
+                                                            p.groups = new HashSet<>();
+                                                        }
+                                                        p.groups.add(persistedGroup);
+                                                        return p.persist().replaceWithVoid();
+                                                    });
+                                                }
+                                                return chain.replaceWith(Response.ok().build());
+                                            })
+                                            .onFailure()
+                                            .invoke(() -> logger.log(Level.FINEST, "Error: "));
+                                }
+                                return Uni.createFrom().item(Response.ok().build());
+                            })
+                            .flatMap(a -> Uni.createFrom().item(Response.status(Response.Status.SEE_OTHER)
+                                    .location(java.net.URI.create("/web/groups"))
+                                    .build()));
+                });
     }
 
     @GET
@@ -144,31 +148,32 @@ public class GroupsPageResource {
                         updatePersonsUni = Uni.createFrom().voidItem();
                     }
 
-                    // Przypisz nowe osoby do grupy
-                    Uni<List<Person>> selectedPersonsUni = (request.persons != null && !request.persons.isEmpty())
-                            ? Person.find("id in ?1", request.persons).list()
-                            : Uni.createFrom().item(List.of());
 
-                    return updatePersonsUni
-                            .flatMap(v -> selectedPersonsUni)
-                            .flatMap(selectedPersons -> {
-                                List<Uni<Void>> addGroupToPersons = selectedPersons.stream().map(p -> {
-                                    if (p.groups == null) {
-                                        p.groups = new java.util.HashSet<>();
-                                    }
-                                    p.groups.add(group);
-                                    return p.persistAndFlush().replaceWithVoid();
-                                }).toList();
 
-                                group.members.addAll(selectedPersons);
+                    return Person.<Person>find("id in ?1", request.persons)
+                            .list()
 
-                                return Uni.combine().all().unis(addGroupToPersons).discardItems()
-                                        .flatMap(x -> group.persistAndFlush().replaceWithVoid());
+                            .flatMap(selectedPersonsUni -> {
+                                Uni<Void> chain = Uni.createFrom().voidItem();
+                                for (Person p : selectedPersonsUni) {
+
+                                    chain = chain.flatMap(ignored -> {
+                                        if (p.groups == null) {
+                                            p.groups = new HashSet<>();
+                                        }
+                                        p.groups.add(group);
+                                        return p.persist().replaceWithVoid();
+                                    });
+                                }
+                                return chain.replaceWith(Response.ok().build());
                             })
-                            .replaceWith(Response.status(Response.Status.SEE_OTHER)
-                                    .location(java.net.URI.create("/web/groups"))
-                                    .build());
-                });
+                            .onFailure()
+                            .invoke(() -> logger.log(Level.FINEST, "Error: "));
+                }) .flatMap(a -> Uni.createFrom().item(Response.status(Response.Status.SEE_OTHER)
+                        .location(java.net.URI.create("/web/groups"))
+                        .build()));
+
+
     }
 
 
