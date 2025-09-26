@@ -38,18 +38,18 @@ public class LinkGenerationResource {
 
     private final PersonRepository personRepository;
     private final EventBus eventBus;
+    private final CostamService costamService;
 
     Logger logger = Logger.getLogger(LinkGenerationResource.class.getName());
 
     @ConfigProperty(name = "app.host")
     String appHost;
 
-    @Inject
-    private CostamService costamService;
 
-    public LinkGenerationResource(PersonRepository personRepository, EventBus eventBus) {
+    public LinkGenerationResource(PersonRepository personRepository, EventBus eventBus, CostamService costamService) {
         this.personRepository = personRepository;
         this.eventBus = eventBus;
+        this.costamService = costamService;
     }
 
     @GET

@@ -5,9 +5,12 @@ import io.quarkus.panache.common.Sort;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Uni;
+import jakarta.inject.Inject;
+import jakarta.persistence.Tuple;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.hibernate.reactive.mutiny.Mutiny;
 import pl.bzowski.attendances.list.AttendanceList;
 import pl.bzowski.base.ReactiveDelete;
 import pl.bzowski.events.Event;
@@ -21,6 +24,9 @@ import java.util.UUID;
 
 @Path("/web/attendance_list")
 public class AttendanceListPageResource {
+
+    @Inject
+    Mutiny.SessionFactory sessionFactory;
 
     private final Template attendanceListDetails;
     private final Template createAttendanceList;
@@ -38,22 +44,47 @@ public class AttendanceListPageResource {
         this.eventRepository = eventRepository;
     }
 
+    String query = "SELECT ae.id, ae.personId, ae.personFirstName, ae.personLastName, ae.personEmail, ae.attendanceListId, ae.linktoken, ae.attendancelistanswered, CASE WHEN cal.id IS NULL THEN FALSE ELSE TRUE END AS communicationSent " +
+            "FROM person_attendance_list_links ae " +
+            "LEFT JOIN communication_attendance_links cal ON ae.id = cal.attendanceEntryId " +
+//            "LEFT JOIN communications c ON cal.attendanceentryid = c.id " +
+            "WHERE ae.attendanceListId = :attendanceListId " +
+            "ORDER BY ae.personLastName";
+
     @GET
     @Path("/{id}/details")
     @Produces(MediaType.TEXT_HTML)
     public Uni<TemplateInstance> showQueryDetails(@PathParam("id") UUID id) {
         return AttendanceList.<AttendanceList>findById(id)
-                .flatMap(
-                        attendanceList -> AttendanceEntry.<AttendanceEntry>find("attendanceListId", Sort.by("personLastName"), attendanceList.id)
-                                .list()
-                                .flatMap(links -> {
-                                    if (attendanceList == null) {
-                                        throw new NotFoundException("Nie znaleziono zapytania");
-                                    }
-                                    return Uni.createFrom().item(attendanceListDetails
-                                            .data("attendanceList", attendanceList)
-                                            .data("links", links));
-                                }));
+                .flatMap(attendanceList ->
+                        sessionFactory.openSession()
+                                .flatMap(session ->
+                                        session.createNativeQuery(query, Tuple.class)
+                                                .setParameter("attendanceListId", id)
+                                                .getResultList()
+                                                .map(list -> list.stream()
+                                                        .map(this::getAttendanceEntryWithCommunicationDTO)
+                                                        .toList())
+                                )
+                                .map(dtos -> attendanceListDetails
+                                        .data("attendanceList", attendanceList)
+                                        .data("links", dtos)
+                                )
+                );
+    }
+
+    private AttendanceEntryWithCommunicationDTO getAttendanceEntryWithCommunicationDTO(Tuple tuple) {
+        return new AttendanceEntryWithCommunicationDTO(
+                tuple.get(0, UUID.class),
+                tuple.get(1, UUID.class),
+                tuple.get(2, String.class),
+                tuple.get(3, String.class),
+                tuple.get(4, String.class),
+                tuple.get(5, UUID.class),
+                tuple.get(6, UUID.class),
+                tuple.get(7, Boolean.class),
+                tuple.get(8, Boolean.class)
+        );
     }
 
     @GET
