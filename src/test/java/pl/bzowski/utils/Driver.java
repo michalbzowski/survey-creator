@@ -9,9 +9,7 @@ public interface Driver {
 
     void assertNewTagCreated(String name);
 
-    void askToCreateNewTag();
-
-    void lookAtTagsList();
+    void askToCreateNew();
 
     void exit();
 
@@ -19,13 +17,17 @@ public interface Driver {
 
     void assertTagNotExists(String name);
 
-    void lookAtPersonsList();
-
-    void askToCreateNewPerson();
+    void lookAtList(String listName);
 
     void fillNewPersonDetails(String firstName, String lastName, String email, String defaultTag, String groups);
 
     void confirmNewPerson();
 
     void assertNewPersonCreated(String firstName);
+
+    void fillFormFields(String fieldName, String groupName);
+
+    void confirm(String formName);
+
+    void assertExistsOnList(String name);
 }

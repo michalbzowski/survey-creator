@@ -7,7 +7,6 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,6 @@ import pl.bzowski.utils.Driver;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -90,11 +88,6 @@ public class RegisteredUserDriver implements Driver {
         assertThat(text).isEqualTo(name);
     }
 
-    public void askToCreateNewTag() {
-        WebElement element = driver.findElement(By.cssSelector("a[href='/web/tags/new']"));
-        element.click();
-    }
-
     @Override
     public void deleteTag(String name) {
         WebElement link = driver.findElement(By.xpath("//tr[td[@id='" + name + "' and text()='" + name + "']]//a[@class='delete-tag']"));
@@ -124,9 +117,9 @@ public class RegisteredUserDriver implements Driver {
     }
 
     @Override
-    public void lookAtPersonsList() {
-        log.info("lookAtPersonsList - start go to /web/persons. Current: " + driver.getCurrentUrl());
-        driver.get(appHost + "/web/persons");
+    public void lookAtList(String listName) {
+        log.info("lookAtPersonsList - start go to /web/" + listName + ". Current: " + driver.getCurrentUrl());
+        driver.get(appHost + "/web/" + listName);
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -134,14 +127,14 @@ public class RegisteredUserDriver implements Driver {
         }
         log.info("Current URL after get(): " + driver.getCurrentUrl());
         new WebDriverWait(driver, Duration.ofSeconds(10))
-                .until(ExpectedConditions.urlContains("/web/persons"));
-        log.info("lookAtPersonsList - stop go to /web/persons. Current: " + driver.getCurrentUrl());
+                .until(ExpectedConditions.urlContains("/web/" + listName));
+        log.info("lookAtPersonsList - stop go to /web/" + listName + ". Current: " + driver.getCurrentUrl());
     }
 
 
     @Override
-    public void askToCreateNewPerson() {
-        By by = By.cssSelector("a[href='/web/persons/new']");
+    public void askToCreateNew() {
+        By by = By.id("create-new");
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(40));
         WebElement element = wait.until(ExpectedConditions.elementToBeClickable(by));
         element.click();
@@ -186,8 +179,28 @@ public class RegisteredUserDriver implements Driver {
     }
 
     @Override
-    public void lookAtTagsList() {
-        driver.get(appHost + "/web/tags");
+    public void fillFormFields(String fieldName, String groupName) {
+        clickAndSendKeys(fieldName, groupName);
+    }
+
+    @Override
+    public void confirm(String formUrl) {
+        log.info("confirm new {} - start", formUrl);
+        WebElement element = driver.findElement(By.id("submit"));
+        element.click();
+        new WebDriverWait(driver, Duration.ofSeconds(10))
+                .until(webDriver -> {
+                    log.info("confirm new {} - wait", formUrl);
+                    return !webDriver.getCurrentUrl().contains("/web/" + formUrl + "/new");
+                });
+        log.info("confirm new {} - finished", formUrl);
+    }
+
+    @Override
+    public void assertExistsOnList(String groupName) {
+        WebElement element = driver.findElement(By.cssSelector("td[data-group-name=\"" + groupName + "\"]"));
+        String text = element.getText();
+        assertThat(text).isEqualTo(groupName);
     }
 
     @Override

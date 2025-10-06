@@ -15,12 +15,12 @@ public class RegisteredUser {
         driver.openSystem();
     }
 
-    public void lookAtTagsList() {
-        driver.lookAtTagsList();
+    public void lookAtList(String listName) {
+        driver.lookAtList(listName);
     }
 
-    public void askToCreateNewTag() {
-        driver.askToCreateNewTag();
+    public void askToCreateNew() {
+        driver.askToCreateNew();
     }
 
     public void fillNewTagDetails(String... args) {
@@ -60,14 +60,6 @@ public class RegisteredUser {
         driver.assertTagNotExists(name);
     }
 
-    public void lookAtPersonsList() {
-        driver.lookAtPersonsList();
-    }
-
-    public void askToCreateNewPerson() {
-        driver.askToCreateNewPerson();
-    }
-
     public void fillNewPersonDetails(String... args) {
         Params params = new Params(args);
         String firstName = params.Optional("firstName", "Default");
@@ -88,5 +80,23 @@ public class RegisteredUser {
         Params params = new Params(args);
         String firstName = params.Optional("firstName", "Default");
         driver.assertNewPersonCreated(firstName);
+    }
+
+    public void fillFormFields(String... args) {
+        Params params = new Params(args);
+        String groupName = params.Optional("groupName", "Default");
+
+        driver.fillFormFields("groupName", groupName);
+    }
+
+    public void confirm(String formName) {
+        driver.confirm(formName);
+    }
+
+    public void assertNewGroupCreated(String... args) {
+        Params params = new Params(args);
+        String name = params.Optional("groupName", "");
+
+        driver.assertExistsOnList(name);
     }
 }

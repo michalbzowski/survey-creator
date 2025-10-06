@@ -2,7 +2,6 @@ package pl.bzowski;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
-import pl.bzowski.drivers.RegisteredUser;
 
 @QuarkusTest
 public class PersonsTest extends MyTestsBase {
@@ -10,13 +9,13 @@ public class PersonsTest extends MyTestsBase {
 
     @Test
     public void shouldAddAPersonWithAConductorTag() {
-        registeredUser.lookAtTagsList();
-        registeredUser.askToCreateNewTag();
+        registeredUser.lookAtList("tags");
+        registeredUser.askToCreateNew();
         registeredUser.fillNewTagDetails("name: Conductor");
         registeredUser.confirmNewTag();
 
-        registeredUser.lookAtPersonsList();
-        registeredUser.askToCreateNewPerson();
+        registeredUser.lookAtList("persons");
+        registeredUser.askToCreateNew();
         registeredUser.fillNewPersonDetails("firstName: Kontrybutor", "lastName: Kowalski", "email: kontrybutor.kowalski@gmail.com");
         registeredUser.confirmNewPerson();
 

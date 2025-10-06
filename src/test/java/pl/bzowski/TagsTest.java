@@ -8,8 +8,8 @@ public class TagsTest extends MyTestsBase {
 
     @Test
     public void shouldAddConductorTag() {
-        registeredUser.lookAtTagsList();
-        registeredUser.askToCreateNewTag();
+        registeredUser.lookAtList("tags");
+        registeredUser.askToCreateNew();
         registeredUser.fillNewTagDetails("name: Conductor");
         registeredUser.confirmNewTag();
         registeredUser.assertNewTagCreated("name: Conductor");
@@ -17,8 +17,8 @@ public class TagsTest extends MyTestsBase {
 
     @Test
     public void shouldAddWitcherTag() {
-        registeredUser.lookAtTagsList();
-        registeredUser.askToCreateNewTag();
+        registeredUser.lookAtList("tags");
+        registeredUser.askToCreateNew();
         registeredUser.fillNewTagDetails("name: Witcher");
         registeredUser.confirmNewTag();
         registeredUser.assertNewTagCreated("name: Witcher");
@@ -26,8 +26,8 @@ public class TagsTest extends MyTestsBase {
 
     @Test
     public void shouldAddCheckRemoveCheckWizardTag() {
-        registeredUser.lookAtTagsList();
-        registeredUser.askToCreateNewTag();
+        registeredUser.lookAtList("tags");
+        registeredUser.askToCreateNew();
         registeredUser.fillNewTagDetails("name: Wizard");
         registeredUser.confirmNewTag();
         registeredUser.assertNewTagCreated("name: Wizard");
