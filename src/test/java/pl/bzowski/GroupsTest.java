@@ -6,11 +6,23 @@ import org.junit.jupiter.api.Test;
 public class GroupsTest  extends MyTestsBase {
 
     @Test
+    public void shouldAddEmptyGroup() {
+        registeredUser.lookAtList("groups");
+        registeredUser.askToCreateNew();
+        registeredUser.fillFormFields("groupName: EmptyGroup");
+        registeredUser.confirm("groups");
+        registeredUser.assertNewGroupCreated("groupName: EmptyGroup");
+    }
+
+    @Test
     public void shouldAddConductorTag() {
         registeredUser.lookAtList("groups");
         registeredUser.askToCreateNew();
-        registeredUser.fillFormFields("groupName: Conductor");
+        registeredUser.fillFormFields("groupName: Conductor", "persons#checkbox: michal.bzowski@gmail.com");
         registeredUser.confirm("groups");
-        registeredUser.assertNewGroupCreated("groupName: Conductor");
+
+        registeredUser.edit("Conductor");
+        registeredUser.assertIsChecked("checkboxes: [michal.bzowski@gmail.com]");
+
     }
 }

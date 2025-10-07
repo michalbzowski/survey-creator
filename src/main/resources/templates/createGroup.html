@@ -10,7 +10,7 @@
         {#for person in persons}
         <div>
             <label>
-                <input type="checkbox" name="persons" value="{person.id}"
+                <input type="checkbox" name="persons" value="{person.id}" id="{person.email}"
                        {#if group.hasThat(person)}checked{/if}>
                 {person.firstName} {person.lastName} ({person.email})
             </label>

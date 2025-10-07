@@ -29,5 +29,11 @@ public interface Driver {
 
     void confirm(String formName);
 
+    void check(String value);
+
+    void isChecked(String value);
+
+    void edit(String rowData);
+
     void assertExistsOnList(String name);
 }

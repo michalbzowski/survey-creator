@@ -197,6 +197,35 @@ public class RegisteredUserDriver implements Driver {
     }
 
     @Override
+    public void check(String value) {
+        WebElement checkbox = driver.findElement(By.id(value));
+        checkbox.click();
+    }
+
+    @Override
+    public void isChecked(String value) {
+        WebElement checkbox = driver.findElement(By.id(value));
+        boolean selected = checkbox.isSelected();
+        assertThat(selected).isTrue();
+    }
+
+    @Override
+    public void edit(String rowData) {
+        WebElement element = driver. findElement(By.cssSelector("td[data-group-name=\"" + rowData + "\"]"));
+        WebElement parent = element.findElement(By.xpath("./.."));
+        WebElement link = parent.findElement(By.cssSelector("a.edit-group"));
+        String href = link.getDomProperty("href");
+        link.click();
+        new WebDriverWait(driver, Duration.ofSeconds(10))
+                .until(webDriver -> {
+                    log.info("confirm href {} - wait", href);
+                    return webDriver.getCurrentUrl().contains(href);
+                });
+        log.info("confirm href {} - finished", href);
+
+    }
+
+    @Override
     public void assertExistsOnList(String groupName) {
         WebElement element = driver.findElement(By.cssSelector("td[data-group-name=\"" + groupName + "\"]"));
         String text = element.getText();
