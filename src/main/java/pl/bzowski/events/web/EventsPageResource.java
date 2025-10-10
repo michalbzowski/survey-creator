@@ -7,11 +7,15 @@ import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
+import jakarta.inject.Inject;
+import jakarta.persistence.Tuple;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logmanager.Level;
+import pl.bzowski.attendances.entry.CommunicationAttendanceLink;
 import pl.bzowski.attendances.list.api.AttendanceListDTO;
 import pl.bzowski.attendances.list.infrastructure.AttendanceListRepository;
 import pl.bzowski.base.ReactiveDelete;
@@ -42,7 +46,7 @@ public class EventsPageResource {
 
     Logger logger = Logger.getLogger(EventsPageResource.class.getName());
 
-    private final Template addEvent;
+    private final Template createEvent;
     private final Template listEvents;
     private final Template eventDetails;
     private final TagsRepository tagsRepository;
@@ -52,8 +56,11 @@ public class EventsPageResource {
     private final AttendanceListRepository attendanceListRepository;
     private final EventBus eventBus;
 
-    public EventsPageResource(Template addEvent, Template listEvents, Template eventDetails, TagsRepository tagsRepository, EventRepository eventRepository, GroupsRepository groupsRepository, PersonRepository personRepository, AttendanceListRepository attendanceListRepository, EventBus eventBus) {
-        this.addEvent = addEvent;
+    @Inject
+    Mutiny.SessionFactory sessionFactory;
+
+    public EventsPageResource(Template createEvent, Template listEvents, Template eventDetails, TagsRepository tagsRepository, EventRepository eventRepository, GroupsRepository groupsRepository, PersonRepository personRepository, AttendanceListRepository attendanceListRepository, EventBus eventBus, Mutiny.SessionFactory sessionFactory) {
+        this.createEvent = createEvent;
         this.listEvents = listEvents;
         this.eventDetails = eventDetails;
         this.tagsRepository = tagsRepository;
@@ -62,6 +69,7 @@ public class EventsPageResource {
         this.personRepository = personRepository;
         this.attendanceListRepository = attendanceListRepository;
         this.eventBus = eventBus;
+        this.sessionFactory = sessionFactory;
     }
 
     @GET
@@ -92,7 +100,7 @@ public class EventsPageResource {
         return loadTags()
                 .flatMap(tags -> loadGroups()
                         .flatMap(groups -> loadPersons()
-                                .map(persons -> addEvent.data(
+                                .map(persons -> createEvent.data(
                                         "tags", tags,
                                         "groups", groups,
                                         "persons", persons
@@ -192,14 +200,25 @@ public class EventsPageResource {
                 });
     }
 
+    String query = "SELECT count(cal.id)" +
+            "FROM person_attendance_list_links ae " +
+            "JOIN communication_attendance_links cal ON ae.id = cal.attendanceEntryId " + //IF cal is present, then assuming communication was sent? //TODO: add another join and check is SEND status for real eg //  "LEFT JOIN communications c ON cal.attendanceentryid = c.id " + ?
+            "WHERE ae.attendanceListId = :attendanceListId ";
+
     private Uni<EventContext> loadSentLinkCount(EventContext ctx) {
         if (ctx.noAttendanceListYet) {
             ctx.sentLinkCount = 0L;
             return Uni.createFrom().item(ctx);
         }
-        return AttendanceEntry.count("attendanceListId = ?1 and status = ?2", ctx.attendanceListId, SendingStatus.SENT)
-                .map(count -> {
-                    ctx.sentLinkCount = count;
+        return sessionFactory.openSession()
+                .flatMap(session ->
+                        session.createNativeQuery(query, Tuple.class)
+                                .setParameter("attendanceListId", ctx.attendanceListId)
+                                .getResultList()
+
+                )
+                .map(tuple -> {
+                    ctx.sentLinkCount = tuple.getFirst().get(0, Long.class);
                     return ctx;
                 });
     }

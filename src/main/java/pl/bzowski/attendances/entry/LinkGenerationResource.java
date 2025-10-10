@@ -1,5 +1,6 @@
 package pl.bzowski.attendances.entry;
 
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Multi;
@@ -61,20 +62,27 @@ public class LinkGenerationResource {
     @WithTransaction
     public Uni<Response> generateLinks(@PathParam("attendanceListId") UUID attendanceListId) {
         return personRepository.listAll()
-                .flatMap(persons -> processAttendanceList(attendanceListId, persons)
-                        .onItem()
-                        .transformToUni(d -> Uni.createFrom().item(
-                                Response.seeOther(UriBuilder.fromPath("/web/attendance_list/{id}/details").build(attendanceListId))
-                                        .build()
+                .onItem()
+                .transformToUni(persons -> processAttendanceList(attendanceListId, persons))
+                .onItem()
+                .transformToUni(d -> Uni.createFrom().item(
+                        getBuild(Response.seeOther(
+                                UriBuilder.fromPath("/web/attendance_list/{id}/details")
+                                        .build(attendanceListId)
                         ))
-                        .onFailure()
-                        .recoverWithItem(d ->
-                                Response.status(Response.Status.NOT_FOUND)
-                                        .entity("Zapytanie nie istnieje")
-                                        .build()));
+                ))
+                .onFailure()
+                .recoverWithItem(d ->
+                        getBuild(Response.status(Response.Status.NOT_FOUND)
+                                .entity("Zapytanie nie istnieje")));
+    }
+
+    private static Response getBuild(Response.ResponseBuilder attendanceListId) {
+        return attendanceListId.build();
     }
 
 
+    @WithTransaction
     public Uni<Void> processAttendanceList(UUID attendanceListId, List<Person> persons) {
         return AttendanceList.<AttendanceList>findById(attendanceListId)
                 .onItem().ifNull().failWith(() -> new WebApplicationException("AttendanceList not found", 404))
@@ -92,12 +100,16 @@ public class LinkGenerationResource {
                                                 } else {
                                                     logger.info("Creating new MessageTemplate for person: " + person.id);
                                                     AttendanceEntry newTemplate = new AttendanceEntry(person, attendanceList);
-                                                    return newTemplate.persist()
-                                                            .replaceWithVoid();
+                                                    Uni<PanacheEntityBase> persist = newTemplate.persist();
+                                                    return persist.replaceWithVoid();
                                                 }
                                             })
                             )
-                            .collect().last()
+                            .collect().asList()
+                            .call(list -> {
+                                logger.info("List size: " + list.stream().count());
+                                return Uni.createFrom().voidItem();
+                            })
                             .replaceWithVoid();
 
                 });
@@ -156,14 +168,14 @@ public class LinkGenerationResource {
                         .flatMap(comm -> {
                             SendingStatus status = comm.getStatus();
                             logger.info("KOT: " + status.name());
-                            Response build = Response.ok(Map.of("status", status)).build();
+                            Response build = getBuild(Response.ok(Map.of("status", status)));
                             return Uni.createFrom().item(build);
                         }))
                 .onFailure()
                 .recoverWithItem(a -> {
                     logger.log(Level.FINEST, a.toString());
                     logger.info("PIES: " + SendingStatus.TO_SEND.name());
-                    return Response.ok(Map.of("status", SendingStatus.TO_SEND)).build();
+                    return getBuild(Response.ok(Map.of("status", SendingStatus.TO_SEND)));
                 });
     }
 

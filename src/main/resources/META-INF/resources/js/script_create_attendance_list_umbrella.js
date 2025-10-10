@@ -42,7 +42,7 @@ u('#attendance-list-form').on('submit', async function(event) {
 });
 
 // Dodawanie nowego wydarzenia do listy obecności
-function addEvent() {
+function createEvent() {
     const containerSelection = u('#events-container');
     if (containerSelection.length === 0) {
         alert('Brak kontenera na wydarzenia!');

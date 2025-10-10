@@ -24,7 +24,7 @@
     <tbody>
     {#for event in events}
     <tr>
-        <th scope="row">{event.name}</th>
+        <td data-event-name="{event.name}">{event.name}</td>
         <td>{event.location}</td>
         <td>{event.formatedLocalDateTime}</td>
         <td>{event.description}</td>

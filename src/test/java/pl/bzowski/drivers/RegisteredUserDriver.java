@@ -197,9 +197,15 @@ public class RegisteredUserDriver implements Driver {
     }
 
     @Override
-    public void check(String value) {
-        WebElement checkbox = driver.findElement(By.id(value));
-        checkbox.click();
+    public void check(String checkboxId, Boolean checkboxValue) {
+        WebElement checkbox = driver.findElement(By.id(checkboxId));
+        String checked = checkbox.getAttribute("checked");
+        if ("true".equals(checked) && Boolean.FALSE.equals(checkboxValue)) {
+            checkbox.click();
+        }
+        if (checked == null && Boolean.TRUE.equals(checkboxValue)) {
+            checkbox.click();
+        }
     }
 
     @Override
@@ -211,7 +217,7 @@ public class RegisteredUserDriver implements Driver {
 
     @Override
     public void edit(String rowData) {
-        WebElement element = driver. findElement(By.cssSelector("td[data-group-name=\"" + rowData + "\"]"));
+        WebElement element = driver.findElement(By.cssSelector("td[data-group-name=\"" + rowData + "\"]"));
         WebElement parent = element.findElement(By.xpath("./.."));
         WebElement link = parent.findElement(By.cssSelector("a.edit-group"));
         String href = link.getDomProperty("href");
@@ -230,6 +236,29 @@ public class RegisteredUserDriver implements Driver {
         WebElement element = driver.findElement(By.cssSelector("td[data-group-name=\"" + groupName + "\"]"));
         String text = element.getText();
         assertThat(text).isEqualTo(groupName);
+    }
+
+    @Override
+    public void fillFormValue(String id, String value) {
+        if (value.isEmpty()) {
+            return;
+        }
+        WebElement element = driver.findElement(By.id(id));
+        JavascriptExecutor j = (JavascriptExecutor) driver;
+        j.executeScript("arguments[0].value='" + value + "';", element);
+    }
+
+    @Override
+    public void assertNewEventCreated(String eventName) {
+        WebElement element = driver.findElement(By.cssSelector("td[data-event-name=\"" + eventName + "\"]"));
+        String text = element.getText();
+        assertThat(text).isEqualTo(eventName);
+    }
+
+    @Override
+    public void select(String radioId) {
+        WebElement button = driver.findElement(By.id(radioId));
+        button.click();
     }
 
     @Override

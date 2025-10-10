@@ -29,11 +29,17 @@ public interface Driver {
 
     void confirm(String formName);
 
-    void check(String value);
+    void check(String checkboxId, Boolean checkboxValue);
 
     void isChecked(String value);
 
     void edit(String rowData);
 
     void assertExistsOnList(String name);
+
+    void fillFormValue(String id, String value);
+
+    void assertNewEventCreated(String eventName);
+
+    void select(String radioId);
 }

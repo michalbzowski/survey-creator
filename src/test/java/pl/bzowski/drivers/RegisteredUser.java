@@ -63,14 +63,46 @@ public class RegisteredUser {
         driver.confirmNewPerson();
     }
 
-    public void fillFormFields(String... args) {
+    public void fillGroupFormFields(String... args) {
         Params params = new Params(args);
         String groupName = params.Optional("groupName", "Default");
-        String checkboxId = params.Optional("persons#checkbox", null);
 
         driver.fillFormFields("groupName", groupName);
-        if (checkboxId != null) {
-            driver.check(checkboxId);
+
+        int checkboxCount = Integer.parseInt(params.Optional("checkboxCount", "0"));
+        for (int i = 1; i <= checkboxCount; i++) {
+            String checkboxId = params.Optional("checkboxId" + i, null);
+            Boolean checkboxValue = Boolean.valueOf(params.Optional("checkboxValue" + 1, null));
+            if (checkboxId != null) {
+                driver.check(checkboxId, checkboxValue);
+            }
+        }
+    }
+
+    public void fillEventFormFields(String... args) {
+        Params params = new Params(args);
+        String name = params.Optional("name", "");
+        String location = params.Optional("location", "");
+        String datetimeInput = params.Optional("datetimeInput", "");
+        String description = params.Optional("description", "");
+
+        driver.fillFormFields("name", name);
+        driver.fillFormFields("location", location);
+        driver.fillFormValue("datetimeInput", datetimeInput);
+        driver.fillFormFields("description", description);
+
+        int checkboxCount = Integer.parseInt(params.Optional("checkboxCount", "0"));
+        for (int i = 1; i <= checkboxCount; i++) {
+            String checkboxId = params.Optional("checkboxId" + i, null);
+            Boolean checkboxValue = Boolean.valueOf(params.Optional("checkboxValue" + 1, null));
+            if (checkboxId != null) {
+                driver.check(checkboxId, checkboxValue);
+            }
+        }
+
+        String radioId = params.Optional("clickRadioId", null);
+        if (radioId != null) {
+            driver.select(radioId);
         }
     }
 
@@ -118,5 +150,12 @@ public class RegisteredUser {
                     String id = s.trim();
                     driver.isChecked(id);
                 });
+    }
+
+    public void assertNewEventCreated(String... args) {
+        Params params = new Params(args);
+        String eventName = params.Optional("eventName", "");
+
+        driver.assertNewEventCreated(eventName);
     }
 }

@@ -2,27 +2,31 @@ package pl.bzowski;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
+import pl.bzowski.drivers.RegisteredUser;
+
 @QuarkusTest
-public class GroupsTest  extends MyTestsBase {
+public class GroupsTest extends MyTestsBase {
 
     @Test
     public void shouldAddEmptyGroup() {
-        registeredUser.lookAtList("groups");
-        registeredUser.askToCreateNew();
-        registeredUser.fillFormFields("groupName: EmptyGroup");
-        registeredUser.confirm("groups");
+        createGroup(registeredUser, "groupName: EmptyGroup");
+
         registeredUser.assertNewGroupCreated("groupName: EmptyGroup");
     }
 
     @Test
     public void shouldAddConductorTag() {
-        registeredUser.lookAtList("groups");
-        registeredUser.askToCreateNew();
-        registeredUser.fillFormFields("groupName: Conductor", "persons#checkbox: michal.bzowski@gmail.com");
-        registeredUser.confirm("groups");
+        createGroup(registeredUser, "groupName: Conductor", "checkboxId: michal.bzowski@gmail.com", "checkboxValue: True");
 
         registeredUser.edit("Conductor");
         registeredUser.assertIsChecked("checkboxes: [michal.bzowski@gmail.com]");
 
+    }
+
+    public static void createGroup(RegisteredUser registeredUser, String... args) {
+        registeredUser.lookAtList("groups");
+        registeredUser.askToCreateNew();
+        registeredUser.fillGroupFormFields(args);
+        registeredUser.confirm("groups");
     }
 }
