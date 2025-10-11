@@ -42,4 +42,8 @@ public interface Driver {
     void assertNewEventCreated(String eventName);
 
     void select(String radioId);
+
+    void lookAtDetails(String listName, String rowName);
+
+    void assertTeamMemberWasSelected(String teamMemberEmail);
 }

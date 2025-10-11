@@ -1,19 +1,19 @@
 ;
-    create table attendance_list (
+    create table team (
         id uuid not null,
         registered_user_id uuid not null,
         name varchar(255),
         primary key (id)
     )
 ;
-    create table attendance_list_events (
-        attendance_list_id uuid not null,
+    create table team_events (
+        team_id uuid not null,
         event_id uuid not null
     )
 ;
     create table events (
         localDateTime timestamp(6) not null,
-        attendance_list_id uuid,
+        team_id uuid,
         id uuid not null,
         registered_user_id uuid not null,
         description varchar(4096) not null,
@@ -22,10 +22,10 @@
         primary key (id)
     )
 ;
-    create table person_attendance_list_links (
-        attendanceListAnswered boolean not null,
-        attendanceListId uuid not null,
-        attendanceList_id uuid not null,
+    create table person_team_links (
+        teamAnswered boolean not null,
+        teamId uuid not null,
+        team_id uuid not null,
         id uuid not null,
         linkToken uuid not null unique,
         personId uuid,
@@ -38,7 +38,7 @@
     )
 ;
     create table person_event_answers (
-        attendance_list_id uuid,
+        team_id uuid,
         event_id uuid,
         id uuid not null,
         person_id uuid,
@@ -64,30 +64,30 @@
         primary key (id)
     )
 ;
-    alter table if exists attendance_list_events 
+    alter table if exists team_events
        add constraint FKbry0dl3w7v0s1sno1cta89ayx 
        foreign key (event_id) 
        references events
 ;
-    alter table if exists attendance_list_events 
+    alter table if exists team_events
        add constraint FKrl1u50fe4esthego4yyh7o3s9 
-       foreign key (attendance_list_id) 
-       references attendance_list
+       foreign key (team_id)
+       references team
 ;
     alter table if exists events 
        add constraint FKf0ryb3223ycf4okssdqvhf0fj 
-       foreign key (attendance_list_id) 
-       references attendance_list
+       foreign key (team_id)
+       references team
 ;
-    alter table if exists person_attendance_list_links 
+    alter table if exists person_team_links
        add constraint FKm9j92i8hjjp7ckupxhcpew07 
-       foreign key (attendanceList_id) 
-       references attendance_list
+       foreign key (team_id)
+       references team
 ;
     alter table if exists person_event_answers 
        add constraint FKnaptxf28iefqr1ugtwrffiv3u 
-       foreign key (attendance_list_id) 
-       references attendance_list
+       foreign key (team_id)
+       references team
 ;
     alter table if exists person_event_answers 
        add constraint FKheawgvegh65gnjf3b6f69ivf4 

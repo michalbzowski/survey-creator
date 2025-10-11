@@ -1,14 +1,14 @@
 {#include layouts/main}
 {#title}
-Listy Obecności
+Zespoły
 {/title}
 {#subtitle}
-<a id="create-new" href="/web/attendance_list/new">
+<a id="create-new" href="/web/teams/new">
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-plus-icon lucide-book-plus"><path d="M12 7v6"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M9 10h6"/></svg>
 </a>
 {/subtitle}
 {#body}
-{#if attendanceList}
+{#if team}
 <table>
     <thead>
     <tr>
@@ -17,18 +17,18 @@ Listy Obecności
     </tr>
     </thead>
     <tbody>
-    {#for attendanceList in attendanceList}
+    {#for team in team}
     <tr>
-        <td>{attendanceList.joinedEventsName}</td>
+        <td data-teams-name="{team.joinedEventsName}">{team.joinedEventsName}</td>
         <td>
             <div role="group">
-                <a href="/web/attendance_list/{attendanceList.id}/details">
+                <a class="teams-details" href="/web/teams/{team.id}/details">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                 </a>
-                <a href="#" class="generate-links" data-id="{attendanceList.id}">
+                <a href="#" class="generate-links" data-id="{team.id}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link-icon lucide-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                 </a>
-                <a href="#" class="delete-attendanceList" data-id="{attendanceList.id}">
+                <a href="#" class="delete-team" data-id="{team.id}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-x-icon lucide-circle-x"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
                 </a>
             </div>
@@ -39,13 +39,13 @@ Listy Obecności
 </table>
 {#else}
 <p>
-    Nie stworzyłeś jeszcze żadnej listy obecnosci.
-    <a href="/web/attendance_list/new">
-        Stwórz swoją pierwszą listę obecności
+    Nie stworzyłeś jeszcze żadnego zespołu.
+    <a href="/web/teams/new">
+        Stwórz swój pierwszy zespół
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-plus-icon lucide-book-plus"><path d="M12 7v6"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M9 10h6"/></svg>
     </a>
 </p>
 {/if}
-<script src="/js/script_list_attendance_list_umbrella.js"></script>
+<script src="/js/script_list_team_umbrella.js"></script>
 {/body}
 {/include}

@@ -1,6 +1,5 @@
-package pl.bzowski.attendances.entry;
+package pl.bzowski.team.entry;
 
-import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.eventbus.Message;
@@ -16,14 +15,14 @@ import java.util.logging.Logger;
 @Singleton
 public class MyNextBean {
 
-    private final Logger logger = Logger.getLogger(AttendanceEntryListener.class.getName());
+    private final Logger logger = Logger.getLogger(TeamEntryListener.class.getName());
 
     @Inject
     LinkGenerationResource linkGenerationResource;
 
     @WithTransaction
     public Uni<List<Person>> getPersonsFromGroups(List<UUID> groupIds) {
-        return Person.find("select p from Person p join p.groups g where g.id in ?1", groupIds).list();
+        return Person.find("select distinct p from Person p join p.groups g where g.id in ?1", groupIds).list();
     }
 
     @WithTransaction
@@ -37,34 +36,30 @@ public class MyNextBean {
     }
 
     @WithTransaction
-    public Uni<Void> getVoidUni(Message<AttendanceCreatedDto> message) {
-        AttendanceCreatedDto dto = message.body();
-        UUID attendanceListId = dto.getAttendanceListId();
-        switch (dto.getAttendanceType()) {
+    public Uni<Void> getVoidUni(Message<TeamCreatedDto> message) {
+        TeamCreatedDto dto = message.body();
+        UUID teamId = dto.getTeamId();
+        switch (dto.getTeamType()) {
             case "group":
                 List<UUID> groupIds = dto.getGroupIds();
                 if (groupIds != null && !groupIds.isEmpty()) {
                     return getPersonsFromGroups(groupIds)
                             .flatMap(personsFromGroups ->
-                                    linkGenerationResource.processAttendanceList(attendanceListId, personsFromGroups)
+                                    linkGenerationResource.processTeam(teamId, personsFromGroups)
                             );
                 }
                 break;
             case "person":
                 if (dto.getPersonIds() != null && !dto.getPersonIds().isEmpty()) {
                     return this.getSelectedPersonsFromForm(dto.getPersonIds())
-                            .onItem()
-                            .invoke(selectedPersons -> linkGenerationResource.processAttendanceList(attendanceListId, selectedPersons))
+                            .flatMap(selectedPersons -> linkGenerationResource.processTeam(teamId, selectedPersons))
                             .onFailure()
-                            .invoke(() -> logger.log(Level.ERROR, "error"))
-                            .replaceWithVoid();
+                            .invoke(() -> logger.log(Level.ERROR, "error"));
                 }
                 break;
             case "all":
                 return this.getAllPersonsForUser(dto.getRegisteredUserId())
-                        .onItem()
-                        .invoke(allPersons -> linkGenerationResource.processAttendanceList(attendanceListId, allPersons))
-                        .replaceWithVoid();
+                        .flatMap(allPersons -> linkGenerationResource.processTeam(teamId, allPersons));
         }
         return Uni.createFrom().voidItem();
     }

@@ -1,19 +1,19 @@
 {#include layouts/main}
-{#title}Szczegóły listy obecności{/title}
+{#title}Szczegóły zespołu{/title}
 {#body}
 
-<p>Lista obecności dotyczy wydarzeń:</p>
+<p>Zespół na wydarzenie:</p>
 <ol>
-    {#each attendanceList.events}
+    {#each team.events}
     <li>{it.name}</li>
     {/each}
 </ol>
 
-<h3>Osoby, które chcesz zapytać o obecność:</h3>
+<h3>Osoby, które chcesz zaprosić do zespołu:</h3>
 {#if links.isEmpty()}
-<p>Nie wybrałeś jeszcze osób do tej listy obecności.
-    <a href="#" class="generate-links" data-id="{attendanceList.id}">
-        Wybierz osoby do listy obecności
+<p>Nie wybrałeś jeszcze osób do tego zespołu.
+    <a href="#" class="generate-links" data-id="{team.id}">
+        Wybierz osoby do tego zespóu
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link-icon lucide-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
     </a>
 </p>
@@ -36,12 +36,12 @@
     <tr>
         <td>{link.personFirstName}</td>
         <td>{link.personLastName}</td>
-        <td>{link.personEmail}</td>
+        <td data-team-member-email="{link.personEmail}">{link.personEmail}</td>
         <td><a href="/web/responses/{link.linkToken}" target="_blank">Otwórz</a></td>
 
         <td style="text-align: center;">
             {#if !link.communicationSent}
-            <a href="#" id="{link.id}" data-id="{link.id}"  class="send-email-button" data-attendance-list-id="{attendanceList.id}" data-link-person-id="{link.personId}">
+            <a href="#" id="{link.id}" data-id="{link.id}"  class="send-email-button" data-team-id="{team.id}" data-link-person-id="{link.personId}">
                 Wyślij e-mail
             </a>
             {#else}
@@ -49,7 +49,7 @@
             {/if}
         </td>
         <td style="text-align: center;">
-            {#if link.attendanceListAnswered}
+            {#if link.teamAnswered}
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#13aa2c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-icon lucide-check"><path d="M20 6 9 17l-5-5"/></svg>
             {#else}
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#cc2828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hourglass-icon lucide-hourglass"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>
@@ -60,6 +60,6 @@
     </tbody>
 </table>
 {/if}
-<script src="/js/script_list_attendance_list_umbrella.js"></script>
+<script src="/js/script_list_team_umbrella.js"></script>
 {/body}
 {/include}

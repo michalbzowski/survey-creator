@@ -1,4 +1,4 @@
-package pl.bzowski.attendances.entry;
+package pl.bzowski.team.entry;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
@@ -7,7 +7,6 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.eventbus.Message;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -16,9 +15,9 @@ import jakarta.ws.rs.core.UriBuilder;
 import java.util.Map;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import pl.bzowski.attendances.list.AttendanceList;
+import pl.bzowski.team.list.Team;
 import pl.bzowski.messaging.*;
-import pl.bzowski.messaging.email.EmailAttendanceEntryLinkSentEvent;
+import pl.bzowski.messaging.email.EmailTeamEntryLinkSentEvent;
 import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.persons.Person;
 
@@ -28,7 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static pl.bzowski.messaging.CommunicationEventListener.PERSIST_COMMUNICATION;
-import static pl.bzowski.messaging.email.EmailAttendanceEntryLinkSender.EMAIL_ATTENDANCE_ENTRY_LINK_SENT;
+import static pl.bzowski.messaging.email.EmailTeamEntryLinkSender.EMAIL_TEAM_ENTRY_LINK_SENT;
 
 @Path("/api/v1/links")
 @Produces(MediaType.APPLICATION_JSON)
@@ -53,22 +52,22 @@ public class LinkGenerationResource {
     }
 
     @GET
-    public Uni<List<AttendanceEntry>> listAllLinks() {
-        return AttendanceEntry.listAll();
+    public Uni<List<TeamEntry>> listAllLinks() {
+        return TeamEntry.listAll();
     }
 
     @GET
-    @Path("/{attendanceListId}")
+    @Path("/{teamId}")
     @WithTransaction
-    public Uni<Response> generateLinks(@PathParam("attendanceListId") UUID attendanceListId) {
+    public Uni<Response> generateLinks(@PathParam("teamId") UUID teamId) {
         return personRepository.listAll()
                 .onItem()
-                .transformToUni(persons -> processAttendanceList(attendanceListId, persons))
+                .transformToUni(persons -> processTeam(teamId, persons))
                 .onItem()
                 .transformToUni(d -> Uni.createFrom().item(
                         getBuild(Response.seeOther(
-                                UriBuilder.fromPath("/web/attendance_list/{id}/details")
-                                        .build(attendanceListId)
+                                UriBuilder.fromPath("/web/teams/{id}/details")
+                                        .build(teamId)
                         ))
                 ))
                 .onFailure()
@@ -77,21 +76,22 @@ public class LinkGenerationResource {
                                 .entity("Zapytanie nie istnieje")));
     }
 
-    private static Response getBuild(Response.ResponseBuilder attendanceListId) {
-        return attendanceListId.build();
+    private static Response getBuild(Response.ResponseBuilder teamId) {
+        return teamId.build();
     }
 
 
     @WithTransaction
-    public Uni<Void> processAttendanceList(UUID attendanceListId, List<Person> persons) {
-        return AttendanceList.<AttendanceList>findById(attendanceListId)
-                .onItem().ifNull().failWith(() -> new WebApplicationException("AttendanceList not found", 404))
-                .flatMap(attendanceList -> {
-                    logger.info("Found AttendanceList with id: " + attendanceListId);
+    public Uni<Void> processTeam(UUID teamId, List<Person> persons) {
+        return Team.<Team>findById(teamId)
+                .onFailure().invoke(_ -> logger.info("Failure - team id: " + teamId))
+                .onItem().ifNull().failWith(() -> new WebApplicationException("team not found", 404))
+                .flatMap(team -> {
+                    logger.info("Found team with id: " + teamId);
 
                     return Multi.createFrom().iterable(persons)
                             .onItem().transformToUniAndConcatenate(person ->
-                                    AttendanceEntry.find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id)
+                                    TeamEntry.find("personId = ?1 and teamId = ?2", person.id, team.id)
                                             .firstResult()
                                             .flatMap(messageTemplate -> {
                                                 if (messageTemplate != null) {
@@ -99,7 +99,7 @@ public class LinkGenerationResource {
                                                     return Uni.createFrom().voidItem();
                                                 } else {
                                                     logger.info("Creating new MessageTemplate for person: " + person.id);
-                                                    AttendanceEntry newTemplate = new AttendanceEntry(person, attendanceList);
+                                                    TeamEntry newTemplate = new TeamEntry(person, team);
                                                     Uni<PanacheEntityBase> persist = newTemplate.persist();
                                                     return persist.replaceWithVoid();
                                                 }
@@ -116,17 +116,17 @@ public class LinkGenerationResource {
     }
 
     @POST
-    @Path("/{attendanceListId}/send/{personId}")
+    @Path("/{teamId}/send/{personId}")
     @WithTransaction
-    public Uni<Void> saveAttendanceListMessageToPerson(@PathParam("attendanceListId") UUID
-                                                               attendanceListId, @PathParam("personId") UUID personId) {
-        logger.info(String.format("Start saving message for attendanceList %s for person %s", attendanceListId, personId));
+    public Uni<Void> saveteamMessageToPerson(@PathParam("teamId") UUID
+                                                     teamId, @PathParam("personId") UUID personId) {
+        logger.info(String.format("Start saving message for team %s for person %s", teamId, personId));
 
         return personRepository.currentUserId().flatMap(currentUserId -> {
-            return AttendanceList.<AttendanceList>findById(attendanceListId)
-                    .flatMap(attendanceList -> {
-                        if (attendanceList == null) {
-                            logger.info("attendanceList is null");
+            return Team.<Team>findById(teamId)
+                    .flatMap(team -> {
+                        if (team == null) {
+                            logger.info("team is null");
                             return Uni.createFrom().failure(new NotFoundException("Zapytanie nie istnieje"));
                         }
                         return Person.<Person>findById(personId)
@@ -135,20 +135,20 @@ public class LinkGenerationResource {
                                         logger.info("Person is null");
                                         return Uni.createFrom().failure(new NotFoundException("Osoba nie istnieje"));
                                     }
-                                    return AttendanceEntry.<AttendanceEntry>find("personId = ?1 and attendanceListId = ?2", person.id, attendanceList.id)
+                                    return TeamEntry.<TeamEntry>find("personId = ?1 and teamId = ?2", person.id, team.id)
                                             .firstResult()
-                                            .flatMap(attendanceEntry -> {
-                                                if (attendanceEntry == null) {
-                                                    String format = String.format("Can not send link. Link doesn't exist for: %s - %s", person.email, attendanceListId);
+                                            .flatMap(teamEntry -> {
+                                                if (teamEntry == null) {
+                                                    String format = String.format("Can not send link. Link doesn't exist for: %s - %s", person.email, teamId);
                                                     logger.info(format);
                                                     return Uni.createFrom().failure(new RuntimeException(format));
                                                 }
-                                                Map<String, Object> properties = Map.of("eventTitle", attendanceEntry.attendanceList.joinedEventsName(),
+                                                Map<String, Object> properties = Map.of("eventTitle", teamEntry.team.joinedEventsName(),
                                                         "appHost", appHost,
-                                                        "attendanceEntryLink", appHost + "/web/responses/" + attendanceEntry.linkToken.toString(),
-                                                        "personEmail", attendanceEntry.personEmail,
-                                                        "attendanceEntryId", attendanceEntry.id);
-                                                this.eventBus.publish(PERSIST_COMMUNICATION, new PersistCommunicationCommand(Channel.EMAIL, CommunicationTemplate.ATTENDANCE_RECORD_LINK, currentUserId, person, properties));
+                                                        "teamEntryLink", appHost + "/web/responses/" + teamEntry.linkToken.toString(),
+                                                        "personEmail", teamEntry.personEmail,
+                                                        "teamEntryId", teamEntry.id);
+                                                this.eventBus.publish(PERSIST_COMMUNICATION, new PersistCommunicationCommand(Channel.EMAIL, CommunicationTemplate.TEAM_RECORD_LINK, currentUserId, person, properties));
                                                 return Uni.createFrom().voidItem();
                                             });
                                 });
@@ -156,12 +156,12 @@ public class LinkGenerationResource {
         });
     }
 
-    @Path("/{attendanceEntryId}/status")
+    @Path("/{teamEntryId}/status")
     @WithTransaction
     @GET
-    public Uni<Response> getStatus(@PathParam("attendanceEntryId") UUID attendanceListId) {
-        logger.info("attendanceEntryId:" + attendanceListId.toString());
-        return CommunicationAttendanceLink.<CommunicationAttendanceLink>find("attendanceEntryId = ?1 ", attendanceListId)
+    public Uni<Response> getStatus(@PathParam("teamEntryId") UUID teamId) {
+        logger.info("teamEntryId:" + teamId.toString());
+        return CommunicationTeamLink.<CommunicationTeamLink>find("teamEntryId = ?1 ", teamId)
                 .firstResult()
                 .flatMap(cal -> Communication
                         .<Communication>findById(cal.communicationId)
@@ -180,9 +180,9 @@ public class LinkGenerationResource {
     }
 
 
-    @ConsumeEvent(EMAIL_ATTENDANCE_ENTRY_LINK_SENT)
-    public void lol(Message<EmailAttendanceEntryLinkSentEvent> msg) {
-        EmailAttendanceEntryLinkSentEvent body = msg.body();
+    @ConsumeEvent(EMAIL_TEAM_ENTRY_LINK_SENT)
+    public void lol(Message<EmailTeamEntryLinkSentEvent> msg) {
+        EmailTeamEntryLinkSentEvent body = msg.body();
         costamService.persiste(body).subscribe().with(l -> System.out.println("Lot"));
 
     }

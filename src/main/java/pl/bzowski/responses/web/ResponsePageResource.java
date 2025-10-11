@@ -6,9 +6,9 @@ import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import pl.bzowski.attendances.list.AttendanceList;
+import pl.bzowski.team.list.Team;
 import pl.bzowski.events.Event;
-import pl.bzowski.attendances.entry.AttendanceEntry;
+import pl.bzowski.team.entry.TeamEntry;
 import pl.bzowski.persons.Person;
 import pl.bzowski.events.PersonEventAnswer;
 
@@ -35,7 +35,7 @@ public class ResponsePageResource {
     @Path("/{token}")
     @Produces(MediaType.TEXT_HTML)
     public Uni<TemplateInstance> showForm(@PathParam("token") UUID token) {
-        return AttendanceEntry.find("linkToken", token)
+        return TeamEntry.find("linkToken", token)
                 .firstResult()
                 .onItem().ifNull().failWith(() -> new NotFoundException("Nie znaleziono linku"))
                 .map(link -> responseForm.data("link", link));
@@ -49,13 +49,13 @@ public class ResponsePageResource {
     public Uni<TemplateInstance> submitAnswer(@PathParam("token") UUID token, Map<String, String> answers) {
         logger.info(String.format("Submit answer for %s - %d", token.toString(), answers.size()));
 
-        return AttendanceEntry.find("linkToken", token)
+        return TeamEntry.find("linkToken", token)
                 .firstResult()
                 .onItem().ifNull().failWith(() -> new NotFoundException("Nie znaleziono linku " + token))
-                .flatMap(link -> Person.findById(((AttendanceEntry) link).personId)
+                .flatMap(link -> Person.findById(((TeamEntry) link).personId)
                         .flatMap(www -> {
                             Person person = (Person) www;
-                            AttendanceList attendanceList = ((AttendanceEntry) link).attendanceList;
+                            Team team = ((TeamEntry) link).team;
                             // Przetwarzamy kolejne odpowiedzi sekwencyjnie reaktywnie
                             Uni<Void> allUpdates = Uni.createFrom().voidItem();
 
@@ -77,7 +77,7 @@ public class ResponsePageResource {
                                                     if (event == null) {
                                                         return Uni.createFrom().voidItem();
                                                     }
-                                                    return PersonEventAnswer.find("person = ?1 and attendanceList = ?2 and event = ?3", person, attendanceList, event)
+                                                    return PersonEventAnswer.find("person = ?1 and team = ?2 and event = ?3", person, team, event)
                                                             .firstResult()
                                                             .flatMap(aaa -> {
                                                                 PersonEventAnswer pqa = (PersonEventAnswer) aaa;
@@ -87,10 +87,10 @@ public class ResponsePageResource {
                                                                 } else {
                                                                     PersonEventAnswer newAnswer = new PersonEventAnswer();
                                                                     newAnswer.person = person;
-                                                                    newAnswer.attendanceList = attendanceList;
+                                                                    newAnswer.team = team;
                                                                     newAnswer.event = (Event) event;
                                                                     newAnswer.answer = finalAnswer;
-                                                                    ((AttendanceEntry) link).attendanceListAnswered = Boolean.TRUE;
+                                                                    ((TeamEntry) link).teamAnswered = Boolean.TRUE;
                                                                     return newAnswer.persistAndFlush().replaceWithVoid();
                                                                 }
                                                             });

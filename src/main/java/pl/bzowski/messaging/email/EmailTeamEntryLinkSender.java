@@ -16,9 +16,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Singleton
-public class EmailAttendanceEntryLinkSender implements CommunicationSender {
+public class EmailTeamEntryLinkSender implements CommunicationSender {
 
-    public static final String EMAIL_ATTENDANCE_ENTRY_LINK_SENT = "EMAIL_ATTENDANCE_RECORD_LINK_SENT";
+    public static final String EMAIL_TEAM_ENTRY_LINK_SENT = "EMAIL_TEAM_RECORD_LINK_SENT";
     private final Logger logger = Logger.getLogger(EmailNewPersonAddedCommunicationSender.class.getName());
 
     @Inject
@@ -27,14 +27,14 @@ public class EmailAttendanceEntryLinkSender implements CommunicationSender {
     @Inject
     EventBus eventBus;
 
-    @Location("email/attendanceEntryLink")
-    Template attendanceEntryLink;
+    @Location("email/teamEntryLink")
+    Template teamEntryLink;
 
     @Override
     public Uni<Void> send(Communication communication) {
-        String render = attendanceEntryLink.data("eventTitle", communication.getProperty("eventTitle"))
+        String render = teamEntryLink.data("eventTitle", communication.getProperty("eventTitle"))
                 .data("appHost", communication.getProperty("appHost"))
-                .data("attendanceEntryLink", communication.getProperty("attendanceEntryLink"))
+                .data("teamEntryLink", communication.getProperty("teamEntryLink"))
                 .data("personEmail", communication.getProperty("personEmail"))
                 .render();
 
@@ -48,8 +48,8 @@ public class EmailAttendanceEntryLinkSender implements CommunicationSender {
                 .onItem().invoke(() -> {
                     logger.info("Communication status updated and persisted");
                     var communicationId = communication.getId();
-                    var attendanceEntryId = UUID.fromString(communication.getProperty("attendanceEntryId").toString());
-                    eventBus.publish(EMAIL_ATTENDANCE_ENTRY_LINK_SENT, new EmailAttendanceEntryLinkSentEvent(communicationId, attendanceEntryId));
+                    var teamEntryId = UUID.fromString(communication.getProperty("teamEntryId").toString());
+                    eventBus.publish(EMAIL_TEAM_ENTRY_LINK_SENT, new EmailTeamEntryLinkSentEvent(communicationId, teamEntryId));
                 })
                 .onFailure().invoke(t ->
                         logger.log(Level.FINEST, "Confirmation failed", t));

@@ -1,13 +1,13 @@
 {#include layouts/main}
-{#title}Nowa lista obecności{/title}
+{#title}Nowy zespół{/title}
 {#body}
-<form id="attendance-list-form">
+<form id="team-form">
     <article hidden="true">
-        <label for="name">Nazwa listy obecności: </label>
+        <label for="name">Nazwa zespołu: </label>
         <input type="text" id="name" name="name" value="{name ?: ''}" />
     </article>
     <div id="events-container">
-        {#each attendanceList.events}
+        {#each team.events}
         <article class="event-entry">
             <label>Wybierz wydarzenie:</label>
             <select name="events[{it_index}]" onchange="checkDuplicateEvents(this)" required>
@@ -19,17 +19,17 @@
             <p>
                 <a href="#" onclick="removeEvent(this)">
                     <i class="si-minus-circle"></i>
-                    Usuń wydarzenie z tej listy obecności
+                    Usuń wydarzenie z tego zespolu
                 </a>
             </p>
         </article>
         {/each}
     </div>
 
-    <button type="submit">Zapisz listę obecności</button>
+    <button type="submit">Stwórz zespół na wybrane wydarzenia</button>
     <a href="#" onclick="createEvent()">
         <i class="si-plus-circle"></i>
-        Dodaj kolejne wydarzenie do tej listy obecności
+        Dodaj kolejne wydarzenie dla tego zespołu
     </a>
 </form>
 <script>
@@ -37,7 +37,7 @@
     const selectEventId = "{eventId}"
 </script>
 
-<script src="/js/script_create_attendance_list_umbrella.js" defer></script>
+<script src="/js/script_create_team_umbrella.js" defer></script>
 
 {/body}
 {/include}

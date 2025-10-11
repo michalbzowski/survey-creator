@@ -21,7 +21,7 @@ public class EventRepository extends RepositoryBase {
                             "localDateTime",
                             Sort.Direction.Ascending
                     );
-                    return Event.list("registeredUserId = ?1 and attendanceList is null",
+                    return Event.list("registeredUserId = ?1 and team is null",
                             localDateTime,
                             uuid);
                 });

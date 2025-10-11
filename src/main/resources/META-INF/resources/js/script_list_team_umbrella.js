@@ -3,14 +3,14 @@ u(document).on('click', 'a.generate-links', function(event) {
     event.preventDefault();
     const id = u(this).data('id');
 
-    if (confirm('Czy wybrać wszystkie osoby do tej listy obecności?')) {
+    if (confirm('Czy wybrać wszystkie osoby do tego zespołu?')) {
         // Przekieruj spodziewając się GET, można użyć location.href
         window.location.href = `/api/v1/links/${id}`;
     }
 });
 
-// Obsługa usuwania listy obecności z potwierdzeniem i fetch POST z _method=delete
-u(document).on('click', 'a.delete-attendance-list', async function(event) {
+// Obsługa usuwania zespołu z potwierdzeniem i fetch POST z _method=delete
+u(document).on('click', 'a.delete-team', async function(event) {
     event.preventDefault();
     const id = u(this).data('id');
 
@@ -19,7 +19,7 @@ u(document).on('click', 'a.delete-attendance-list', async function(event) {
     }
 
     try {
-        const response = await fetchWithLoader(`/web/attendance_list/${id}`, {
+        const response = await fetchWithLoader(`/web/teams/${id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: '_method=delete',
@@ -39,9 +39,9 @@ u(document).on('click', 'a.send-email-button', async function(e) {
     e.preventDefault();
 
     const button = this;
-    const attendanceListId = u(button).data('attendance-list-id');
+    const teamId = u(button).data('team-id');
     const linkPersonId = u(button).data('link-person-id');
-    const attendanceEntryId = u(button).data('id');
+    const teamEntryId = u(button).data('id');
 
     // Zamień link na ikonę klepsydry
     u(button).html(`
@@ -56,7 +56,7 @@ u(document).on('click', 'a.send-email-button', async function(e) {
     `);
 
     try {
-        const response = await fetchWithLoader(`/api/v1/links/${attendanceListId}/send/${linkPersonId}`, {
+        const response = await fetchWithLoader(`/api/v1/links/${teamId}/send/${linkPersonId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
@@ -71,7 +71,7 @@ u(document).on('click', 'a.send-email-button', async function(e) {
         // Polling: co sekundę sprawdzaj czy e-mail wysłany
         const checkInterval = setInterval(async () => {
             try {
-                const statusResp = await fetch(`/api/v1/links/${attendanceEntryId}/status`, {
+                const statusResp = await fetch(`/api/v1/links/${teamEntryId}/status`, {
                     method: 'GET',
                     headers: { 'Accept': 'application/json' }
                 });
@@ -128,11 +128,11 @@ u(document).on('click', '#send-to-all', async function(event) {
     // Wysyłamy wiadomosc kolejno do każdej osoby
     for (let i = 0; i < buttons.length; i++) {
         const btn = u(buttons.nodes[i]);
-        const attendanceListId = btn.data('attendance-list-id');
+        const teamId = btn.data('team-id');
         const linkPersonId = btn.data('link-person-id');
 
         try {
-            const response = await fetchWithLoader(`/api/v1/links/${attendanceListId}/send/${linkPersonId}`, {
+            const response = await fetchWithLoader(`/api/v1/links/${teamId}/send/${linkPersonId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
             });

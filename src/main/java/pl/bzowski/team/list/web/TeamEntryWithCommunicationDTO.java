@@ -1,28 +1,28 @@
-package pl.bzowski.attendances.list.web;
+package pl.bzowski.team.list.web;
 
 import java.util.UUID;
 
-public class AttendanceEntryWithCommunicationDTO {
+public class TeamEntryWithCommunicationDTO {
 
     public UUID id;
     public UUID personId;
     public String personFirstName;
     public String personLastName;
     public String personEmail;
-    public UUID attendanceListId;
+    public UUID teamId;
     public UUID linkToken;
     public Boolean communicationSent; // dodatkowe pole z left join
-    public Boolean attendanceListAnswered;
+    public Boolean teamAnswered;
 
-    public AttendanceEntryWithCommunicationDTO(UUID id, UUID personId, String personFirstName, String personLastName, String personEmail, UUID attendanceListId, UUID linkToken,  Boolean attendanceListAnswered, Boolean communicationSent) {
+    public TeamEntryWithCommunicationDTO(UUID id, UUID personId, String personFirstName, String personLastName, String personEmail, UUID teamId, UUID linkToken,  Boolean teamAnswered, Boolean communicationSent) {
         this.id = id;
         this.personId = personId;
         this.personFirstName = personFirstName;
         this.personLastName = personLastName;
         this.personEmail = personEmail;
-        this.attendanceListId = attendanceListId;
+        this.teamId = teamId;
         this.linkToken = linkToken;
-        this.attendanceListAnswered = attendanceListAnswered;
+        this.teamAnswered = teamAnswered;
         this.communicationSent = communicationSent;
     }
 
@@ -46,16 +46,16 @@ public class AttendanceEntryWithCommunicationDTO {
         return personEmail;
     }
 
-    public UUID getAttendanceListId() {
-        return attendanceListId;
+    public UUID getteamId() {
+        return teamId;
     }
 
     public UUID getLinkToken() {
         return linkToken;
     }
 
-    public Boolean getAttendanceListAnswered() {
-        return attendanceListAnswered;
+    public Boolean getteamAnswered() {
+        return teamAnswered;
     }
 
     public Boolean getCommunicationSent() {

@@ -262,6 +262,33 @@ public class RegisteredUserDriver implements Driver {
     }
 
     @Override
+    public void lookAtDetails(String listName, String rowName) {
+        WebElement element = driver.findElement(By.cssSelector("td[data-" + listName + "-name=\"" + rowName + "\"]"));
+        WebElement parent = element.findElement(By.xpath("./.."));
+        WebElement link = parent.findElement(By.cssSelector("a." + listName + "-details"));
+        String href = link.getDomProperty("href");
+        link.click();
+        new WebDriverWait(driver, Duration.ofSeconds(10))
+                .until(webDriver -> {
+                    log.info("confirm href {} - wait", href);
+                    return webDriver.getCurrentUrl().contains(href);
+                });
+        log.info("confirm href {} - finished", href);
+    }
+
+    @Override
+    public void assertTeamMemberWasSelected(String teamMemberEmail) {
+        WebElement element = driver.findElement(By.cssSelector("td[data-team-member-email=\"" + teamMemberEmail + "\"]"));
+        String text = element.getText();
+        new WebDriverWait(driver, Duration.ofSeconds(10))
+                .until(webDriver -> {
+                    log.info("assertTeamMemberWasSelected: {} - wait", teamMemberEmail);
+                    return assertThat(text).isEqualTo(teamMemberEmail);
+                });
+        log.info("assertTeamMemberWasSelected: {} - finished", teamMemberEmail);
+    }
+
+    @Override
     public void exit() {
         try {
             if (driver != null) {

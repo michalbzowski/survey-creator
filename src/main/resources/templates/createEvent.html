@@ -17,19 +17,19 @@
               required></textarea>
 
     <fieldset>
-        <input type="checkbox" id="withAttendanceList" name="withAttendanceList" value="checked" checked/>
-        <label for="withAttendanceList">Utwórz listę obecności dla tego wydarzenia</label>
+        <input type="checkbox" id="withTeam" name="withTeam" value="checked" checked/>
+        <label for="withTeam">Utwórz listę obecności dla tego wydarzenia</label>
     </fieldset>
 
-    <fieldset id="attendanceOptions" style="display:none; margin-top:10px;">
-        <legend>Opcje listy obecności</legend>
-        <input type="radio" id="chooseGroup" name="attendanceType" value="group"/>
+    <fieldset id="teamOptions" style="display:none; margin-top:10px;">
+        <legend>Opcje zespołu</legend>
+        <input type="radio" id="chooseGroup" name="teamType" value="group"/>
         <label for="chooseGroup">Wybierz grupę osób</label><br/>
 
-        <input type="radio" id="choosePersons" name="attendanceType" value="person"/>
+        <input type="radio" id="choosePersons" name="teamType" value="person"/>
         <label for="choosePersons">Wybierz osoby</label><br/>
 
-        <input type="radio" id="chooseAll" name="attendanceType" value="all" checked/>
+        <input type="radio" id="chooseAll" name="teamType" value="all" checked/>
         <label for="chooseAll">Przypisz wszystkie</label><br/>
     </fieldset>
 

@@ -1,17 +1,17 @@
-package pl.bzowski.attendances.list;
+package pl.bzowski.team.list;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import pl.bzowski.events.Event;
-import pl.bzowski.attendances.list.api.AttendanceListDTO;
+import pl.bzowski.team.list.api.TeamDTO;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "attendance_list")//TODO: Attendance -zmien nazwe skasuj list
-public class AttendanceList extends PanacheEntityBase {
+@Table(name = "team")
+public class Team extends PanacheEntityBase {
 
     @Id
     @GeneratedValue
@@ -21,23 +21,23 @@ public class AttendanceList extends PanacheEntityBase {
     public String name;
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
-    @JoinTable(name = "attendance_list_events",
-            joinColumns = @JoinColumn(name = "attendance_list_id"),
+    @JoinTable(name = "team_events",
+            joinColumns = @JoinColumn(name = "team_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id"))
     public List<Event> events;
 
     @Column(nullable = false, name = "registered_user_id")
     public UUID registeredUserId;
 
-    public AttendanceList() {}
+    public Team() {}
 
-    public AttendanceList(String name, List<Event> events) {
+    public Team(String name, List<Event> events) {
         this.name = name;
         this.events = events;
     }
 
-    public AttendanceListDTO toDTO() {
-        return new AttendanceListDTO(this.id, this.name, this.events.stream().map(e -> e.id).toList());
+    public TeamDTO toDTO() {
+        return new TeamDTO(this.id, this.name, this.events.stream().map(e -> e.id).toList());
     }
 
     public String joinedEventsName() {

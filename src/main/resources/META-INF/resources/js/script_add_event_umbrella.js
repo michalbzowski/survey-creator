@@ -1,24 +1,24 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const withAttendance = document.getElementById('withAttendanceList');
-    const attendanceOptions = document.getElementById('attendanceOptions');
+    const withTeam = document.getElementById('withTeam');
+    const teamOptions = document.getElementById('teamOptions');
     const groupsSelect = document.getElementById('groupsSelect');
     const personsSelect = document.getElementById('personsSelect');
-    const radios = attendanceOptions.querySelectorAll('input[type="radio"][name="attendanceType"]');
+    const radios = teamOptions.querySelectorAll('input[type="radio"][name="teamType"]');
 
     function updateVisibility() {
-        if (withAttendance.checked) {
-            attendanceOptions.style.display = 'block';
+        if (withTeam.checked) {
+            teamOptions.style.display = 'block';
             const selected = [...radios].find(r => r.checked)?.value;
             groupsSelect.style.display = selected === 'group' ? 'block' : 'none';
             personsSelect.style.display = selected === 'person' ? 'block' : 'none';
         } else {
-            attendanceOptions.style.display = 'none';
+            teamOptions.style.display = 'none';
             groupsSelect.style.display = 'none';
             personsSelect.style.display = 'none';
         }
     }
 
-    withAttendance.addEventListener('change', updateVisibility);
+    withTeam.addEventListener('change', updateVisibility);
     radios.forEach(radio => radio.addEventListener('change', updateVisibility));
 
     updateVisibility(); // initial

@@ -1,6 +1,6 @@
 
 // Obsługa submit formularza
-u('#attendance-list-form').on('submit', async function(event) {
+u('#team-form').on('submit', async function(event) {
     event.preventDefault();
     const name = u('#name').nodes[0].value.trim() || ""; //Wydaje mi się, że ta nazwa do niczego mi nie służy
 
@@ -21,27 +21,27 @@ u('#attendance-list-form').on('submit', async function(event) {
         return;
     }
 
-    const attendanceList = { name, events };
+    const team = { name, events };
 
     try {
-        const response = await fetchWithLoader('/web/attendance_list', {
+        const response = await fetchWithLoader('/web/teams', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(attendanceList),
+            body: JSON.stringify(team),
         });
 
         if (response.ok) {
             const result = await response.json();
-            window.location.href = '/web/attendance_list/' + result.id + '/details';
+            window.location.href = '/web/teams/' + result.id + '/details';
         } else {
-            alert('Błąd przy zapisie listy obecności');
+            alert('Błąd przy zapisie zespołu');
         }
     } catch (error) {
         alert('Błąd połączenia z serwerem:' + error);
     }
 });
 
-// Dodawanie nowego wydarzenia do listy obecności
+// Dodawanie nowego wydarzenia do zespołu
 function createEvent() {
     const containerSelection = u('#events-container');
     if (containerSelection.length === 0) {
@@ -86,7 +86,7 @@ function createEvent() {
     const par = document.createElement('p');
     const btn = document.createElement('a');
     btn.href = '#';
-    btn.textContent = 'Usuń wydarzenie z tej listy obecności';
+    btn.textContent = 'Usuń wydarzenie dla tego zespołu';
     btn.onclick = function(e) {
         e.preventDefault();
         removeEvent(btn);

@@ -8,10 +8,10 @@
         <p>{event.description}</p>
     </details>
     <hr />
-    {#if noAttendanceListYet}
-    <p>To wydarzenie nie ma jeszcze swojej listy obecności.
-        <a href="/web/attendance_list/new?name={event.name}&eventId={event.id}">
-        Stwórz listę obecności
+    {#if noteamYet}
+    <p>To wydarzenie nie ma jeszcze swojego zespołu.
+        <a href="/web/teams/new?name={event.name}&eventId={event.id}">
+        Stwórz zespół dla tego wydarzenia.
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
              class="lucide lucide-book-plus-icon lucide-book-plus">
@@ -21,8 +21,8 @@
         </svg>
     </a></p>
     {#else if linkCount == 0}
-    <form action="/api/v1/links/{eventAttendanceListId}" method="get" style="display:inline;">
-        <button type="submit" onclick="return confirm('Czy wybrać wszystkie osoby do tej listy obecności?')">Generuj linki
+    <form action="/api/v1/links/{eventteamId}" method="get" style="display:inline;">
+        <button type="submit" onclick="return confirm('Czy wybrać wszystkie osoby do tego zespołu?')">Generuj linki
         </button>
     </form>
     {#else}
@@ -40,7 +40,7 @@
     </details>
 <hr />
     {/if}
-{#if noAttendanceListYet}
+{#if noteamYet}
 <!--Blank-->
 {#else}
 <details name = "event-details">

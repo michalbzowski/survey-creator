@@ -7,13 +7,13 @@
 </head>
 <body>
 <h2>Witaj, {link.personFirstName} {link.personLastName} </h2>
-{#if link.attendanceListAnswered}
+{#if link.teamAnswered}
 <p>Już odpowiedziałeś na tą ankietę. Jeśli chcesz zmienić zdanie, uzupełnij i wyślij ponownie</p>
 {/if}
 <p>({link.personEmail})</p>
-<p>Dotyczy wydarzeń: {link.attendanceList.joinedEventsName}</p>
+<p>Dotyczy wydarzeń: {link.team.joinedEventsName}</p>
 <form action="/web/responses/{link.linkToken}" id="response-form">
-    {#each link.attendanceList.events}
+    {#each link.team.events}
     <article>
         <p><strong>{it.name}</strong></p>
         <p>{it.location}</p>

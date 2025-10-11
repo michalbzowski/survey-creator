@@ -1,4 +1,4 @@
-package pl.bzowski.attendances.list.web;
+package pl.bzowski.team.list.web;
 
 import jakarta.inject.Singleton;
 import jakarta.json.bind.Jsonb;

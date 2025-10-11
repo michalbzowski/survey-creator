@@ -1,15 +1,15 @@
-package pl.bzowski.attendances.entry;
+package pl.bzowski.team.entry;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import pl.bzowski.attendances.list.AttendanceList;
+import pl.bzowski.team.list.Team;
 import pl.bzowski.persons.Person;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "person_attendance_list_links")
-public class AttendanceEntry extends PanacheEntityBase {
+@Table(name = "person_team_links")
+public class TeamEntry extends PanacheEntityBase {
 
     @Id
     @GeneratedValue
@@ -31,27 +31,27 @@ public class AttendanceEntry extends PanacheEntityBase {
     public String personTag;
 
     @ManyToOne(optional = false)
-    public AttendanceList attendanceList;
+    public Team team;
 
     @Column(nullable = false)
-    public UUID attendanceListId;
+    public UUID teamId;
 
     @Column(nullable = false, unique = true)
     public UUID linkToken; // unikalny identyfikator do URL-a
 
     @Column(nullable = false)
-    public Boolean attendanceListAnswered = false;
+    public Boolean teamAnswered = false;
 
-    public AttendanceEntry() {
+    public TeamEntry() {
     }
 
-    public AttendanceEntry(Person person, AttendanceList attendanceList) {
+    public TeamEntry(Person person, Team team) {
         this.personId = person.id;
         this.personFirstName = person.firstName;
         this.personLastName = person.lastName;
         this.personEmail = person.email;
-        this.attendanceList = attendanceList;
-        this.attendanceListId = attendanceList.id;
+        this.team = team;
+        this.teamId = team.id;
         this.linkToken = UUID.randomUUID();
     }
 }

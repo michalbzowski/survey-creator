@@ -15,17 +15,15 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logmanager.Level;
-import pl.bzowski.attendances.entry.CommunicationAttendanceLink;
-import pl.bzowski.attendances.list.api.AttendanceListDTO;
-import pl.bzowski.attendances.list.infrastructure.AttendanceListRepository;
+import pl.bzowski.team.list.api.TeamDTO;
+import pl.bzowski.team.list.infrastructure.TeamRepository;
 import pl.bzowski.base.ReactiveDelete;
-import pl.bzowski.messaging.SendingStatus;
 import pl.bzowski.events.Event;
 import pl.bzowski.events.EventRepository;
 import pl.bzowski.groups.Group;
 import pl.bzowski.groups.GroupsRepository;
-import pl.bzowski.attendances.entry.AttendanceCreatedDto;
-import pl.bzowski.attendances.entry.AttendanceEntry;
+import pl.bzowski.team.entry.TeamCreatedDto;
+import pl.bzowski.team.entry.TeamEntry;
 import pl.bzowski.events.PersonEventAnswer;
 import pl.bzowski.persons.Person;
 import pl.bzowski.persons.PersonRepository;
@@ -39,7 +37,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-import static pl.bzowski.attendances.entry.AttendanceCreatedDto.EVENT_WITH_ATTENDANCE_CREATED;
+import static pl.bzowski.team.entry.TeamCreatedDto.EVENT_WITH_TEAM_CREATED;
 
 @Path("/web/events")
 public class EventsPageResource {
@@ -53,13 +51,13 @@ public class EventsPageResource {
     private final EventRepository eventRepository;
     private final GroupsRepository groupsRepository;
     private final PersonRepository personRepository;
-    private final AttendanceListRepository attendanceListRepository;
+    private final TeamRepository teamRepository;
     private final EventBus eventBus;
 
     @Inject
     Mutiny.SessionFactory sessionFactory;
 
-    public EventsPageResource(Template createEvent, Template listEvents, Template eventDetails, TagsRepository tagsRepository, EventRepository eventRepository, GroupsRepository groupsRepository, PersonRepository personRepository, AttendanceListRepository attendanceListRepository, EventBus eventBus, Mutiny.SessionFactory sessionFactory) {
+    public EventsPageResource(Template createEvent, Template listEvents, Template eventDetails, TagsRepository tagsRepository, EventRepository eventRepository, GroupsRepository groupsRepository, PersonRepository personRepository, TeamRepository teamRepository, EventBus eventBus, Mutiny.SessionFactory sessionFactory) {
         this.createEvent = createEvent;
         this.listEvents = listEvents;
         this.eventDetails = eventDetails;
@@ -67,7 +65,7 @@ public class EventsPageResource {
         this.eventRepository = eventRepository;
         this.groupsRepository = groupsRepository;
         this.personRepository = personRepository;
-        this.attendanceListRepository = attendanceListRepository;
+        this.teamRepository = teamRepository;
         this.eventBus = eventBus;
         this.sessionFactory = sessionFactory;
     }
@@ -112,13 +110,13 @@ public class EventsPageResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @WithTransaction
     public Uni<Response> createEvent(@BeanParam EventDto eventDto,
-                                     @FormParam("withAttendanceList") String withAttendanceList,
-                                     @FormParam("attendanceType") String attendanceType,
+                                     @FormParam("withTeam") String withTeam,
+                                     @FormParam("teamType") String teamType,
                                      @FormParam("groups") List<UUID> groupIds,
                                      @FormParam("persons") List<UUID> personIds) {
         return eventRepository.persist(eventDto)
-                .invoke(withAttendanceListLogger(withAttendanceList))
-                .call(eventIfWithAttendanceListChecked(eventDto, withAttendanceList, attendanceType, groupIds, personIds))
+                .invoke(withTeamLogger(withTeam))
+                .call(eventIfWithTeamChecked(eventDto, withTeam, teamType, groupIds, personIds))
                 .map(redirectToEventDetails())
                 .onFailure().invoke(logFailure())
                 .onFailure().recoverWithItem(returnServerError());
@@ -128,26 +126,26 @@ public class EventsPageResource {
         return event -> Response.seeOther(UriBuilder.fromPath("/web/events/" + event.id + "/details").build()).build();
     }
 
-    private Function<Event, Uni<?>> eventIfWithAttendanceListChecked(EventDto eventDto, String withAttendanceList, String attendanceType, List<UUID> groupIds, List<UUID> personIds) {
+    private Function<Event, Uni<?>> eventIfWithTeamChecked(EventDto eventDto, String withTeam, String teamType, List<UUID> groupIds, List<UUID> personIds) {
         return event -> {
-            if ("checked".equals(withAttendanceList)) {
-                return attendanceListRepository.createAttendanceList(new AttendanceListDTO(event.id))
+            if ("checked".equals(withTeam)) {
+                return teamRepository.createTeam(new TeamDTO(event.id))
                         .onItem()
-                        .invoke(publish(eventDto, withAttendanceList, attendanceType, groupIds, personIds, event));
+                        .invoke(publish(eventDto, withTeam, teamType, groupIds, personIds, event));
             }
             return Uni.createFrom().voidItem();
         };
     }
 
-    private Consumer<AttendanceListDTO> publish(EventDto eventDto, String withAttendanceList, String attendanceType, List<UUID> groupIds, List<UUID> personIds, Event event) {
-        return attendanceListDTO -> {
-            eventBus.publish(EVENT_WITH_ATTENDANCE_CREATED,
-                    new AttendanceCreatedDto(withAttendanceList, attendanceType, groupIds, personIds, attendanceListDTO.id, event.registeredUserId, eventDto));
+    private Consumer<TeamDTO> publish(EventDto eventDto, String withTeam, String teamType, List<UUID> groupIds, List<UUID> personIds, Event event) {
+        return teamDTO -> {
+            eventBus.publish(EVENT_WITH_TEAM_CREATED,
+                    new TeamCreatedDto(withTeam, teamType, groupIds, personIds, teamDTO.id, event.registeredUserId, eventDto));
         };
     }
 
-    private Consumer<Event> withAttendanceListLogger(String withAttendanceList) {
-        return event -> logger.info("Created event withAttendanceList: " + withAttendanceList);
+    private Consumer<Event> withTeamLogger(String withTeam) {
+        return event -> logger.info("Created event withTeam: " + withTeam);
     }
 
     private static Function<Throwable, Response> returnServerError() {
@@ -160,12 +158,12 @@ public class EventsPageResource {
         return ex -> logger.log(Level.ERROR, "Failed to create event", ex);
     }
 
-    private Uni<AttendanceListDTO> persistAttendanceList(EventDto eventDto, Event event) {
-        // Utwórz listę obecności (AttendanceList) powiązaną z tym wydarzeniem
-        AttendanceListDTO attendanceListDTO = new AttendanceListDTO();
-        attendanceListDTO.name = eventDto.name;
-        attendanceListDTO.events = List.of(event.id);
-        return attendanceListRepository.createAttendanceList(attendanceListDTO);
+    private Uni<TeamDTO> persistTeam(EventDto eventDto, Event event) {
+        // Utwórz listę obecności (team) powiązaną z tym wydarzeniem
+        TeamDTO teamDTO = new TeamDTO();
+        teamDTO.name = eventDto.name;
+        teamDTO.events = List.of(event.id);
+        return teamRepository.createTeam(teamDTO);
     }
 
     @GET
@@ -189,11 +187,11 @@ public class EventsPageResource {
     }
 
     private Uni<EventContext> loadLinkCount(EventContext ctx) {
-        if (ctx.noAttendanceListYet) {
+        if (ctx.noteamYet) {
             ctx.linkCount = 0L;
             return Uni.createFrom().item(ctx);
         }
-        return AttendanceEntry.count("attendanceListId = ?1", ctx.attendanceListId)
+        return TeamEntry.count("teamId = ?1", ctx.teamId)
                 .map(count -> {
                     ctx.linkCount = count;
                     return ctx;
@@ -201,19 +199,19 @@ public class EventsPageResource {
     }
 
     String query = "SELECT count(cal.id)" +
-            "FROM person_attendance_list_links ae " +
-            "JOIN communication_attendance_links cal ON ae.id = cal.attendanceEntryId " + //IF cal is present, then assuming communication was sent? //TODO: add another join and check is SEND status for real eg //  "LEFT JOIN communications c ON cal.attendanceentryid = c.id " + ?
-            "WHERE ae.attendanceListId = :attendanceListId ";
+            "FROM person_team_links ae " +
+            "JOIN communication_team_links cal ON ae.id = cal.teamEntryId " + //IF cal is present, then assuming communication was sent? //TODO: add another join and check is SEND status for real eg //  "LEFT JOIN communications c ON cal.teamentryid = c.id " + ?
+            "WHERE ae.teamId = :teamId ";
 
     private Uni<EventContext> loadSentLinkCount(EventContext ctx) {
-        if (ctx.noAttendanceListYet) {
+        if (ctx.noteamYet) {
             ctx.sentLinkCount = 0L;
             return Uni.createFrom().item(ctx);
         }
         return sessionFactory.openSession()
                 .flatMap(session ->
                         session.createNativeQuery(query, Tuple.class)
-                                .setParameter("attendanceListId", ctx.attendanceListId)
+                                .setParameter("teamId", ctx.teamId)
                                 .getResultList()
 
                 )
@@ -293,14 +291,14 @@ public class EventsPageResource {
                 .data("answerNoCount", ctx.answerNoCount)
                 .data("answerLaterCount", ctx.answerLaterCount)
                 .data("fullStats", ctx.fullStats)
-                .data("noAttendanceListYet", ctx.noAttendanceListYet)
-                .data("eventAttendanceListId", ctx.attendanceListId);
+                .data("noteamYet", ctx.noteamYet)
+                .data("eventteamId", ctx.teamId);
     }
 
     private static class EventContext {
         final Event event;
-        final boolean noAttendanceListYet;
-        final UUID attendanceListId;
+        final boolean noteamYet;
+        final UUID teamId;
 
         long linkCount;
         long sentLinkCount;
@@ -311,8 +309,8 @@ public class EventsPageResource {
 
         EventContext(Event event) {
             this.event = event;
-            this.noAttendanceListYet = event.attendanceList == null;
-            this.attendanceListId = noAttendanceListYet ? null : event.attendanceList.id;
+            this.noteamYet = event.team == null;
+            this.teamId = noteamYet ? null : event.team.id;
         }
     }
 

@@ -158,4 +158,18 @@ public class RegisteredUser {
 
         driver.assertNewEventCreated(eventName);
     }
+
+    public void lookAtDetails(String listName, String... args) {
+        Params params = new Params(args);
+        String rowName = params.Optional("rowName", "");
+
+        driver.lookAtDetails(listName, rowName);
+    }
+
+    public void assertTeamMemberWasSelected(String... args) {
+        Params params = new Params(args);
+        String teamMemberEmail = params.Optional("teamMemberEmail", "");
+
+        driver.assertTeamMemberWasSelected(teamMemberEmail);
+    }
 }

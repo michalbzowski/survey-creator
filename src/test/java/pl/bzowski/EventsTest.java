@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 public class EventsTest extends MyTestsBase {
 
     @Test
-    public void shouldCreateEventWithoutAttendanceList() {
+    public void shouldCreateEventWithoutTeam() {
         registeredUser.lookAtList("events");
         registeredUser.askToCreateNew();
         registeredUser.fillEventFormFields("name: Event1",
@@ -15,7 +15,7 @@ public class EventsTest extends MyTestsBase {
                 "datetimeInput: 2025-10-08T12:00",
                 "description: Longer description for description purpose",
                 "checkboxCount: 1",
-                "checkboxId1: withAttendanceList",
+                "checkboxId1: withTeam",
                 "checkboxValue1: False");
         registeredUser.confirm("events");
         registeredUser.lookAtList("events"); //need to go manually, because redirect after events submit
@@ -23,7 +23,7 @@ public class EventsTest extends MyTestsBase {
     }
 
     @Test
-    public void shouldCreateEventWithAttendanceListWithTwoSelectedPersons() {
+    public void shouldCreateEventWithTeamWithTwoSelectedPersons() {
         registeredUser.lookAtList("events");
         registeredUser.askToCreateNew();
         registeredUser.fillEventFormFields("name: Event2",
@@ -31,7 +31,7 @@ public class EventsTest extends MyTestsBase {
                 "datetimeInput: 2025-10-08T12:00",
                 "description: Longer description for description purpose",
                 "checkboxCount: 1",
-                "checkboxId1: withAttendanceList",
+                "checkboxId1: withTeam",
                 "checkboxValue1: True",
                 "clickRadioId: choosePersons");
         registeredUser.fillEventFormFields("checkboxCount: 1", "checkboxId1: michal.bzowski@gmail.com", "checkboxValue1: true");
@@ -39,10 +39,14 @@ public class EventsTest extends MyTestsBase {
         registeredUser.confirm("events");
         registeredUser.lookAtList("events"); //need to go manually, because redirect after events submit
         registeredUser.assertNewEventCreated("eventName: Event2");
+        registeredUser.lookAtList("teams");
+        registeredUser.lookAtDetails("teams", "rowName: Event2");
+        registeredUser.assertTeamMemberWasSelected("teamMemberEmail: michal.bzowski@gmail.com");
+        registeredUser.assertTeamMemberWasSelected("teamMemberEmail: 00michal.bzowski@gmail.com");
     }
 
     @Test
-    public void shouldCreateEventWithAttendanceListWithOneSelectedGroup() {
+    public void shouldCreateEventWithTeamWithOneSelectedGroup() {
         GroupsTest.createGroup(this.registeredUser, "groupName: Conductor", "checkboxCount: 1", "checkboxId1: michal.bzowski@gmail.com", "checkboxValue1: True");
         GroupsTest.createGroup(this.registeredUser, "groupName: Trombones", "checkboxCount: 2", "checkboxId1: michal.bzowski@gmail.com", "checkboxValue1: True",
                 "checkboxId2: 00michal.bzowski@gmail.com", "checkboxValue2: True");
@@ -54,7 +58,7 @@ public class EventsTest extends MyTestsBase {
                 "datetimeInput: 2025-10-08T12:00",
                 "description: Longer description for description purpose",
                 "checkboxCount: 1",
-                "checkboxId1: withAttendanceList",
+                "checkboxId1: withTeam",
                 "checkboxValue1: True",
                 "clickRadioId: chooseGroup");
         registeredUser.fillEventFormFields("checkboxCount: 1",
@@ -62,17 +66,48 @@ public class EventsTest extends MyTestsBase {
         registeredUser.confirm("events");
         registeredUser.lookAtList("events"); //need to go manually, because redirect after events submit
         registeredUser.assertNewEventCreated("eventName: Event3");
+        registeredUser.lookAtList("teams");
+        registeredUser.lookAtDetails("teams", "rowName: Event3");
+        registeredUser.assertTeamMemberWasSelected("teamMemberEmail: michal.bzowski@gmail.com");
     }
 
     @Test
-    public void shouldCreateEventWithAttendanceListWithTwoSelectedGroup() {
+    public void shouldCreateEventWithTeamWithTwoSelectedGroup() {
+        GroupsTest.createGroup(this.registeredUser, "groupName: Conductor2", "checkboxCount: 1", "checkboxId1: michal.bzowski@gmail.com", "checkboxValue1: True");
+        GroupsTest.createGroup(this.registeredUser, "groupName: Trombones2", "checkboxCount: 2", "checkboxId1: michal.bzowski@gmail.com", "checkboxValue1: True",
+                "checkboxId2: 00michal.bzowski@gmail.com", "checkboxValue2: True");
+
+        registeredUser.lookAtList("events");
+        registeredUser.askToCreateNew();
+        registeredUser.fillEventFormFields("name: Event4",
+                "location: Location 2/3",
+                "datetimeInput: 2025-10-08T12:00",
+                "description: Longer description for description purpose",
+                "checkboxId: withTeam",
+                "checkboxValue: True",
+                "clickRadioId: chooseGroup");
+        registeredUser.fillEventFormFields("checkboxCount: 1",
+                "checkboxId1: Conductor2", "checkboxValue1: true");
+        registeredUser.fillEventFormFields("checkboxCount: 1",
+                "checkboxId1: Trombones2", "checkboxValue1: true");
+        registeredUser.confirm("events");
+        registeredUser.lookAtList("events"); //need to go manually, because redirect after events submit
+        registeredUser.assertNewEventCreated("eventName: Event4");
+        registeredUser.lookAtList("teams");
+        registeredUser.lookAtDetails("teams", "rowName: Event4");
+        registeredUser.assertTeamMemberWasSelected("teamMemberEmail: michal.bzowski@gmail.com");
+        registeredUser.assertTeamMemberWasSelected("teamMemberEmail: 00michal.bzowski@gmail.com");
+    }
+
+    @Test
+    public void shouldCreateEventWithTeamWithOneEntryForPersonWhoIsInTwoGroupsAtOnce() {
         registeredUser.lookAtList("events");
         registeredUser.askToCreateNew();
         registeredUser.fillEventFormFields("name: Event2",
                 "location: Location 2/3",
                 "datetimeInput: 2025-10-08T12:00",
                 "description: Longer description for description purpose",
-                "checkboxId: withAttendanceList",
+                "checkboxId: withTeam",
                 "checkboxValue: True",
                 "clickRadioId: chooseGroup");
 //        registeredUser.fillEventFormFields("checkboxId: michal.bzowski@gmail.com", "checkboxValue: true");
@@ -83,25 +118,7 @@ public class EventsTest extends MyTestsBase {
     }
 
     @Test
-    public void shouldCreateEventWithAttendanceListWithOneEntryForPersonWhoIsInTwoGroupsAtOnce() {
-        registeredUser.lookAtList("events");
-        registeredUser.askToCreateNew();
-        registeredUser.fillEventFormFields("name: Event2",
-                "location: Location 2/3",
-                "datetimeInput: 2025-10-08T12:00",
-                "description: Longer description for description purpose",
-                "checkboxId: withAttendanceList",
-                "checkboxValue: True",
-                "clickRadioId: chooseGroup");
-//        registeredUser.fillEventFormFields("checkboxId: michal.bzowski@gmail.com", "checkboxValue: true");
-//        registeredUser.fillEventFormFields("checkboxId: 00michal.bzowski@gmail.com", "checkboxValue: true");
-//        registeredUser.confirm("events");
-//        registeredUser.lookAtList("events"); //need to go manually, because redirect after events submit
-//        registeredUser.assertNewEventCreated("eventName: Event2");
-    }
-
-    @Test
-    public void shouldNotCreateEventWithEmptyAttendanceListForSelectPersonOption() {
+    public void shouldNotCreateEventWithEmptyTeamForSelectPersonOption() {
 
     }
 
