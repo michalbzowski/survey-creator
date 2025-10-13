@@ -62,5 +62,6 @@ public class Member extends PanacheEntityBase {
         this.personEmail = person.email;
         this.teamId = team.id;
         this.linkToken = UUID.randomUUID();
+        this.personTag = person.defaultTag != null ? person.defaultTag.name : null;
     }
 }

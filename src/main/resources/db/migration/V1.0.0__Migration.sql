@@ -1,5 +1,5 @@
 ;
-    create table team (
+    create table teams(
         id uuid not null,
         registered_user_id uuid not null,
         name varchar(255),

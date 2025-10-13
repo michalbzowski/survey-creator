@@ -24,7 +24,7 @@ import pl.bzowski.events.EventRepository;
 import pl.bzowski.groups.Group;
 import pl.bzowski.groups.GroupsRepository;
 import pl.bzowski.members.TeamCreatedDto;
-import pl.bzowski.events.PersonEventAnswer;
+import pl.bzowski.answers.Answer;
 import pl.bzowski.persons.Person;
 import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.tags.Tag;
@@ -222,7 +222,7 @@ public class EventsPageResource {
     }
 
     private Uni<EventContext> loadAnswerYesCount(EventContext ctx) {
-        return PersonEventAnswer.count("event = ?1 and answer = ?2", ctx.event, PersonEventAnswer.Answer.TAK)
+        return Answer.count("event = ?1 and answerValue = ?2", ctx.event, Answer.AnswerValue.TAK)
                 .map(count -> {
                     ctx.answerYesCount = count;
                     return ctx;
@@ -230,7 +230,7 @@ public class EventsPageResource {
     }
 
     private Uni<EventContext> loadAnswerNoCount(EventContext ctx) {
-        return PersonEventAnswer.count("event = ?1 and answer = ?2", ctx.event, PersonEventAnswer.Answer.NIE)
+        return Answer.count("event = ?1 and answerValue = ?2", ctx.event, Answer.AnswerValue.NIE)
                 .map(count -> {
                     ctx.answerNoCount = count;
                     return ctx;
@@ -238,7 +238,7 @@ public class EventsPageResource {
     }
 
     private Uni<EventContext> loadAnswerLaterCount(EventContext ctx) {
-        return PersonEventAnswer.count("event = ?1 and answer = ?2", ctx.event, PersonEventAnswer.Answer.ODPOWIEM_POZNIEJ)
+        return Answer.count("event = ?1 and answerValue = ?2", ctx.event, Answer.AnswerValue.ODPOWIEM_POZNIEJ)
                 .map(count -> {
                     ctx.answerLaterCount = count;
                     return ctx;
@@ -247,9 +247,9 @@ public class EventsPageResource {
 
     private Uni<EventContext> loadStats(EventContext ctx) {
         // Sekwencyjne ładowanie statystyk odpowiedzi według tagów
-        return getResultListReactive(ctx.event, PersonEventAnswer.Answer.TAK).flatMap(takStats -> {
-            return getResultListReactive(ctx.event, PersonEventAnswer.Answer.NIE).flatMap(nieStats -> {
-                return getResultListReactive(ctx.event, PersonEventAnswer.Answer.ODPOWIEM_POZNIEJ).map(laterStats -> {
+        return getResultListReactive(ctx.event, Answer.AnswerValue.TAK).flatMap(takStats -> {
+            return getResultListReactive(ctx.event, Answer.AnswerValue.NIE).flatMap(nieStats -> {
+                return getResultListReactive(ctx.event, Answer.AnswerValue.ODPOWIEM_POZNIEJ).map(laterStats -> {
                     ctx.fullStats = combineStats(takStats, nieStats, laterStats);
                     return ctx;
                 });
@@ -315,18 +315,18 @@ public class EventsPageResource {
     }
 
 
-    private Uni<List<Object[]>> getResultListReactive(Event event, PersonEventAnswer.Answer answer) {
+    private Uni<List<Object[]>> getResultListReactive(Event event, Answer.AnswerValue answerValue) {
         return Panache
                 .getSession()
                 .onItem()
                 .transformToUni(session -> session.createQuery(
-                                "SELECT t.name, COUNT(pea.person) " +
+                                "SELECT t.name, COUNT(a.member) " +
                                         "FROM Tag t " +
-                                        "LEFT JOIN Person p ON p.defaultTag = t " +
-                                        "LEFT JOIN PersonEventAnswer pea ON pea.person = p AND pea.event = :event AND pea.answer = :answer " +
+                                        "LEFT JOIN Member m ON m.personTag = t.name " +
+                                        "LEFT JOIN Answer a ON a.member = m AND a.event = :event AND a.answerValue = :answerValue " +
                                         "GROUP BY t.name", Object[].class)
                         .setParameter("event", event)
-                        .setParameter("answer", answer)
+                        .setParameter("answerValue", answerValue)
                         .getResultList());
     }
 

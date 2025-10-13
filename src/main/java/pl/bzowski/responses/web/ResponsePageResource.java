@@ -10,7 +10,7 @@ import pl.bzowski.members.Member;
 import pl.bzowski.team.Team;
 import pl.bzowski.events.Event;
 import pl.bzowski.persons.Person;
-import pl.bzowski.events.PersonEventAnswer;
+import pl.bzowski.answers.Answer;
 
 import java.util.Map;
 import java.util.UUID;
@@ -50,25 +50,23 @@ public class ResponsePageResource {
         logger.info(String.format("Submit answer for %s - %d", token.toString(), answers.size()));
 
         return Member.find("linkToken", token)
-                .firstResult()
+                .<Member>firstResult()
                 .onItem().ifNull().failWith(() -> new NotFoundException("Nie znaleziono linku " + token))
-                .flatMap(link -> Person.findById(((Member) link).personId)
-                        .flatMap(www -> {
-                            Person person = (Person) www;
-                            Team team = ((Member) link).team;
+                .flatMap(member -> {
+                            Team team = ((Member) member).team;
                             // Przetwarzamy kolejne odpowiedzi sekwencyjnie reaktywnie
                             Uni<Void> allUpdates = Uni.createFrom().voidItem();
 
                             for (Map.Entry<String, String> entry : answers.entrySet()) {
                                 UUID eventId = UUID.fromString(entry.getKey());
-                                PersonEventAnswer.Answer answer;
+                                Answer.AnswerValue answerValue;
                                 try {
-                                    answer = PersonEventAnswer.Answer.valueOf(entry.getValue());
+                                    answerValue = Answer.AnswerValue.valueOf(entry.getValue());
                                 } catch (IllegalArgumentException e) {
                                     return Uni.createFrom().failure(new IllegalArgumentException("Invalid answer value"));
                                 }
 
-                                final PersonEventAnswer.Answer finalAnswer = answer;
+                                final Answer.AnswerValue finalAnswerValue = answerValue;
                                 final UUID finalEventId = eventId;
 
                                 allUpdates = allUpdates
@@ -77,20 +75,20 @@ public class ResponsePageResource {
                                                     if (event == null) {
                                                         return Uni.createFrom().voidItem();
                                                     }
-                                                    return PersonEventAnswer.find("person = ?1 and team = ?2 and event = ?3", person, team, event)
+                                                    return Answer.find("member = ?1 and team = ?2 and event = ?3", member, team, event)
                                                             .firstResult()
                                                             .flatMap(aaa -> {
-                                                                PersonEventAnswer pqa = (PersonEventAnswer) aaa;
+                                                                Answer pqa = (Answer) aaa;
                                                                 if (pqa != null) {
-                                                                    pqa.answer = finalAnswer;
+                                                                    pqa.answerValue = finalAnswerValue;
                                                                     return pqa.persistAndFlush().replaceWithVoid();
                                                                 } else {
-                                                                    PersonEventAnswer newAnswer = new PersonEventAnswer();
-                                                                    newAnswer.person = person;
+                                                                    Answer newAnswer = new Answer();
+                                                                    newAnswer.member = member;
                                                                     newAnswer.team = team;
                                                                     newAnswer.event = (Event) event;
-                                                                    newAnswer.answer = finalAnswer;
-                                                                    ((Member) link).teamAnswered = Boolean.TRUE;
+                                                                    newAnswer.answerValue = finalAnswerValue;
+                                                                    ((Member) member).teamAnswered = Boolean.TRUE;
                                                                     return newAnswer.persistAndFlush().replaceWithVoid();
                                                                 }
                                                             });
@@ -98,8 +96,7 @@ public class ResponsePageResource {
                             }
 
                             return allUpdates.map(v -> thankYou.instance());
-                        })
-                )
-                .onFailure(IllegalArgumentException.class).recoverWithItem(() -> error.instance());
+                        });
+
     }
 }

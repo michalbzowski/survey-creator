@@ -13,7 +13,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "team")
+@Table(name = "teams")
 public class Team extends PanacheEntityBase {
 
     @Id
