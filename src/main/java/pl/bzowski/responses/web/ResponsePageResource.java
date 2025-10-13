@@ -6,9 +6,9 @@ import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import pl.bzowski.members.Member;
 import pl.bzowski.team.Team;
 import pl.bzowski.events.Event;
-import pl.bzowski.members.TeamMember;
 import pl.bzowski.persons.Person;
 import pl.bzowski.events.PersonEventAnswer;
 
@@ -35,7 +35,7 @@ public class ResponsePageResource {
     @Path("/{token}")
     @Produces(MediaType.TEXT_HTML)
     public Uni<TemplateInstance> showForm(@PathParam("token") UUID token) {
-        return TeamMember.find("linkToken", token)
+        return Member.find("linkToken", token)
                 .firstResult()
                 .onItem().ifNull().failWith(() -> new NotFoundException("Nie znaleziono linku"))
                 .map(link -> responseForm.data("link", link));
@@ -49,13 +49,13 @@ public class ResponsePageResource {
     public Uni<TemplateInstance> submitAnswer(@PathParam("token") UUID token, Map<String, String> answers) {
         logger.info(String.format("Submit answer for %s - %d", token.toString(), answers.size()));
 
-        return TeamMember.find("linkToken", token)
+        return Member.find("linkToken", token)
                 .firstResult()
                 .onItem().ifNull().failWith(() -> new NotFoundException("Nie znaleziono linku " + token))
-                .flatMap(link -> Person.findById(((TeamMember) link).personId)
+                .flatMap(link -> Person.findById(((Member) link).personId)
                         .flatMap(www -> {
                             Person person = (Person) www;
-                            Team team = ((TeamMember) link).team;
+                            Team team = ((Member) link).team;
                             // Przetwarzamy kolejne odpowiedzi sekwencyjnie reaktywnie
                             Uni<Void> allUpdates = Uni.createFrom().voidItem();
 
@@ -90,7 +90,7 @@ public class ResponsePageResource {
                                                                     newAnswer.team = team;
                                                                     newAnswer.event = (Event) event;
                                                                     newAnswer.answer = finalAnswer;
-                                                                    ((TeamMember) link).teamAnswered = Boolean.TRUE;
+                                                                    ((Member) link).teamAnswered = Boolean.TRUE;
                                                                     return newAnswer.persistAndFlush().replaceWithVoid();
                                                                 }
                                                             });

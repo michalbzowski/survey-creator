@@ -42,12 +42,12 @@ public class TeamPageResource {
         this.eventRepository = eventRepository;
     }
 
-    String query = "SELECT ae.id, ae.personId, ae.personFirstName, ae.personLastName, ae.personEmail, ae.teamId, ae.linktoken, ae.teamanswered, CASE WHEN cal.id IS NULL THEN FALSE ELSE TRUE END AS communicationSent " +
-            "FROM team_member ae " +
-            "LEFT JOIN communication_team_links cal ON ae.id = cal.teamEntryId " +
+    String query = "SELECT m.id, m.personId, m.personFirstName, m.personLastName, m.personEmail, m.teamId, m.linktoken, m.teamanswered, CASE WHEN cal.id IS NULL THEN FALSE ELSE TRUE END AS communicationSent " +
+            "FROM members m " +
+            "LEFT JOIN communication_team_links cal ON m.id = cal.teamEntryId " +
 //            "LEFT JOIN communications c ON cal.teamentryid = c.id " +
-            "WHERE ae.teamId = :teamId " +
-            "ORDER BY ae.personLastName";
+            "WHERE m.teamId = :teamId " +
+            "ORDER BY m.personLastName";
 
     @GET
     @Path("/{id}/details")
@@ -61,7 +61,7 @@ public class TeamPageResource {
                                                 .setParameter("teamId", id)
                                                 .getResultList()
                                                 .map(list -> list.stream()
-                                                        .map(this::getTeamEntryWithCommunicationDTO)
+                                                        .map(this::getTeamWithMembersDTO)
                                                         .toList())
                                 )
                                 .map(dtos -> teamDetails
@@ -71,7 +71,7 @@ public class TeamPageResource {
                 );
     }
 
-    private TeamEntryWithCommunicationDTO getTeamEntryWithCommunicationDTO(Tuple tuple) {
+    private TeamEntryWithCommunicationDTO getTeamWithMembersDTO(Tuple tuple) {
         return new TeamEntryWithCommunicationDTO(
                 tuple.get(0, UUID.class),
                 tuple.get(1, UUID.class),
@@ -112,7 +112,7 @@ public class TeamPageResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @WithTransaction
-    public Uni<Response> createteam(TeamDTO team) {
+    public Uni<Response> createTeam(TeamDTO team) {
         return teamRepository.createTeam(team)
                 .onItem()
                 .transformToUni(list -> Uni.createFrom().item(Response.ok(list).build()))

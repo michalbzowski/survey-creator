@@ -1,25 +1,25 @@
 package pl.bzowski.messaging;
 
 import jakarta.inject.Singleton;
-import pl.bzowski.messaging.email.EmailTeamEntryLinkSender;
+import pl.bzowski.messaging.email.MemberAssignedMailSender;
 import pl.bzowski.messaging.email.EmailNewPersonAddedCommunicationSender;
 
 @Singleton
 public class CommunicationSenderFactory {
 
     private final EmailNewPersonAddedCommunicationSender emailNewPersonAddedCommunicationSender;
-    private final EmailTeamEntryLinkSender emailTeamEntryLinkSender;
+    private final MemberAssignedMailSender memberAssignedMailSender;
 
-    public CommunicationSenderFactory(EmailNewPersonAddedCommunicationSender emailNewPersonAddedCommunicationSender, EmailTeamEntryLinkSender emailTeamEntryLinkSender) {
+    public CommunicationSenderFactory(EmailNewPersonAddedCommunicationSender emailNewPersonAddedCommunicationSender, MemberAssignedMailSender memberAssignedMailSender) {
         this.emailNewPersonAddedCommunicationSender = emailNewPersonAddedCommunicationSender;
-        this.emailTeamEntryLinkSender = emailTeamEntryLinkSender;
+        this.memberAssignedMailSender = memberAssignedMailSender;
     }
 
     public CommunicationSender create(CommunicationTemplate communicationTemplate) {
         if (CommunicationTemplate.EMAIL_NEW_PERSON_ADDED.equals(communicationTemplate)) {
             return emailNewPersonAddedCommunicationSender;
         } else if (CommunicationTemplate.TEAM_RECORD_LINK.equals(communicationTemplate)) {
-            return emailTeamEntryLinkSender;
+            return memberAssignedMailSender;
         }
         return null;
     }

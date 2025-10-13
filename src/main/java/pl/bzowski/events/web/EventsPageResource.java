@@ -15,6 +15,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logmanager.Level;
+import pl.bzowski.members.Member;
 import pl.bzowski.team.api.TeamDTO;
 import pl.bzowski.team.infrastructure.TeamRepository;
 import pl.bzowski.base.ReactiveDelete;
@@ -23,7 +24,6 @@ import pl.bzowski.events.EventRepository;
 import pl.bzowski.groups.Group;
 import pl.bzowski.groups.GroupsRepository;
 import pl.bzowski.members.TeamCreatedDto;
-import pl.bzowski.members.TeamMember;
 import pl.bzowski.events.PersonEventAnswer;
 import pl.bzowski.persons.Person;
 import pl.bzowski.persons.PersonRepository;
@@ -191,7 +191,7 @@ public class EventsPageResource {
             ctx.linkCount = 0L;
             return Uni.createFrom().item(ctx);
         }
-        return TeamMember.count("teamId = ?1", ctx.teamId)
+        return Member.count("teamId = ?1", ctx.teamId)
                 .map(count -> {
                     ctx.linkCount = count;
                     return ctx;
@@ -199,9 +199,9 @@ public class EventsPageResource {
     }
 
     String query = "SELECT count(cal.id)" +
-            "FROM team_member ae " +
-            "JOIN communication_team_links cal ON ae.id = cal.teamEntryId " + //IF cal is present, then assuming communication was sent? //TODO: add another join and check is SEND status for real eg //  "LEFT JOIN communications c ON cal.teamentryid = c.id " + ?
-            "WHERE ae.teamId = :teamId ";
+            "FROM members m " +
+            "JOIN communication_team_links cal ON m.id = cal.teamEntryId " + //IF cal is present, then assuming communication was sent? //TODO: add another join and check is SEND status for real eg //  "LEFT JOIN communications c ON cal.teamentryid = c.id " + ?
+            "WHERE m.teamId = :teamId ";
 
     private Uni<EventContext> loadSentLinkCount(EventContext ctx) {
         if (ctx.noteamYet) {

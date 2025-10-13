@@ -41,8 +41,8 @@ public class EventsTest extends MyTestsBase {
         registeredUser.assertNewEventCreated("eventName: Event2");
         registeredUser.lookAtList("teams");
         registeredUser.lookAtDetails("teams", "rowName: Event2");
-        registeredUser.assertTeamMemberWasSelected("teamMemberEmail: michal.bzowski@gmail.com");
-        registeredUser.assertTeamMemberWasSelected("teamMemberEmail: 00michal.bzowski@gmail.com");
+        registeredUser.assertMemberWasSelected("memberEmail: michal.bzowski@gmail.com");
+        registeredUser.assertMemberWasSelected("memberEmail: 00michal.bzowski@gmail.com");
     }
 
     @Test
@@ -68,7 +68,7 @@ public class EventsTest extends MyTestsBase {
         registeredUser.assertNewEventCreated("eventName: Event3");
         registeredUser.lookAtList("teams");
         registeredUser.lookAtDetails("teams", "rowName: Event3");
-        registeredUser.assertTeamMemberWasSelected("teamMemberEmail: michal.bzowski@gmail.com");
+        registeredUser.assertMemberWasSelected("memberEmail: michal.bzowski@gmail.com");
     }
 
     @Test
@@ -95,8 +95,8 @@ public class EventsTest extends MyTestsBase {
         registeredUser.assertNewEventCreated("eventName: Event4");
         registeredUser.lookAtList("teams");
         registeredUser.lookAtDetails("teams", "rowName: Event4");
-        registeredUser.assertTeamMemberWasSelected("teamMemberEmail: michal.bzowski@gmail.com");
-        registeredUser.assertTeamMemberWasSelected("teamMemberEmail: 00michal.bzowski@gmail.com");
+        registeredUser.assertMemberWasSelected("memberEmail: michal.bzowski@gmail.com");
+        registeredUser.assertMemberWasSelected("memberEmail: 00michal.bzowski@gmail.com");
     }
 
     @Test

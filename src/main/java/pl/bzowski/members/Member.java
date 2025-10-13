@@ -2,14 +2,17 @@ package pl.bzowski.members;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import pl.bzowski.team.Team;
+import pl.bzowski.groups.Group;
 import pl.bzowski.persons.Person;
+import pl.bzowski.team.Team;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "team_member")
-public class TeamMember extends PanacheEntityBase {
+@Table(name = "members")
+public class Member extends PanacheEntityBase {
 
     @Id
     @GeneratedValue
@@ -27,12 +30,6 @@ public class TeamMember extends PanacheEntityBase {
     @Column
     public String personEmail;
 
-    @Column
-    public String personTag;
-
-    @ManyToOne(optional = false)
-    public Team team;
-
     @Column(nullable = false)
     public UUID teamId;
 
@@ -42,15 +39,27 @@ public class TeamMember extends PanacheEntityBase {
     @Column(nullable = false)
     public Boolean teamAnswered = false;
 
-    public TeamMember() {
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinTable(
+            name = "team_member",
+            joinColumns = @JoinColumn(name = "team_id"),
+            inverseJoinColumns = @JoinColumn(name = "member_id")
+    )
+    public Team team;
+
+    @Column
+    public String personTag;
+
+    Member() {
+
     }
 
-    public TeamMember(Person person, Team team) {
+    public Member(Person person, Team team) {
+        this.team = team;
         this.personId = person.id;
         this.personFirstName = person.firstName;
         this.personLastName = person.lastName;
         this.personEmail = person.email;
-        this.team = team;
         this.teamId = team.id;
         this.linkToken = UUID.randomUUID();
     }

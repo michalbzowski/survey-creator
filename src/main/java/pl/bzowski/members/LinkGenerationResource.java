@@ -17,7 +17,7 @@ import java.util.Map;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import pl.bzowski.team.Team;
 import pl.bzowski.messaging.*;
-import pl.bzowski.messaging.email.EmailTeamEntryLinkSentEvent;
+import pl.bzowski.messaging.email.MemberAssignedMailSentEvent;
 import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.persons.Person;
 
@@ -27,7 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static pl.bzowski.messaging.CommunicationEventListener.PERSIST_COMMUNICATION;
-import static pl.bzowski.messaging.email.EmailTeamEntryLinkSender.EMAIL_TEAM_ENTRY_LINK_SENT;
+import static pl.bzowski.messaging.email.MemberAssignedMailSender.MEMBER_ASSIGNED_MAIL_SENT;
 
 @Path("/api/v1/links")
 @Produces(MediaType.APPLICATION_JSON)
@@ -49,11 +49,6 @@ public class LinkGenerationResource {
         this.personRepository = personRepository;
         this.eventBus = eventBus;
         this.costamService = costamService;
-    }
-
-    @GET
-    public Uni<List<TeamMember>> listAllLinks() {
-        return TeamMember.listAll();
     }
 
     @GET
@@ -91,16 +86,16 @@ public class LinkGenerationResource {
 
                     return Multi.createFrom().iterable(persons)
                             .onItem().transformToUniAndConcatenate(person ->
-                                    TeamMember.find("personId = ?1 and teamId = ?2", person.id, team.id)
+                                    Member.find("personId = ?1 and teamId = ?2", person.id, team.id)
                                             .firstResult()
                                             .flatMap(messageTemplate -> {
                                                 if (messageTemplate != null) {
-                                                    logger.info("Found existing MessageTemplate for person: " + person.id);
+                                                    logger.info(String.format("Found existing Member for Person %s and Team %s.", person.id, team.id));
                                                     return Uni.createFrom().voidItem();
                                                 } else {
-                                                    logger.info("Creating new MessageTemplate for person: " + person.id);
-                                                    TeamMember newTemplate = new TeamMember(person, team);
-                                                    Uni<PanacheEntityBase> persist = newTemplate.persist();
+                                                    logger.info(String.format("Creating new Member for Person %s and Team %s.", person.id, team.id));
+                                                    Member member = new Member(person, team);
+                                                    Uni<PanacheEntityBase> persist = member.persist();
                                                     return persist.replaceWithVoid();
                                                 }
                                             })
@@ -135,19 +130,19 @@ public class LinkGenerationResource {
                                         logger.info("Person is null");
                                         return Uni.createFrom().failure(new NotFoundException("Osoba nie istnieje"));
                                     }
-                                    return TeamMember.<TeamMember>find("personId = ?1 and teamId = ?2", person.id, team.id)
+                                    return Member.<Member>find("personId = ?1 and teamId = ?2", person.id, team.id)
                                             .firstResult()
-                                            .flatMap(teamMember -> {
-                                                if (teamMember == null) {
+                                            .flatMap(member -> {
+                                                if (member == null) {
                                                     String format = String.format("Can not send link. Link doesn't exist for: %s - %s", person.email, teamId);
                                                     logger.info(format);
                                                     return Uni.createFrom().failure(new RuntimeException(format));
                                                 }
-                                                Map<String, Object> properties = Map.of("eventTitle", teamMember.team.joinedEventsName(),
+                                                Map<String, Object> properties = Map.of("eventTitle", member.team.joinedEventsName(),
                                                         "appHost", appHost,
-                                                        "teamEntryLink", appHost + "/web/responses/" + teamMember.linkToken.toString(),
-                                                        "personEmail", teamMember.personEmail,
-                                                        "teamEntryId", teamMember.id);
+                                                        "teamEntryLink", appHost + "/web/responses/" + member.linkToken.toString(),
+                                                        "personEmail", member.personEmail,
+                                                        "teamEntryId", member.id);
                                                 this.eventBus.publish(PERSIST_COMMUNICATION, new PersistCommunicationCommand(Channel.EMAIL, CommunicationTemplate.TEAM_RECORD_LINK, currentUserId, person, properties));
                                                 return Uni.createFrom().voidItem();
                                             });
@@ -180,10 +175,10 @@ public class LinkGenerationResource {
     }
 
 
-    @ConsumeEvent(EMAIL_TEAM_ENTRY_LINK_SENT)
-    public void lol(Message<EmailTeamEntryLinkSentEvent> msg) {
-        EmailTeamEntryLinkSentEvent body = msg.body();
-        costamService.persiste(body).subscribe().with(l -> System.out.println("Lot"));
+    @ConsumeEvent(MEMBER_ASSIGNED_MAIL_SENT)
+    public void lol(Message<MemberAssignedMailSentEvent> msg) {
+        MemberAssignedMailSentEvent body = msg.body();
+        costamService.persist(body).subscribe().with(l -> System.out.println("Lot"));
 
     }
 }

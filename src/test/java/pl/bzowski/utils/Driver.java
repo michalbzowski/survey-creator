@@ -45,5 +45,5 @@ public interface Driver {
 
     void lookAtDetails(String listName, String rowName);
 
-    void assertTeamMemberWasSelected(String teamMemberEmail);
+    void assertMemberWasSelected(String memberEmail);
 }

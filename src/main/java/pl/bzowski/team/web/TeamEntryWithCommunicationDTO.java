@@ -46,7 +46,7 @@ public class TeamEntryWithCommunicationDTO {
         return personEmail;
     }
 
-    public UUID getteamId() {
+    public UUID getTeamId() {
         return teamId;
     }
 
@@ -54,7 +54,7 @@ public class TeamEntryWithCommunicationDTO {
         return linkToken;
     }
 
-    public Boolean getteamAnswered() {
+    public Boolean getTeamAnswered() {
         return teamAnswered;
     }
 

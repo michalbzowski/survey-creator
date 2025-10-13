@@ -3,9 +3,12 @@ package pl.bzowski.team;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import pl.bzowski.events.Event;
+import pl.bzowski.members.Member;
 import pl.bzowski.team.api.TeamDTO;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -20,16 +23,25 @@ public class Team extends PanacheEntityBase {
     @Column
     public String name;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @Column(nullable = false, name = "registered_user_id")
+    public UUID registeredUserId;
+
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
     @JoinTable(name = "team_event",
             joinColumns = @JoinColumn(name = "team_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id"))
     public List<Event> events;
 
-    @Column(nullable = false, name = "registered_user_id")
-    public UUID registeredUserId;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "team_member",
+            joinColumns = @JoinColumn(name = "member_id"),
+            inverseJoinColumns = @JoinColumn(name = "team_id")
+    )
+    public Set<Member> members = new HashSet<>();
 
-    public Team() {}
+    public Team() {
+    }
 
     public Team(String name, List<Event> events) {
         this.name = name;

@@ -277,15 +277,15 @@ public class RegisteredUserDriver implements Driver {
     }
 
     @Override
-    public void assertTeamMemberWasSelected(String teamMemberEmail) {
-        WebElement element = driver.findElement(By.cssSelector("td[data-team-member-email=\"" + teamMemberEmail + "\"]"));
+    public void assertMemberWasSelected(String memberEmail) {
+        WebElement element = driver.findElement(By.cssSelector("td[data-member-email=\"" + memberEmail + "\"]"));
         String text = element.getText();
         new WebDriverWait(driver, Duration.ofSeconds(10))
                 .until(webDriver -> {
-                    log.info("assertTeamMemberWasSelected: {} - wait", teamMemberEmail);
-                    return assertThat(text).isEqualTo(teamMemberEmail);
+                    log.info("assertMemberWasSelected: {} - wait", memberEmail);
+                    return assertThat(text).isEqualTo(memberEmail);
                 });
-        log.info("assertTeamMemberWasSelected: {} - finished", teamMemberEmail);
+        log.info("assertMemberWasSelected: {} - finished", memberEmail);
     }
 
     @Override

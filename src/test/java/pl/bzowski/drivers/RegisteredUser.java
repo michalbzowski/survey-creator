@@ -166,10 +166,10 @@ public class RegisteredUser {
         driver.lookAtDetails(listName, rowName);
     }
 
-    public void assertTeamMemberWasSelected(String... args) {
+    public void assertMemberWasSelected(String... args) {
         Params params = new Params(args);
-        String teamMemberEmail = params.Optional("teamMemberEmail", "");
+        String memberEmail = params.Optional("memberEmail", "");
 
-        driver.assertTeamMemberWasSelected(teamMemberEmail);
+        driver.assertMemberWasSelected(memberEmail);
     }
 }
