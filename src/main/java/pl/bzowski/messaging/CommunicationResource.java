@@ -7,7 +7,7 @@ import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import pl.bzowski.messaging.agreement.CommunicationPersonAgreement;
+import pl.bzowski.messaging.agreement.CommunicationAgreement;
 import pl.bzowski.persons.Person;
 
 import java.util.UUID;
@@ -23,7 +23,7 @@ public class CommunicationResource {
     @Path("confirm/{id}")
     @WithTransaction
     public Uni<TemplateInstance> confirm(@PathParam("id") UUID id) {
-        return CommunicationPersonAgreement.<CommunicationPersonAgreement>findById(id)
+        return CommunicationAgreement.<CommunicationAgreement>findById(id)
                 .onItem().ifNull().failWith(() -> new NotFoundException("Nie znaleziono potwierdzenia"))
                 .flatMap(cpa -> Person.<Person>findById(cpa.personId)
                         .flatMap(person -> {

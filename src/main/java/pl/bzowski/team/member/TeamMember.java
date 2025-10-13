@@ -1,15 +1,15 @@
-package pl.bzowski.team.entry;
+package pl.bzowski.team.member;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import pl.bzowski.team.list.Team;
+import pl.bzowski.team.Team;
 import pl.bzowski.persons.Person;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "person_team_links")
-public class TeamEntry extends PanacheEntityBase {
+@Table(name = "team_member")
+public class TeamMember extends PanacheEntityBase {
 
     @Id
     @GeneratedValue
@@ -42,10 +42,10 @@ public class TeamEntry extends PanacheEntityBase {
     @Column(nullable = false)
     public Boolean teamAnswered = false;
 
-    public TeamEntry() {
+    public TeamMember() {
     }
 
-    public TeamEntry(Person person, Team team) {
+    public TeamMember(Person person, Team team) {
         this.personId = person.id;
         this.personFirstName = person.firstName;
         this.personLastName = person.lastName;

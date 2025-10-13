@@ -10,7 +10,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.hibernate.reactive.mutiny.Mutiny;
-import pl.bzowski.team.list.Team;
+import pl.bzowski.team.Team;
 import pl.bzowski.base.ReactiveDelete;
 import pl.bzowski.events.Event;
 import pl.bzowski.team.list.api.TeamDTO;
@@ -43,7 +43,7 @@ public class TeamPageResource {
     }
 
     String query = "SELECT ae.id, ae.personId, ae.personFirstName, ae.personLastName, ae.personEmail, ae.teamId, ae.linktoken, ae.teamanswered, CASE WHEN cal.id IS NULL THEN FALSE ELSE TRUE END AS communicationSent " +
-            "FROM person_team_links ae " +
+            "FROM team_member ae " +
             "LEFT JOIN communication_team_links cal ON ae.id = cal.teamEntryId " +
 //            "LEFT JOIN communications c ON cal.teamentryid = c.id " +
             "WHERE ae.teamId = :teamId " +

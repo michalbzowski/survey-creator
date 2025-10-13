@@ -22,8 +22,8 @@ import pl.bzowski.events.Event;
 import pl.bzowski.events.EventRepository;
 import pl.bzowski.groups.Group;
 import pl.bzowski.groups.GroupsRepository;
-import pl.bzowski.team.entry.TeamCreatedDto;
-import pl.bzowski.team.entry.TeamEntry;
+import pl.bzowski.team.member.TeamCreatedDto;
+import pl.bzowski.team.member.TeamMember;
 import pl.bzowski.events.PersonEventAnswer;
 import pl.bzowski.persons.Person;
 import pl.bzowski.persons.PersonRepository;
@@ -37,7 +37,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-import static pl.bzowski.team.entry.TeamCreatedDto.EVENT_WITH_TEAM_CREATED;
+import static pl.bzowski.team.member.TeamCreatedDto.EVENT_WITH_TEAM_CREATED;
 
 @Path("/web/events")
 public class EventsPageResource {
@@ -191,7 +191,7 @@ public class EventsPageResource {
             ctx.linkCount = 0L;
             return Uni.createFrom().item(ctx);
         }
-        return TeamEntry.count("teamId = ?1", ctx.teamId)
+        return TeamMember.count("teamId = ?1", ctx.teamId)
                 .map(count -> {
                     ctx.linkCount = count;
                     return ctx;
@@ -199,7 +199,7 @@ public class EventsPageResource {
     }
 
     String query = "SELECT count(cal.id)" +
-            "FROM person_team_links ae " +
+            "FROM team_member ae " +
             "JOIN communication_team_links cal ON ae.id = cal.teamEntryId " + //IF cal is present, then assuming communication was sent? //TODO: add another join and check is SEND status for real eg //  "LEFT JOIN communications c ON cal.teamentryid = c.id " + ?
             "WHERE ae.teamId = :teamId ";
 

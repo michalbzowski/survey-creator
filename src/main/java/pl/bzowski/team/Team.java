@@ -1,4 +1,4 @@
-package pl.bzowski.team.list;
+package pl.bzowski.team;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
@@ -21,7 +21,7 @@ public class Team extends PanacheEntityBase {
     public String name;
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
-    @JoinTable(name = "team_events",
+    @JoinTable(name = "team_event",
             joinColumns = @JoinColumn(name = "team_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id"))
     public List<Event> events;

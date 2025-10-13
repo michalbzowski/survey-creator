@@ -1,4 +1,4 @@
-package pl.bzowski.team.entry;
+package pl.bzowski.team.member;
 
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 @Singleton
 public class MyNextBean {
 
-    private final Logger logger = Logger.getLogger(TeamEntryListener.class.getName());
+    private final Logger logger = Logger.getLogger(EventWithTeamCreatedListener.class.getName());
 
     @Inject
     LinkGenerationResource linkGenerationResource;

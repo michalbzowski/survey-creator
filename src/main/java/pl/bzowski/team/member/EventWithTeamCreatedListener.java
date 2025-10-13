@@ -1,14 +1,14 @@
-package pl.bzowski.team.entry;
+package pl.bzowski.team.member;
 
 import io.quarkus.vertx.ConsumeEvent;
 import io.vertx.core.eventbus.Message;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import static pl.bzowski.team.entry.TeamCreatedDto.EVENT_WITH_TEAM_CREATED;
+import static pl.bzowski.team.member.TeamCreatedDto.EVENT_WITH_TEAM_CREATED;
 
 @Singleton
-public class TeamEntryListener {
+public class EventWithTeamCreatedListener {
 
     @Inject
     MyNextBean myNextBean;

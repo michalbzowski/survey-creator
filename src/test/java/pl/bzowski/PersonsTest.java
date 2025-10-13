@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 @QuarkusTest
 public class PersonsTest extends MyTestsBase {
 
-
     @Test
     public void shouldAddAPersonWithAConductorTag() {
         registeredUser.lookAtList("tags");

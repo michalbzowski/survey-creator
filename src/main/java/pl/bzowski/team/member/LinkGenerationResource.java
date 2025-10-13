@@ -1,4 +1,4 @@
-package pl.bzowski.team.entry;
+package pl.bzowski.team.member;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
@@ -15,7 +15,7 @@ import jakarta.ws.rs.core.UriBuilder;
 import java.util.Map;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import pl.bzowski.team.list.Team;
+import pl.bzowski.team.Team;
 import pl.bzowski.messaging.*;
 import pl.bzowski.messaging.email.EmailTeamEntryLinkSentEvent;
 import pl.bzowski.persons.PersonRepository;
@@ -52,8 +52,8 @@ public class LinkGenerationResource {
     }
 
     @GET
-    public Uni<List<TeamEntry>> listAllLinks() {
-        return TeamEntry.listAll();
+    public Uni<List<TeamMember>> listAllLinks() {
+        return TeamMember.listAll();
     }
 
     @GET
@@ -91,7 +91,7 @@ public class LinkGenerationResource {
 
                     return Multi.createFrom().iterable(persons)
                             .onItem().transformToUniAndConcatenate(person ->
-                                    TeamEntry.find("personId = ?1 and teamId = ?2", person.id, team.id)
+                                    TeamMember.find("personId = ?1 and teamId = ?2", person.id, team.id)
                                             .firstResult()
                                             .flatMap(messageTemplate -> {
                                                 if (messageTemplate != null) {
@@ -99,7 +99,7 @@ public class LinkGenerationResource {
                                                     return Uni.createFrom().voidItem();
                                                 } else {
                                                     logger.info("Creating new MessageTemplate for person: " + person.id);
-                                                    TeamEntry newTemplate = new TeamEntry(person, team);
+                                                    TeamMember newTemplate = new TeamMember(person, team);
                                                     Uni<PanacheEntityBase> persist = newTemplate.persist();
                                                     return persist.replaceWithVoid();
                                                 }
@@ -135,19 +135,19 @@ public class LinkGenerationResource {
                                         logger.info("Person is null");
                                         return Uni.createFrom().failure(new NotFoundException("Osoba nie istnieje"));
                                     }
-                                    return TeamEntry.<TeamEntry>find("personId = ?1 and teamId = ?2", person.id, team.id)
+                                    return TeamMember.<TeamMember>find("personId = ?1 and teamId = ?2", person.id, team.id)
                                             .firstResult()
-                                            .flatMap(teamEntry -> {
-                                                if (teamEntry == null) {
+                                            .flatMap(teamMember -> {
+                                                if (teamMember == null) {
                                                     String format = String.format("Can not send link. Link doesn't exist for: %s - %s", person.email, teamId);
                                                     logger.info(format);
                                                     return Uni.createFrom().failure(new RuntimeException(format));
                                                 }
-                                                Map<String, Object> properties = Map.of("eventTitle", teamEntry.team.joinedEventsName(),
+                                                Map<String, Object> properties = Map.of("eventTitle", teamMember.team.joinedEventsName(),
                                                         "appHost", appHost,
-                                                        "teamEntryLink", appHost + "/web/responses/" + teamEntry.linkToken.toString(),
-                                                        "personEmail", teamEntry.personEmail,
-                                                        "teamEntryId", teamEntry.id);
+                                                        "teamEntryLink", appHost + "/web/responses/" + teamMember.linkToken.toString(),
+                                                        "personEmail", teamMember.personEmail,
+                                                        "teamEntryId", teamMember.id);
                                                 this.eventBus.publish(PERSIST_COMMUNICATION, new PersistCommunicationCommand(Channel.EMAIL, CommunicationTemplate.TEAM_RECORD_LINK, currentUserId, person, properties));
                                                 return Uni.createFrom().voidItem();
                                             });

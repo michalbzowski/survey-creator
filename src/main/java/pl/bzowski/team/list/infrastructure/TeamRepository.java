@@ -6,7 +6,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Singleton;
 import org.hibernate.reactive.mutiny.Mutiny;
-import pl.bzowski.team.list.Team;
+import pl.bzowski.team.Team;
 import pl.bzowski.base.RepositoryBase;
 import pl.bzowski.events.Event;
 import pl.bzowski.team.list.api.TeamDTO;

@@ -1,4 +1,4 @@
-package pl.bzowski.team.entry;
+package pl.bzowski.team.member;
 
 import pl.bzowski.events.web.EventDto;
 

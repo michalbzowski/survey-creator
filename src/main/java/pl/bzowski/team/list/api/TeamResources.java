@@ -6,9 +6,9 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import pl.bzowski.team.list.Team;
+import pl.bzowski.team.Team;
 import pl.bzowski.team.list.infrastructure.TeamRepository;
-import pl.bzowski.team.entry.LinkGenerationResource;
+import pl.bzowski.team.member.LinkGenerationResource;
 
 import java.util.List;
 import java.util.UUID;

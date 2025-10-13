@@ -144,8 +144,8 @@ public class RegisteredUser {
 
     public void assertIsChecked(String... checkboxes) {
         Params params = new Params(checkboxes);
-        String checboxesIds = params.Optional("checkboxes", "[]");
-        Arrays.stream(checboxesIds.substring(1, checboxesIds.length() - 1).split(",")).toList()
+        String checkboxesIds = params.Optional("checkboxes", "[]");
+        Arrays.stream(checkboxesIds.substring(1, checkboxesIds.length() - 1).split(",")).toList()
                 .forEach(s -> {
                     String id = s.trim();
                     driver.isChecked(id);

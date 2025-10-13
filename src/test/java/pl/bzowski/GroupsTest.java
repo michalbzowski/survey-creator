@@ -16,7 +16,7 @@ public class GroupsTest extends MyTestsBase {
 
     @Test
     public void shouldAddConductorTag() {
-        createGroup(registeredUser, "groupName: Conductor", "checkboxId: michal.bzowski@gmail.com", "checkboxValue: True");
+        createGroup(registeredUser, "groupName: Conductor",  "checkboxCount: 1", "checkboxId1: michal.bzowski@gmail.com", "checkboxValue1: True");
 
         registeredUser.edit("Conductor");
         registeredUser.assertIsChecked("checkboxes: [michal.bzowski@gmail.com]");

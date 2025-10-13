@@ -14,7 +14,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logmanager.Level;
 import pl.bzowski.base.CurrentUserRepository;
 import pl.bzowski.messaging.*;
-import pl.bzowski.messaging.agreement.CommunicationPersonAgreement;
+import pl.bzowski.messaging.agreement.CommunicationAgreement;
 import pl.bzowski.groups.Group;
 import pl.bzowski.groups.GroupsRepository;
 import pl.bzowski.persons.Person;
@@ -82,7 +82,7 @@ public class PersonPageResource {
                                    @FormParam("groups") List<UUID> groupsIds) {
         return personService.persist(firstName, lastName, email, defaultTag, groupsIds)
                 .flatMap(person -> {
-                    CommunicationPersonAgreement cpa = new CommunicationPersonAgreement();
+                    CommunicationAgreement cpa = new CommunicationAgreement();
                     cpa.channel = Channel.EMAIL;
                     cpa.personId = person.id;
                     cpa.personEmail = email;

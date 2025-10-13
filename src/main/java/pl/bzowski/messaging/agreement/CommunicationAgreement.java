@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.UUID;
 
 @Entity
-@Table(name = "communication_person_agreement")
-public class CommunicationPersonAgreement extends PanacheEntityBase {
+@Table(name = "communication_agreement")
+public class CommunicationAgreement extends PanacheEntityBase {
 
     @Id
     @GeneratedValue

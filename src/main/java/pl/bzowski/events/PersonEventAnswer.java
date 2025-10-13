@@ -3,7 +3,7 @@ package pl.bzowski.events;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import pl.bzowski.persons.Person;
-import pl.bzowski.team.list.Team;
+import pl.bzowski.team.Team;
 
 import java.util.UUID;
 

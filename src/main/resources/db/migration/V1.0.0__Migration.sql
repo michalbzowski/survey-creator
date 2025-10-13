@@ -6,7 +6,7 @@
         primary key (id)
     )
 ;
-    create table team_events (
+    create table team_event (
         team_id uuid not null,
         event_id uuid not null
     )
@@ -22,7 +22,7 @@
         primary key (id)
     )
 ;
-    create table person_team_links (
+    create table team_member (
         teamAnswered boolean not null,
         teamId uuid not null,
         team_id uuid not null,
@@ -64,12 +64,12 @@
         primary key (id)
     )
 ;
-    alter table if exists team_events
+    alter table if exists team_event
        add constraint FKbry0dl3w7v0s1sno1cta89ayx 
        foreign key (event_id) 
        references events
 ;
-    alter table if exists team_events
+    alter table if exists team_event
        add constraint FKrl1u50fe4esthego4yyh7o3s9 
        foreign key (team_id)
        references team
@@ -79,7 +79,7 @@
        foreign key (team_id)
        references team
 ;
-    alter table if exists person_team_links
+    alter table if exists team_member
        add constraint FKm9j92i8hjjp7ckupxhcpew07 
        foreign key (team_id)
        references team
