@@ -1,4 +1,4 @@
-package pl.bzowski.team.list.web;
+package pl.bzowski.team.web;
 
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.qute.Template;
@@ -13,8 +13,8 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import pl.bzowski.team.Team;
 import pl.bzowski.base.ReactiveDelete;
 import pl.bzowski.events.Event;
-import pl.bzowski.team.list.api.TeamDTO;
-import pl.bzowski.team.list.infrastructure.TeamRepository;
+import pl.bzowski.team.api.TeamDTO;
+import pl.bzowski.team.infrastructure.TeamRepository;
 import pl.bzowski.events.EventRepository;
 
 import java.util.List;

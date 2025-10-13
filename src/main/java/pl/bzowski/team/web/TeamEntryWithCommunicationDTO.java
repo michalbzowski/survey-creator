@@ -1,4 +1,4 @@
-package pl.bzowski.team.list.web;
+package pl.bzowski.team.web;
 
 import java.util.UUID;
 

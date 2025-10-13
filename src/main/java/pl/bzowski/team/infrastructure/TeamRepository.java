@@ -1,4 +1,4 @@
-package pl.bzowski.team.list.infrastructure;
+package pl.bzowski.team.infrastructure;
 
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
@@ -9,7 +9,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import pl.bzowski.team.Team;
 import pl.bzowski.base.RepositoryBase;
 import pl.bzowski.events.Event;
-import pl.bzowski.team.list.api.TeamDTO;
+import pl.bzowski.team.api.TeamDTO;
 
 import java.util.ArrayList;
 import java.util.List;

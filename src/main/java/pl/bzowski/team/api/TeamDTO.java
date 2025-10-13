@@ -1,4 +1,4 @@
-package pl.bzowski.team.list.api;
+package pl.bzowski.team.api;
 
 
 import java.util.List;

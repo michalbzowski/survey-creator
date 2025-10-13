@@ -1,4 +1,4 @@
-package pl.bzowski.team.list.api;
+package pl.bzowski.team.api;
 
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
@@ -7,7 +7,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import pl.bzowski.team.Team;
-import pl.bzowski.team.list.infrastructure.TeamRepository;
+import pl.bzowski.team.infrastructure.TeamRepository;
 import pl.bzowski.members.LinkGenerationResource;
 
 import java.util.List;
