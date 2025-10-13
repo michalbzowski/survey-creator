@@ -8,7 +8,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import pl.bzowski.team.Team;
 import pl.bzowski.events.Event;
-import pl.bzowski.team.member.TeamMember;
+import pl.bzowski.members.TeamMember;
 import pl.bzowski.persons.Person;
 import pl.bzowski.events.PersonEventAnswer;
 

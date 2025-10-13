@@ -1,4 +1,4 @@
-package pl.bzowski.team.member;
+package pl.bzowski.members;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;

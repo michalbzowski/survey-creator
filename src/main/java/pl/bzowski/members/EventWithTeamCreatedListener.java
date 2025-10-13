@@ -1,11 +1,11 @@
-package pl.bzowski.team.member;
+package pl.bzowski.members;
 
 import io.quarkus.vertx.ConsumeEvent;
 import io.vertx.core.eventbus.Message;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import static pl.bzowski.team.member.TeamCreatedDto.EVENT_WITH_TEAM_CREATED;
+import static pl.bzowski.members.TeamCreatedDto.EVENT_WITH_TEAM_CREATED;
 
 @Singleton
 public class EventWithTeamCreatedListener {

@@ -22,8 +22,8 @@ import pl.bzowski.events.Event;
 import pl.bzowski.events.EventRepository;
 import pl.bzowski.groups.Group;
 import pl.bzowski.groups.GroupsRepository;
-import pl.bzowski.team.member.TeamCreatedDto;
-import pl.bzowski.team.member.TeamMember;
+import pl.bzowski.members.TeamCreatedDto;
+import pl.bzowski.members.TeamMember;
 import pl.bzowski.events.PersonEventAnswer;
 import pl.bzowski.persons.Person;
 import pl.bzowski.persons.PersonRepository;
@@ -37,7 +37,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-import static pl.bzowski.team.member.TeamCreatedDto.EVENT_WITH_TEAM_CREATED;
+import static pl.bzowski.members.TeamCreatedDto.EVENT_WITH_TEAM_CREATED;
 
 @Path("/web/events")
 public class EventsPageResource {

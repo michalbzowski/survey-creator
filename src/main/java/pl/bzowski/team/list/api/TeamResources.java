@@ -8,7 +8,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import pl.bzowski.team.Team;
 import pl.bzowski.team.list.infrastructure.TeamRepository;
-import pl.bzowski.team.member.LinkGenerationResource;
+import pl.bzowski.members.LinkGenerationResource;
 
 import java.util.List;
 import java.util.UUID;
