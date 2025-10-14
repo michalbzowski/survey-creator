@@ -1,6 +1,7 @@
 package pl.bzowski;
 
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
@@ -103,7 +104,7 @@ public class EventsTest extends MyTestsBase {
     public void shouldCreateEventWithTeamWithOneEntryForPersonWhoIsInTwoGroupsAtOnce() {
         registeredUser.lookAtList("events");
         registeredUser.askToCreateNew();
-        registeredUser.fillEventFormFields("name: Event2",
+        registeredUser.fillEventFormFields("name: Event5",
                 "location: Location 2/3",
                 "datetimeInput: 2025-10-08T12:00",
                 "description: Longer description for description purpose",
@@ -114,15 +115,64 @@ public class EventsTest extends MyTestsBase {
 //        registeredUser.fillEventFormFields("checkboxId: 00michal.bzowski@gmail.com", "checkboxValue: true");
 //        registeredUser.confirm("events");
 //        registeredUser.lookAtList("events"); //need to go manually, because redirect after events submit
-//        registeredUser.assertNewEventCreated("eventName: Event2");
+//        registeredUser.assertNewEventCreated("eventName: Event5");
     }
 
     @Test
+    public void shouldEventStatsBeCorrectAtEventStatsAccordion() {
+        registeredUser.lookAtList("events");
+        registeredUser.askToCreateNew();
+        registeredUser.fillEventFormFields("name: Event6",
+                "location: Location 2/3",
+                "datetimeInput: 2025-10-08T12:00",
+                "description: Longer description for description purpose",
+                "checkboxCount: 1",
+                "checkboxId1: withTeam",
+                "checkboxValue1: True",
+                "clickRadioId: choosePersons");
+        registeredUser.fillEventFormFields("checkboxCount: 1", "checkboxId1: michal.bzowski@gmail.com", "checkboxValue1: true");
+        registeredUser.fillEventFormFields("checkboxCount: 1", "checkboxId1: 00michal.bzowski@gmail.com", "checkboxValue1: true");
+        registeredUser.confirm("events");
+        registeredUser.lookAtList("teams");
+        registeredUser.lookAtDetails("teams", "rowName: Event6");
+        registeredUser.sendEmailToMember("memberEmail: michal.bzowski@gmail.com");
+        registeredUser.openQuestionToMember("memberEmail: michal.bzowski@gmail.com");
+        registeredUser.selectMemberAnswer("answerId: option-TAK");
+        registeredUser.lookAtList("teams");
+        registeredUser.lookAtDetails("teams", "rowName: Event6");
+        registeredUser.assertIsEmailSent("memberEmail: michal.bzowski@gmail.com");
+        registeredUser.assertMemberAnswered("memberEmail: michal.bzowski@gmail.com");
+        registeredUser.lookAtList("events");
+        registeredUser.lookAtDetails("events", "rowName: Event6");
+        registeredUser.assertStats("Wybraneosoby: 2",
+                "Wysłane: 1",
+                "Odpowiedzi: 1",
+                "Bezodpowiedzi: 1",
+                "Tak: 1",
+                "Nie: 0",
+                "Odpowiempóźniej: 0");
+    }
+
+    @Test
+    public void shouldEventAnswersBeCorrectAtEventAnswersAccordion() {
+
+    }
+
+    @Test
+    @Disabled
+    public void shouldEventDetailsBeCorrectAtEventDetailsAccordion() {
+
+    }
+
+
+    @Test
+    @Disabled
     public void shouldNotCreateEventWithEmptyTeamForSelectPersonOption() {
 
     }
 
     @Test
+    @Disabled
     public void shouldNotCreateEventWithEmptyGroupSelectionForSelectGroupOption() {
 
     }

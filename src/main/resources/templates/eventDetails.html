@@ -27,15 +27,15 @@
     </form>
     {#else}
     <details name = "event-details">
-        <summary>Statystyki</summary>
+        <summary id="summary-tab">Statystyki</summary>
         <ul>
-            <li>Wybrane osoby: {linkCount}</li>
-            <li>Wysłane: {sentLinkCount}</li>
-            <li>Odpowiedzi: {answerSum}</li>
-            <li>Bez odpowiedzi: {unansweredCount}</li>
-            <li>Tak: {answerYesCount}</li>
-            <li>Nie: {answerNoCount}</li>
-            <li>Odpowiem później: {answerLaterCount}</li>
+            <li id="selectedMembersCount">Wybrane osoby: {linkCount}</li>
+            <li id="sentEmailsCount">Wysłane: {sentLinkCount}</li>
+            <li id="answersCount">Odpowiedzi: {answerSum}</li>
+            <li id="notAnsweredCount">Bez odpowiedzi: {unansweredCount}</li>
+            <li id="yesCount">Tak: {answerYesCount}</li>
+            <li id="noCount">Nie: {answerNoCount}</li>
+            <li id="laterCount">Odpowiem później: {answerLaterCount}</li>
         </ul>
     </details>
 <hr />

@@ -172,4 +172,51 @@ public class RegisteredUser {
 
         driver.assertMemberWasSelected(memberEmail);
     }
+
+    public void sendEmailToMember(String... args) {
+        Params params = new Params(args);
+        String memberEmail = params.Optional("memberEmail", "");
+
+        driver.sendEmailToMember(memberEmail);
+    }
+
+    public void openQuestionToMember(String... args) {
+        Params params = new Params(args);
+        String memberEmail = params.Optional("memberEmail", "");
+
+        driver.openQuestionToMember(memberEmail);
+    }
+
+    public void selectMemberAnswer(String... args) {
+        Params params = new Params(args);
+        String answerId = params.Optional("answerId", "");
+
+        driver.selectMemberAnswer(answerId);
+    }
+
+    public void assertIsEmailSent(String... args) {
+        Params params = new Params(args);
+        String memberEmail = params.Optional("memberEmail", "");
+        driver.assertIsEmailSent(memberEmail);
+    }
+
+    public void assertMemberAnswered(String... args) {
+        Params params = new Params(args);
+        String memberEmail = params.Optional("memberEmail", "");
+        driver.assertMemberAnswered(memberEmail);
+    }
+
+    public void assertStats(String... args) {
+        Params params = new Params(args);
+
+        String selectedMembersCount = params.Optional("Wybraneosoby", "");
+        String sentEmailsCount = params.Optional("Wysłane", "");
+        String answersCount = params.Optional("Odpowiedzi", "");
+        String notAnsweredCount = params.Optional("Bezodpowiedzi", "");
+        String yesCount = params.Optional("Tak", "");
+        String noCount = params.Optional("Nie", "");
+        String laterCount = params.Optional("Odpowiempóźniej", "");
+
+        driver.assertStats(selectedMembersCount, sentEmailsCount, answersCount, notAnsweredCount, yesCount, noCount, laterCount);
+    }
 }

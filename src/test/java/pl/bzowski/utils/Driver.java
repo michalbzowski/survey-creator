@@ -46,4 +46,16 @@ public interface Driver {
     void lookAtDetails(String listName, String rowName);
 
     void assertMemberWasSelected(String memberEmail);
+
+    void sendEmailToMember(String memberEmail);
+
+    void openQuestionToMember(String memberEmail);
+
+    void selectMemberAnswer(String answerId);
+
+    void assertIsEmailSent(String memberEmail);
+
+    void assertMemberAnswered(String memberEmail);
+
+    void assertStats(String selectedMembersCount, String sentEmailsCount, String answersCount, String notAnsweredCount, String yesCount, String noCount, String laterCount);
 }
