@@ -1,4 +1,4 @@
-package pl.bzowski.security;
+package pl.bzowski.shared.security;
 
 import io.quarkus.qute.TemplateInstance;
 import jakarta.ws.rs.GET;

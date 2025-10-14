@@ -1,4 +1,4 @@
-package pl.bzowski.base;
+package pl.bzowski.shared.base;
 
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;

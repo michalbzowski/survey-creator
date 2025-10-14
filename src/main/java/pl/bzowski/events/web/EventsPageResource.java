@@ -18,7 +18,7 @@ import org.jboss.logmanager.Level;
 import pl.bzowski.members.Member;
 import pl.bzowski.team.api.TeamDTO;
 import pl.bzowski.team.infrastructure.TeamRepository;
-import pl.bzowski.base.ReactiveDelete;
+import pl.bzowski.shared.base.ReactiveDelete;
 import pl.bzowski.events.Event;
 import pl.bzowski.events.EventRepository;
 import pl.bzowski.groups.Group;

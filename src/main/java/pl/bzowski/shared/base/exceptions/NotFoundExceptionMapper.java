@@ -1,4 +1,4 @@
-package pl.bzowski.base.exceptions;
+package pl.bzowski.shared.base.exceptions;
 
 import io.quarkus.qute.Location;
 import jakarta.ws.rs.core.Context;

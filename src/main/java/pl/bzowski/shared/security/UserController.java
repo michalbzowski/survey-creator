@@ -1,11 +1,11 @@
-package pl.bzowski.security;
+package pl.bzowski.shared.security;
 
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import pl.bzowski.base.RepositoryBase;
+import pl.bzowski.shared.base.RepositoryBase;
 
 @Path("/sec/")
 @Singleton

@@ -1,4 +1,4 @@
-package pl.bzowski.base;
+package pl.bzowski.shared.base;
 
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;

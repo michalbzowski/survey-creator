@@ -8,7 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import pl.bzowski.base.ReactiveDelete;
+import pl.bzowski.shared.base.ReactiveDelete;
 import pl.bzowski.persons.Person;
 import pl.bzowski.persons.PersonRepository;
 

@@ -1,4 +1,4 @@
-package pl.bzowski.base;
+package pl.bzowski.shared.base;
 
 import jakarta.inject.Singleton;
 

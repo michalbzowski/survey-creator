@@ -3,7 +3,7 @@ package pl.bzowski.persons;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.RequestScoped;
-import pl.bzowski.base.RepositoryBase;
+import pl.bzowski.shared.base.RepositoryBase;
 
 import java.util.List;
 import java.util.UUID;

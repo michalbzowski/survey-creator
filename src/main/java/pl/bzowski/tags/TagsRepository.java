@@ -3,7 +3,7 @@ package pl.bzowski.tags;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Singleton;
-import pl.bzowski.base.RepositoryBase;
+import pl.bzowski.shared.base.RepositoryBase;
 
 import java.util.List;
 

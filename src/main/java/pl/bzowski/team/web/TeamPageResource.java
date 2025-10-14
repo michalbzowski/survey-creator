@@ -11,7 +11,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.hibernate.reactive.mutiny.Mutiny;
 import pl.bzowski.team.Team;
-import pl.bzowski.base.ReactiveDelete;
+import pl.bzowski.shared.base.ReactiveDelete;
 import pl.bzowski.events.Event;
 import pl.bzowski.team.api.TeamDTO;
 import pl.bzowski.team.infrastructure.TeamRepository;

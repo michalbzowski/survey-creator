@@ -4,11 +4,10 @@ import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Uni;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import pl.bzowski.base.ReactiveDelete;
+import pl.bzowski.shared.base.ReactiveDelete;
 import pl.bzowski.persons.Person;
 import pl.bzowski.tags.TagsRepository;
 
