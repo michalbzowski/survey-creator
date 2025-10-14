@@ -3,33 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <title>Odpowiedź na zapytanie</title>
-    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+    <link href="/css/pico.min.css" rel="stylesheet">
 </head>
 <body>
-<h2>Witaj, {link.personFirstName} {link.personLastName} </h2>
-{#if link.teamAnswered}
-<p>Już odpowiedziałeś na tą ankietę. Jeśli chcesz zmienić zdanie, uzupełnij i wyślij ponownie</p>
-{/if}
-<p>({link.personEmail})</p>
-<p>Dotyczy wydarzeń: {link.team.joinedEventsName}</p>
-<form action="/web/responses/{link.linkToken}" id="response-form">
-    {#each link.team.events}
-    <article>
-        <p><strong>{it.name}</strong></p>
-        <p>{it.location}</p>
-        <p>{it.formatedLocalDateTime}</p>
-        <p>{it.description}</p>
-        <label for="{it.id}">Odpowiedź:</label>
-        <select class="answerValue-entry" name="{it.id}" id="{it.id}" required>
-            <option id="option-Empty" value="">-- wybierz --</option>
-            <option id="option-TAK" value="TAK">Tak</option>
-            <option id="option-NIE" value="NIE">Nie</option>
-            <option id="option-ODPOWIEM_POZNIEJ" value="ODPOWIEM_POZNIEJ">Odpowiem później</option>
-        </select>
-    </article>
-    {/each}
-    <button id="submit" type="submit">Wyślij</button>
-</form>
+<header class="container">
+    <h2>Witaj, {link.personFirstName} {link.personLastName} </h2>
+</header>
+<main class="container">
+    {#if link.teamAnswered}
+    <p>Już odpowiedziałeś na tą ankietę. Jeśli chcesz zmienić zdanie, uzupełnij i wyślij ponownie</p>
+    {/if}
+    <p>({link.personEmail})</p>
+    <p>Dotyczy wydarzeń: {link.team.joinedEventsName}</p>
+    <form action="/web/responses/{link.linkToken}" id="response-form">
+        {#each link.team.events}
+        <article>
+            <p><strong>{it.name}</strong></p>
+            <p>{it.location}</p>
+            <p>{it.formatedLocalDateTime}</p>
+            <p>{it.description}</p>
+            <label for="{it.id}">Odpowiedź:</label>
+            <select class="answerValue-entry" name="{it.id}" id="{it.id}" required>
+                <option id="option-Empty" value="">-- wybierz --</option>
+                <option id="option-TAK" value="TAK">Tak</option>
+                <option id="option-NIE" value="NIE">Nie</option>
+                <option id="option-ODPOWIEM_POZNIEJ" value="ODPOWIEM_POZNIEJ">Odpowiem później</option>
+            </select>
+        </article>
+        {/each}
+        <button id="submit" type="submit">Wyślij</button>
+    </form>
+</main>
 </body>
 <script>
     document.getElementById('response-form').addEventListener('submit', async function(event) {
