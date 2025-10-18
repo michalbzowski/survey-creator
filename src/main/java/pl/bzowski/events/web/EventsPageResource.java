@@ -30,8 +30,10 @@ import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.tags.Tag;
 import pl.bzowski.tags.TagsRepository;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -116,7 +118,7 @@ public class EventsPageResource {
                                      @FormParam("persons") List<UUID> personIds) {
         return eventRepository.persist(eventDto)
                 .invoke(withTeamLogger(withTeam))
-                .call(eventIfWithTeamChecked(eventDto, withTeam, teamType, groupIds, personIds))
+                .call(eventIfWithTeamChecked(withTeam, teamType, groupIds, personIds))
                 .map(redirectToEventDetails())
                 .onFailure().invoke(logFailure())
                 .onFailure().recoverWithItem(returnServerError());
@@ -126,21 +128,48 @@ public class EventsPageResource {
         return event -> Response.seeOther(UriBuilder.fromPath("/web/events/" + event.id + "/details").build()).build();
     }
 
-    private Function<Event, Uni<?>> eventIfWithTeamChecked(EventDto eventDto, String withTeam, String teamType, List<UUID> groupIds, List<UUID> personIds) {
+    private Function<Event, Uni<?>> eventIfWithTeamChecked(String withTeam, String teamType, List<UUID> groupIds, List<UUID> personIds) {
         return event -> {
             if ("checked".equals(withTeam)) {
                 return teamRepository.createTeam(new TeamDTO(event.id))
                         .onItem()
-                        .invoke(publish(eventDto, withTeam, teamType, groupIds, personIds, event));
+                        .invoke(publish(withTeam, teamType, groupIds, personIds, event.registeredUserId));
             }
             return Uni.createFrom().voidItem();
         };
     }
 
-    private Consumer<TeamDTO> publish(EventDto eventDto, String withTeam, String teamType, List<UUID> groupIds, List<UUID> personIds, Event event) {
+    @POST
+    @Path("/members")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @WithTransaction
+    public Uni<Response> addMembers(@FormParam("withTeam") String withTeam,
+                                    @FormParam("teamType") String teamType,
+                                    @FormParam("groups") List<UUID> groupIds,
+                                    @FormParam("persons") List<UUID> personIds,
+                                    @FormParam("teamId") UUID teamId) {
+
+        if ("checked".equals(withTeam)) {
+            teamRepository.currentRegisteredUserId()
+                    .onItem()
+                    .invoke(registeredUserId -> {
+                        eventBus.publish(EVENT_WITH_TEAM_CREATED,
+                                new TeamCreatedDto(withTeam, teamType, groupIds, personIds, teamId, registeredUserId));
+                    }).subscribe().with(_ -> logger.info("Success"),
+                            _ -> logger.info("Failure"));
+
+        }
+        URI build = UriBuilder.fromPath("/web/teams/{id}/details")
+                .build(teamId);
+        Response build1 = Response.seeOther(build).build();
+        return Uni.createFrom().item(build1);
+    }
+
+    private Consumer<TeamDTO> publish(String withTeam, String
+            teamType, List<UUID> groupIds, List<UUID> personIds, UUID registeredUserId) {
         return teamDTO -> {
             eventBus.publish(EVENT_WITH_TEAM_CREATED,
-                    new TeamCreatedDto(withTeam, teamType, groupIds, personIds, teamDTO.id, event.registeredUserId, eventDto));
+                    new TeamCreatedDto(withTeam, teamType, groupIds, personIds, teamDTO.id, registeredUserId));
         };
     }
 
@@ -257,7 +286,8 @@ public class EventsPageResource {
         });
     }
 
-    private List<EventDetails.Stats> combineStats(List<Object[]> takStats, List<Object[]> nieStats, List<Object[]> laterStats) {
+    private List<EventDetails.Stats> combineStats(List<Object[]> takStats, List<Object[]> nieStats, List<Object[]>
+            laterStats) {
         List<EventDetails.Stats> fullStats = new ArrayList<>();
         for (Object[] takStat : takStats) {
             String tag = (String) takStat[0];

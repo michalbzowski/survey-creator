@@ -16,16 +16,14 @@ public class TeamCreatedDto {
     private final List<UUID> personIds;
     private final UUID teamId;
     private final UUID registeredUserId;
-    private final EventDto eventDto;
 
-    public TeamCreatedDto(String withTeam, String teamType, List<UUID> groupIds, List<UUID> personIds, UUID teamId, UUID registeredUserId, EventDto eventDto) {
+    public TeamCreatedDto(String withTeam, String teamType, List<UUID> groupIds, List<UUID> personIds, UUID teamId, UUID registeredUserId) {
         this.withTeam = withTeam;
         this.teamType = teamType;
         this.groupIds = groupIds;
         this.personIds = personIds;
         this.teamId = teamId;
         this.registeredUserId = registeredUserId;
-        this.eventDto = eventDto;
     }
 
     public String getWithTeam() {
@@ -50,9 +48,5 @@ public class TeamCreatedDto {
 
     public UUID getRegisteredUserId() {
         return registeredUserId;
-    }
-
-    public EventDto getEventDto() {
-        return eventDto;
     }
 }

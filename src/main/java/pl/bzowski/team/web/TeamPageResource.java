@@ -10,6 +10,10 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.hibernate.reactive.mutiny.Mutiny;
+import pl.bzowski.groups.Group;
+import pl.bzowski.groups.GroupsRepository;
+import pl.bzowski.persons.Person;
+import pl.bzowski.persons.PersonRepository;
 import pl.bzowski.team.Team;
 import pl.bzowski.shared.base.ReactiveDelete;
 import pl.bzowski.events.Event;
@@ -32,14 +36,26 @@ public class TeamPageResource {
     private final TeamRepository teamRepository;
     private final JsonHelper jsonHelper;
     private final EventRepository eventRepository;
+    private final GroupsRepository groupsRepository;
+    private final PersonRepository personRepository;
 
-    public TeamPageResource(Template teamDetails, Template createTeam, Template listTeam, TeamRepository teamRepository, JsonHelper jsonHelper, EventRepository eventRepository) {
+    public TeamPageResource(Template teamDetails, Template createTeam, Template listTeam, TeamRepository teamRepository, JsonHelper jsonHelper, EventRepository eventRepository, GroupsRepository groupsRepository, PersonRepository personRepository) {
         this.teamDetails = teamDetails;
         this.createTeam = createTeam;
         this.listTeam = listTeam;
         this.teamRepository = teamRepository;
         this.jsonHelper = jsonHelper;
         this.eventRepository = eventRepository;
+        this.groupsRepository = groupsRepository;
+        this.personRepository = personRepository;
+    }
+
+    private Uni<List<Group>> loadGroups() {
+        return groupsRepository.listAll();
+    }
+
+    private Uni<List<Person>> loadPersons() {
+        return personRepository.listAll();
     }
 
     String query = "SELECT m.id, m.personId, m.personFirstName, m.personLastName, m.personEmail, m.teamId, m.linktoken, m.teamanswered, CASE WHEN cal.id IS NULL THEN FALSE ELSE TRUE END AS communicationSent " +
@@ -63,11 +79,14 @@ public class TeamPageResource {
                                                 .map(list -> list.stream()
                                                         .map(this::getTeamWithMembersDTO)
                                                         .toList())
-                                )
-                                .map(dtos -> teamDetails
-                                        .data("team", team)
-                                        .data("links", dtos)
-                                )
+                                ).flatMap(dtos -> loadGroups()
+                                        .flatMap(groups -> loadPersons()
+                                                .map(persons -> teamDetails
+                                                        .data("team", team)
+                                                        .data("links", dtos)
+                                                        .data("groups", groups)
+                                                        .data("persons", persons)
+                                                )))
                 );
     }
 

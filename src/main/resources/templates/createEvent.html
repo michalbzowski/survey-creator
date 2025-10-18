@@ -16,42 +16,9 @@
     <textarea maxlength="4096" id="description" name="description" placeholder="Opisz wydarzenie..."
               required></textarea>
 
-    <fieldset>
-        <input type="checkbox" id="withTeam" name="withTeam" value="checked" checked/>
-        <label for="withTeam">Utwórz listę obecności dla tego wydarzenia</label>
-    </fieldset>
+    {#include forms/createTeamForm.html}
 
-    <fieldset id="teamOptions" style="display:none; margin-top:10px;">
-        <legend>Opcje zespołu</legend>
-        <input type="radio" id="chooseGroup" name="teamType" value="group"/>
-        <label for="chooseGroup">Wybierz grupę osób</label><br/>
-
-        <input type="radio" id="choosePersons" name="teamType" value="person"/>
-        <label for="choosePersons">Wybierz osoby</label><br/>
-
-        <input type="radio" id="chooseAll" name="teamType" value="all" checked/>
-        <label for="chooseAll">Przypisz wszystkie</label><br/>
-    </fieldset>
-
-    <fieldset id="groupsSelect" style="display:none; margin-top:10px;">
-        <legend>Wybierz grupy</legend>
-        {#for group in groups}
-        <label>
-            <input type="checkbox" name="groups" value="{group.id}" id="{group.name}"/>
-            {group.name}
-        </label><br/>
-        {/for}
-    </fieldset>
-
-    <fieldset id="personsSelect" style="display:none; margin-top:10px;">
-        <legend>Wybierz osoby</legend>
-        {#for person in persons}
-        <label>
-            <input type="checkbox" name="persons" value="{person.id}" id="{person.email}"/>
-            {person.firstName} {person.lastName} ({person.email})
-        </label><br/>
-        {/for}
-    </fieldset>
+    {/include}
 
     <button type="submit" id="submit">Dodaj</button>
 </form>
