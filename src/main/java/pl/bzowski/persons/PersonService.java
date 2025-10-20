@@ -70,17 +70,8 @@ public class PersonService {
     }
 
     @WithTransaction
-    public Uni<Void> deletePerson(UUID id, String method) {
-        if (!"delete".equalsIgnoreCase(method)) {
-            return Uni.createFrom().voidItem();
-        }
-        return Person.findById(id)
-                .flatMap(person -> {
-                    if (person == null) {
-                        return Uni.createFrom().voidItem();
-                    }
-                    return person.delete();
-                });
+    public Uni<Boolean> deletePerson(UUID id) {
+        return Person.deleteById(id);
     }
 
 }

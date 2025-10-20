@@ -125,9 +125,14 @@ public class PersonPageResource {
     @POST
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response deletePerson(@PathParam("id") UUID id, @FormParam("_method") String method) {
-        personService.deletePerson(id, method);
-        return Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build();
+    public Uni<Response> deletePerson(@PathParam("id") UUID id, @FormParam("_method") String method) {
+        if (!"delete".equalsIgnoreCase(method)) {
+            return Uni.createFrom().item(Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build());
+        } else {
+            return personService.deletePerson(id)
+                    .onItem()
+                    .transform(t -> Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build());
+        }
     }
 
     @GET
