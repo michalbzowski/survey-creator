@@ -59,8 +59,11 @@ public class TeamRepository extends RepositoryBase {
                                     });
                         })
                 )
+                .onItem()
+                .call(team -> team.persist())
                 .onFailure().recoverWithNull()
-                .onItem().transform(Team::toDTO);
+                .onItem()
+                .transform(Team::toDTO);
     }
 
 

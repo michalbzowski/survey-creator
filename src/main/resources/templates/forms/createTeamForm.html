@@ -12,11 +12,15 @@
     <label for="choosePersons">Wybierz osoby</label><br/>
 
     <input type="radio" id="chooseAll" name="teamType" value="all" checked/>
-    <label for="chooseAll">Przypisz wszystkie</label><br/>
+    <label for="chooseAll">Przypisz wszystkie osoby</label><br/>
 </fieldset>
 
 <fieldset id="groupsSelect" style="display:none; margin-top:10px;">
-    <legend>Wybierz grupy</legend>
+    {#if groups.isEmpty()}
+        <legend>Nie masz stworzonej żadnej grupy osób. Mozesz ją stworzyć na stronie Grupy</legend>
+    {#else}
+        <legend>Wybierz grupy</legend>
+    {/if}
     {#for group in groups}
     <label>
         <input type="checkbox" name="groups" value="{group.id}" id="{group.name}"/>

@@ -69,25 +69,42 @@ public class TeamPageResource {
     @Path("/{id}/details")
     @Produces(MediaType.TEXT_HTML)
     public Uni<TemplateInstance> showQueryDetails(@PathParam("id") UUID id) {
-        return Team.<Team>findById(id)
-                .flatMap(team ->
-                        sessionFactory.openSession()
-                                .flatMap(session ->
-                                        session.createNativeQuery(query, Tuple.class)
-                                                .setParameter("teamId", id)
-                                                .getResultList()
-                                                .map(list -> list.stream()
-                                                        .map(this::getTeamWithMembersDTO)
-                                                        .toList())
-                                ).flatMap(dtos -> loadGroups()
-                                        .flatMap(groups -> loadPersons()
-                                                .map(persons -> teamDetails
-                                                        .data("team", team)
-                                                        .data("links", dtos)
-                                                        .data("groups", groups)
-                                                        .data("persons", persons)
-                                                )))
+        return getCreateTeamData(id)
+                .map(ctx -> teamDetails
+                        .data("team", ctx.getTeam())
+                        .data("links", ctx.getLinks())
+                        .data("groups", ctx.getGroups())
+                        .data("persons", ctx.getPersons())
                 );
+    }
+
+    public Uni<TeamDetailsContext> getCreateTeamData(UUID id) {
+        TeamDetailsContext teamDetailsContext = new TeamDetailsContext();
+        return Team.<Team>findById(id)
+                .onItem()
+                .transformToUni(team -> {
+                    teamDetailsContext.setTeam(team);
+                    return sessionFactory.openSession()
+                            .flatMap(session ->
+                                    session.createNativeQuery(query, Tuple.class)
+                                            .setParameter("teamId", id)
+                                            .getResultList()
+                                            .map(list -> list.stream()
+                                                    .map(this::getTeamWithMembersDTO)
+                                                    .toList())
+                            ).flatMap(dtos -> {
+                                teamDetailsContext.setLinks(dtos);
+                                return loadGroups()
+                                        .flatMap(groups -> {
+                                            teamDetailsContext.setGroups(groups);
+                                            return loadPersons()
+                                                    .map(persons -> {
+                                                        teamDetailsContext.setPersons(persons);
+                                                        return teamDetailsContext;
+                                                    });
+                                        });
+                            });
+                });
     }
 
     private TeamEntryWithCommunicationDTO getTeamWithMembersDTO(Tuple tuple) {

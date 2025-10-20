@@ -1,49 +1,47 @@
 {#include layouts/main}
 {#title}{event.name}{/title}
 {#body}
-    <details name = "event-details">
-        <summary>Szczegóły</summary>
-        <p><strong>Gdzie:</strong> {event.location}</p>
-        <p><strong>Kiedy:</strong> {event.formatedLocalDateTime}</p>
-        <p>{event.description}</p>
-    </details>
-    <hr />
-    {#if noteamYet}
-    <p>To wydarzenie nie ma jeszcze swojego zespołu.
-        <a href="/web/teams/new?name={event.name}&eventId={event.id}">
-        Stwórz zespół dla tego wydarzenia.
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             class="lucide lucide-book-plus-icon lucide-book-plus">
-            <path d="M12 7v6"/>
-            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/>
-            <path d="M9 10h6"/>
-        </svg>
-    </a></p>
-    {#else if linkCount == 0}
-    <form action="/api/v1/links/{eventteamId}" method="get" style="display:inline;">
-        <button type="submit" onclick="return confirm('Czy wybrać wszystkie osoby do tego zespołu?')">Generuj linki
-        </button>
-    </form>
-    {#else}
-    <details name = "event-details">
-        <summary id="summary-tab">Statystyki</summary>
-        <ul>
-            <li id="selectedMembersCount">Wybrane osoby: {linkCount}</li>
-            <li id="sentEmailsCount">Wysłane: {sentLinkCount}</li>
-            <li id="answersCount">Odpowiedzi: {answerSum}</li>
-            <li id="notAnsweredCount">Bez odpowiedzi: {unansweredCount}</li>
-            <li id="yesCount">Tak: {answerYesCount}</li>
-            <li id="noCount">Nie: {answerNoCount}</li>
-            <li id="laterCount">Odpowiem później: {answerLaterCount}</li>
-        </ul>
-    </details>
-<hr />
+<details name="event-details">
+    <summary>Szczegóły</summary>
+    <p><strong>Gdzie:</strong> {event.location}</p>
+    <p><strong>Kiedy:</strong> {event.formatedLocalDateTime}</p>
+    <p>{event.description}</p>
+</details>
+<hr/>
+{#if noTeamYet}
+<form action="/web/events/members" method="post">
+    {#if team != null}
+    <input type="text" name="teamId" hidden="hidden" value="{event.team.id}">
     {/if}
-{#if noteamYet}
+    <input type="text" name="eventId" hidden="hidden" value="{event.id}">
+    {#include forms/createTeamForm.html}
+    {/include}
+    <button type="submit" id="submit">Zapisz</button>
+</form>
+{#else if linkCount == 0}
+<form action="/api/v1/links/{eventTeamId}" method="get" style="display:inline;">
+    <button type="submit" onclick="return confirm('Czy wybrać wszystkie osoby do tego zespołu?')">Generuj linki
+    </button>
+</form>
+{#else}
+<details name="event-details">
+    <summary id="summary-tab">Statystyki</summary>
+    <ul>
+        <li id="selectedMembersCount">Wybrane osoby: {linkCount}</li>
+        <li id="sentEmailsCount">Wysłane: {sentLinkCount}</li>
+        <li id="answersCount">Odpowiedzi: {answerSum}</li>
+        <li id="notAnsweredCount">Bez odpowiedzi: {unansweredCount}</li>
+        <li id="yesCount">Tak: {answerYesCount}</li>
+        <li id="noCount">Nie: {answerNoCount}</li>
+        <li id="laterCount">Odpowiem później: {answerLaterCount}</li>
+    </ul>
+</details>
+<hr/>
+{/if}
+{#if noTeamYet}
 <!--Blank-->
 {#else}
-<details name = "event-details">
+<details name="event-details">
     <summary>Odpowiedzi</summary>
     <table>
         <thead>
@@ -67,5 +65,69 @@
     </table>
 </details>
 {/if}
+<hr/>
+{#if linkCount != 0}
+<details>
+    <summary>Zespół</summary>
+
+    <table>
+        <thead>
+        <a href="#" id="send-to-all">Wyślij e-mail do wszystkich</a>
+        <tr>
+            <th>Imię</th>
+            <th>Nazwisko</th>
+            <th>Email</th>
+            <th>Link</th>
+            <th>Wiadomość</th>
+            <th>Odpowiedziała</th>
+        </tr>
+        </thead>
+        <tbody>
+        {#for link in links}
+        <tr>
+            <td>{link.personFirstName}</td>
+            <td>{link.personLastName}</td>
+            <td data-member-email="{link.personEmail}">{link.personEmail}</td>
+            <td><a class="open-member-question" href="/web/responses/{link.linkToken}" target="_blank">Otwórz</a></td>
+
+            <td style="text-align: center;">
+                {#if !link.communicationSent}
+                <a href="#" id="{link.id}" data-id="{link.id}" class="send-email-button" data-team-id="{team.id}"
+                   data-link-person-id="{link.personId}">
+                    Wyślij e-mail
+                </a>
+                {#else}
+                <svg id="email-send-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                     fill="none" stroke="#13aa2c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                     class="lucide lucide-check-icon lucide-check">
+                    <path d="M20 6 9 17l-5-5"/>
+                </svg>
+                {/if}
+            </td>
+            <td style="text-align: center;">
+                {#if link.teamAnswered}
+                <svg id="member-answered-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                     viewBox="0 0 24 24" fill="none" stroke="#13aa2c" stroke-width="2" stroke-linecap="round"
+                     stroke-linejoin="round" class="lucide lucide-check-icon lucide-check">
+                    <path d="M20 6 9 17l-5-5"/>
+                </svg>
+                {#else}
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                     stroke="#cc2828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                     class="lucide lucide-hourglass-icon lucide-hourglass">
+                    <path d="M5 22h14"/>
+                    <path d="M5 2h14"/>
+                    <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/>
+                    <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>
+                </svg>
+                {/if}
+            </td>
+        </tr>
+        {/for}
+        </tbody>
+    </table>
+</details>
+{/if}
+<script src="/js/script_list_team_umbrella.js"></script>
 {/body}
 {/include}

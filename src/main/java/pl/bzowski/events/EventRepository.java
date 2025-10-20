@@ -4,10 +4,12 @@ import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Singleton;
+import pl.bzowski.events.web.EventsPageResource;
 import pl.bzowski.shared.base.RepositoryBase;
 import pl.bzowski.events.web.EventDto;
 
 import java.util.List;
+import java.util.UUID;
 
 
 @Singleton
@@ -41,5 +43,10 @@ public class EventRepository extends RepositoryBase {
         return currentRegisteredUserId()
                 .onItem()
                 .transformToUni(uuid -> Event.list("registeredUserId = ?1", localDateTime, uuid));
+    }
+
+    @WithTransaction
+    public Uni<Event> findById(UUID eventId) {
+        return Event.findById(eventId);
     }
 }
