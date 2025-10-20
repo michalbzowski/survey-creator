@@ -296,14 +296,15 @@ public class EventsPageResource {
 
     private Uni<EventContext> loadStats(EventContext ctx) {
         // Sekwencyjne ładowanie statystyk odpowiedzi według tagów
-        return getResultListReactive(ctx.event, Answer.AnswerValue.TAK).flatMap(takStats -> {
-            return getResultListReactive(ctx.event, Answer.AnswerValue.NIE).flatMap(nieStats -> {
-                return getResultListReactive(ctx.event, Answer.AnswerValue.ODPOWIEM_POZNIEJ).map(laterStats -> {
-                    ctx.fullStats = combineStats(takStats, nieStats, laterStats);
-                    return ctx;
-                });
-            });
-        });
+        return teamRepository.currentRegisteredUserId()
+                .flatMap(registeredUserId -> getResultListReactive(ctx.event, Answer.AnswerValue.TAK, registeredUserId)
+                        .flatMap(takStats -> getResultListReactive(ctx.event, Answer.AnswerValue.NIE, registeredUserId)
+                                .flatMap(nieStats -> getResultListReactive(ctx.event, Answer.AnswerValue.ODPOWIEM_POZNIEJ, registeredUserId)
+                                        .map(laterStats -> {
+                                            ctx.fullStats = combineStats(takStats, nieStats, laterStats);
+                                            return ctx;
+                }))));
+
     }
 
     private List<EventDetails.Stats> combineStats(List<Object[]> takStats, List<Object[]> nieStats, List<Object[]>
@@ -371,7 +372,7 @@ public class EventsPageResource {
     }
 
 
-    private Uni<List<Object[]>> getResultListReactive(Event event, Answer.AnswerValue answerValue) {
+    private Uni<List<Object[]>> getResultListReactive(Event event, Answer.AnswerValue answerValue, UUID registeredUserId) {
         return Panache
                 .getSession()
                 .onItem()
@@ -380,9 +381,11 @@ public class EventsPageResource {
                                         "FROM Tag t " +
                                         "LEFT JOIN Member m ON m.personTag = t.name " +
                                         "LEFT JOIN Answer a ON a.member = m AND a.event = :event AND a.answerValue = :answerValue " +
+                                        "WHERE t.registeredUserId = :registeredUserId " +
                                         "GROUP BY t.name", Object[].class)
                         .setParameter("event", event)
                         .setParameter("answerValue", answerValue)
+                        .setParameter("registeredUserId", registeredUserId)
                         .getResultList());
     }
 
