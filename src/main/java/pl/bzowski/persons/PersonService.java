@@ -55,28 +55,18 @@ public class PersonService {
     }
 
     public Uni<Void> editPerson(UUID id, String firstName, String lastName, String email, String defaultTag, List<UUID> groupsIds) {
-        Uni<Person> p = Person.findById(id);
-        Uni<Tag> t = Tag.find("name", defaultTag).firstResult();
-        return Uni.combine()
-                .all()
-                .unis(p, t)
-                .asTuple()
+        return Person.<Person>findById(id)
                 .onItem()
-                .transformToUni(tuple -> {
-                    Person person = tuple.getItem1();
-                    Tag tag = tuple.getItem2();
-                    if (person == null) {
-                        throw new WebApplicationException("Person not found", 404);
-                    }
-                    person.firstName = firstName;
-                    person.lastName = lastName;
-                    person.email = email;
-                    person.defaultTag = tag;
-
-                    addGroupsToPerson(groupsIds, person);
-                    return Uni.createFrom().voidItem();
-                });
-
+                .call(person -> Tag.find("registeredUserId = ?1 and name = ?2", person.registeredUserId, defaultTag).firstResult()
+                        .onItem()
+                        .call(tag -> {
+                            person.firstName = firstName;
+                            person.lastName = lastName;
+                            person.email = email;
+                            person.defaultTag = (Tag) tag;
+                            addGroupsToPerson(groupsIds, person);
+                            return Uni.createFrom().item(person);
+                        })).replaceWithVoid();
     }
 
     @WithTransaction

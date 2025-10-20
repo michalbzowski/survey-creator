@@ -153,13 +153,16 @@ public class PersonPageResource {
     @POST
     @Path("/edit/{id}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response editPerson(@PathParam("id") UUID id,
-                               @FormParam("firstName") String firstName,
-                               @FormParam("lastName") String lastName,
-                               @FormParam("email") String email,
-                               @FormParam("defaultTag") String defaultTag,
-                               @FormParam("groups") List<UUID> groupsIds) {
-        personService.editPerson(id, firstName, lastName, email, defaultTag, groupsIds);
-        return Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build();
+    @WithTransaction
+    public Uni<Response> editPerson(@PathParam("id") UUID id,
+                                    @FormParam("firstName") String firstName,
+                                    @FormParam("lastName") String lastName,
+                                    @FormParam("email") String email,
+                                    @FormParam("defaultTag") String defaultTag,
+                                    @FormParam("groups") List<UUID> groupsIds) {
+        return personService
+                .editPerson(id, firstName, lastName, email, defaultTag, groupsIds)
+                .onItem()
+                .transformToUni(a -> Uni.createFrom().item(Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build()));
     }
 }
