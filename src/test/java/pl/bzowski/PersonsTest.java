@@ -1,6 +1,7 @@
 package pl.bzowski;
 
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
@@ -31,6 +32,39 @@ public class PersonsTest extends MyTestsBase {
         registeredUser.assertNewPersonCreated("firstName: Kontrybutor2");
         registeredUser.assertPersonHasFields("firstName: Kontrybutor2", "lastName: Kowalski2", "email: kontrybutor2.kowalski2@gmail.com", "defaultTag: Conductor");
     }
+
+    @Test
+    @Disabled
+    public void shouldEditFirstName() {
+
+    }
+
+
+    @Test
+    @Disabled
+    public void shouldEditFirstLastName() {
+
+    }
+
+    @Test
+    @Disabled
+    public void shouldEditEmailAndPersonShouldConfirmOnceAgainEmail() {
+
+    }
+
+
+    @Test
+    @Disabled
+    public void shouldEditDefaultTag() {
+
+    }
+
+    @Test
+    @Disabled
+    public void shouldEditGroups() {
+
+    }
+
 
 
 }

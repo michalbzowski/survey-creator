@@ -27,7 +27,8 @@ public class EmailNewPersonAddedCommunicationSender implements CommunicationSend
 
     @Override
     public Uni<Void> send(Communication communication) {
-        String body = confirmation.data("firstName", communication.getPersonFirstName())
+        String body = confirmation
+                .data("firstName", communication.getPersonFirstName())
                 .data("lastName", communication.getPersonLastName())
                 .data("userEmail", communication.getProperty("userEmail"))
                 .data("confirmationLink", communication.getProperty("confirmationLink"))

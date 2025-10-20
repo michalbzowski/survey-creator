@@ -36,6 +36,7 @@
       font-weight: 600;
       margin-top: 1rem;
       transition: background-color 0.3s ease;
+      font-size: 16px;
     }
     a.confirm-button:hover {
       background-color: #454599;
@@ -45,6 +46,26 @@
       font-size: 14px;
       color: #777;
       text-align: center;
+    }
+
+    /* Responsywność */
+    @media (max-width: 600px) {
+      body {
+        padding: 1rem;
+      }
+      p {
+        font-size: 20px;
+      }
+      .header {
+        font-size: 28px;
+      }
+      a.confirm-button {
+        font-size: 20px;
+        padding: 14px 28px;
+      }
+      footer {
+        font-size: 16px;
+      }
     }
   </style>
 </head>
