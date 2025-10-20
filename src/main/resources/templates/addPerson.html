@@ -15,7 +15,7 @@
     <label for="defaultTag">Default Tag:</label>
     <select id="defaultTag" name="defaultTag">
         {#for tag in tags}
-        <option value="{tag.name}" {#if person.defaultTag && person.defaultTag.name == tag.name}selected{/if}>{tag.name}</option>
+        <option id="tag-option-{tag.name}" value="{tag.name}" {#if person.defaultTag && person.defaultTag.name == tag.name}selected{/if}>{tag.name}</option>
         {/for}
     </select><br><br>
 

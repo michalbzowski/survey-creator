@@ -219,4 +219,15 @@ public class RegisteredUser {
 
         driver.assertStats(selectedMembersCount, sentEmailsCount, answersCount, notAnsweredCount, yesCount, noCount, laterCount);
     }
+
+    public void assertPersonHasFields(String... args) {
+        Params params = new Params(args);
+        String firstName = params.Optional("firstName", "Default");
+        String lastName = params.Optional("lastName", "Default");
+        String email = params.Optional("email", "d@d.pl");
+
+        String defaultTag = params.Optional("defaultTag", null);
+
+        driver.assertPersonHasFields(firstName, lastName, email, defaultTag);
+    }
 }

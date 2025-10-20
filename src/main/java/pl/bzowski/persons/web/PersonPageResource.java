@@ -137,25 +137,16 @@ public class PersonPageResource {
         Uni<Person> personUni = Person.findById(id);
         Uni<List<Tag>> tagsUni = tagsRepository.listAll();
         Uni<List<Group>> groupsUni = groupsRepository.listAll();
+        return personUni
+                .flatMap(person -> tagsUni
+                        .flatMap(tags -> groupsUni
+                                .flatMap(groups -> Uni.createFrom().item(addPerson
+                                        .data("person", person)
+                                        .data("tags", tags)
+                                        .data("groups", groups)
+                                        .data("edit", true))
 
-        return Uni.combine().all().unis(personUni, tagsUni, groupsUni)
-                .asTuple()
-                .map(tuple -> {
-                    Person person = tuple.getItem1();
-                    List<Tag> tags = tuple.getItem2();
-                    List<Group> groups = tuple.getItem3();
-
-                    if (person == null) {
-                        throw new WebApplicationException("Person not found", 404);
-                    }
-
-                    return addPerson
-                            .data("person", person)
-                            .data("tags", tags)
-                            .data("groups", groups)
-                            .data("edit", true);
-                });
-
+                                )));
     }
 
 

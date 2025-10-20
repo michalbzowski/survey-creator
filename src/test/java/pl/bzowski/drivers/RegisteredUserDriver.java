@@ -148,7 +148,8 @@ public class RegisteredUserDriver implements Driver {
         clickAndSendKeys("lastName", lastName);
         clickAndSendKeys("email", email);
         if (defaultTag != null) {
-            //TODO
+            driver.findElement(By.id("defaultTag")).click();
+            driver.findElement(By.id("tag-option-" + defaultTag)).click();
         }
         if (groups != null) {
             //TODO
@@ -394,6 +395,17 @@ public class RegisteredUserDriver implements Driver {
             return webElement.getText();
         });
         assertThat(laterCountText).isEqualTo("Odpowiem później: " + laterCount);
+    }
+
+    @Override
+    public void assertPersonHasFields(String firstName, String lastName, String email, String defaultTag) {
+        lookAtList("persons");
+        lookAtDetails("persons", lastName);
+        assertThat(driver.findElement(By.id("firstName")).getAttribute("value")).isEqualTo(firstName);
+        assertThat(driver.findElement(By.id("lastName")).getAttribute("value")).isEqualTo(lastName);
+        assertThat(driver.findElement(By.id("email")).getAttribute("value")).isEqualTo(email);
+        assertThat(driver.findElement(By.id("defaultTag")).getAttribute("value")).isEqualTo(defaultTag);
+
     }
 
     @Override

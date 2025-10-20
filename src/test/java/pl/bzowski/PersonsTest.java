@@ -7,6 +7,16 @@ import org.junit.jupiter.api.Test;
 public class PersonsTest extends MyTestsBase {
 
     @Test
+    public void shouldAddAPerson() {
+        registeredUser.lookAtList("persons");
+        registeredUser.askToCreateNew();
+        registeredUser.fillNewPersonDetails("firstName: Kontrybutor", "lastName: Kowalski", "email: kontrybutor.kowalski@gmail.com");
+        registeredUser.confirmNewPerson();
+
+        registeredUser.assertNewPersonCreated("firstName: Kontrybutor");
+    }
+
+    @Test
     public void shouldAddAPersonWithAConductorTag() {
         registeredUser.lookAtList("tags");
         registeredUser.askToCreateNew();
@@ -15,10 +25,12 @@ public class PersonsTest extends MyTestsBase {
 
         registeredUser.lookAtList("persons");
         registeredUser.askToCreateNew();
-        registeredUser.fillNewPersonDetails("firstName: Kontrybutor", "lastName: Kowalski", "email: kontrybutor.kowalski@gmail.com");
+        registeredUser.fillNewPersonDetails("firstName: Kontrybutor2", "lastName: Kowalski2", "email: kontrybutor2.kowalski2@gmail.com", "defaultTag: Conductor");
         registeredUser.confirmNewPerson();
 
-        registeredUser.assertNewPersonCreated("firstName: Kontrybutor");
+        registeredUser.assertNewPersonCreated("firstName: Kontrybutor2");
+        registeredUser.assertPersonHasFields("firstName: Kontrybutor2", "lastName: Kowalski2", "email: kontrybutor2.kowalski2@gmail.com", "defaultTag: Conductor");
     }
+
 
 }
