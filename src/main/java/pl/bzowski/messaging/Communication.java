@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "communications")
-public class Communication  extends PanacheEntityBase {
+public class Communication extends PanacheEntityBase {
 
     @Id
     @GeneratedValue
@@ -25,6 +25,9 @@ public class Communication  extends PanacheEntityBase {
 
     @Column(nullable = false)
     private UUID personId;
+
+    @Column(nullable = false)
+    private UUID currentUserId;
 
     @Column(nullable = false)
     private String personFirstName;
@@ -45,7 +48,7 @@ public class Communication  extends PanacheEntityBase {
     public Communication() {
     }
 
-    public Communication(Channel channel, CommunicationTemplate communicationTemplate, UUID personId, String personFirstName, String personLastName, String personEmail, SendingStatus status, Map<String, Object> properties) {
+    public Communication(Channel channel, CommunicationTemplate communicationTemplate, UUID personId, String personFirstName, String personLastName, String personEmail, SendingStatus status, UUID currentUserId, Map<String, Object> properties) {
         this.id = null;
         this.channel = channel;
         this.communicationTemplate = communicationTemplate;
@@ -54,10 +57,11 @@ public class Communication  extends PanacheEntityBase {
         this.personLastName = personLastName;
         this.personEmail = personEmail;
         this.status = status;
+        this.currentUserId = currentUserId;
         this.properties = properties;
     }
 
-    public Communication(UUID id, Channel channel, CommunicationTemplate communicationTemplate, UUID personId, String personFirstName, String personLastName, String personEmail, SendingStatus status, Map<String, Object> properties) {
+    public Communication(UUID id, Channel channel, CommunicationTemplate communicationTemplate, UUID personId, String personFirstName, String personLastName, String personEmail, SendingStatus status, UUID currentUserId, Map<String, Object> properties) {
         this.id = id;
         this.channel = channel;
         this.communicationTemplate = communicationTemplate;
@@ -103,5 +107,9 @@ public class Communication  extends PanacheEntityBase {
 
     public SendingStatus getStatus() {
         return this.status;
+    }
+
+    public UUID getCurrentUserId() {
+        return currentUserId;
     }
 }

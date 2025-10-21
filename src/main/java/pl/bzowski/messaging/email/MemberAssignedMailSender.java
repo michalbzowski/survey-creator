@@ -39,8 +39,7 @@ public class MemberAssignedMailSender implements CommunicationSender {
                 .data("personEmail", communication.getProperty("personEmail"))
                 .render();
 
-        return emailService.sendEmail(communication.getPersonEmail(), "Czy będziesz obecny?", render)
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+        return emailService.sendEmail(communication.getPersonEmail(), "Czy będziesz obecny?", render, "Twój dyrygent")
                 .flatMap(_ -> {
                     logger.info("Confirmation mail sent");
                     communication.statusSent();

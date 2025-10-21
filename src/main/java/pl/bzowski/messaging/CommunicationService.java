@@ -32,6 +32,7 @@ public class CommunicationService {
                 body.getPersonLastName(),
                 body.getPersonEmail(),
                 body.getStatus(),
+                body.getCurrentUserId(),
                 body.getProperties()
         );
         return communicationRepository.persist(communication)
@@ -42,11 +43,10 @@ public class CommunicationService {
     @WithTransaction
     public Uni<Void> send(UUID id) {
         return Communication.<Communication>findById(id)
-                .flatMap(communication -> {
-                    logger.info("Success");
-                    CommunicationSender communicationSender = communicationSenderFactory.create(communication.getCommunicationTemplate());
-                    // Tutaj zwracamy Uni przesłane z wywołania send, łącząc je z łańcuchem
-                    return communicationSender.send(communication);
-                });
+                .flatMap(communication ->
+                        communicationSenderFactory.create(communication
+                                        .getCommunicationTemplate())
+                                .send(communication)
+                );
     }
 }

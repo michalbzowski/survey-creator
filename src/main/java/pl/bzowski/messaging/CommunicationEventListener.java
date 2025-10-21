@@ -43,8 +43,9 @@ public class CommunicationEventListener {
     public void sendMyMessage(Message<UUID> msg) {
         logger.info("Send communication started: " + msg.body());
         communicationService.send(msg.body())
-                .subscribe().with(
-                        item -> logger.info("Send completed"),
+                .subscribe()
+                .with(
+                        _ -> logger.info("Send completed"),
                         failure -> logger.log(Level.ERROR, "Send failed", failure)
                 );
     }

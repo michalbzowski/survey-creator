@@ -11,9 +11,11 @@ import pl.bzowski.messaging.messenger.MessengerUserAgreement;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
+import static pl.bzowski.configurations.Configurations.EMAIL_FROM;
 import static pl.bzowski.configurations.Configurations.MESSENGER;
 
 @Singleton
@@ -23,13 +25,19 @@ public class ConfigurationsRepository extends RepositoryBase {
 
     MessengerService messengerService;
 
+    @WithTransaction
     public Uni<Map<String, Object>> getConfigurations() {
         return currentRegisteredUserId()
                 .onItem()
-                .transform(uuid -> Configurations.find("registeredUserId = ?1", uuid))
-                .onItem()
-                .transform(value -> ((Configurations) value).configuration)
-                .onFailure().recoverWithItem(Map.of());
+                .transformToUni(uuid -> Configurations.<Configurations>find("registeredUserId = ?1", uuid)
+                        .firstResult()
+                        .flatMap(value -> {
+                            if (value != null) {
+                                return Uni.createFrom().item(value.configuration);
+                            } else {
+                                return Uni.createFrom().item(Map.of());
+                            }
+                        }));
     }
 
     @WithTransaction
@@ -43,13 +51,16 @@ public class ConfigurationsRepository extends RepositoryBase {
                                         config.configuration.put(jsonKey, jsonValue);
                                         return config.persistAndFlush().replaceWithVoid();
                                     } else {
-                                        Configurations newConfig = new Configurations();
-                                        newConfig.registeredUserId = registeredUserId;
-                                        newConfig.configuration = Map.of(jsonKey, jsonValue);
-                                        return newConfig.persistAndFlush().replaceWithVoid();
+                                        return piesek(registeredUserId, jsonKey, jsonValue);
                                     }
-                                })
-                );
+                                }));
+    }
+
+    private Uni<Void> piesek(UUID registeredUserId, String jsonKey, Object jsonValue) {
+        Configurations newConfig = new Configurations();
+        newConfig.registeredUserId = registeredUserId;
+        newConfig.configuration = Map.of(jsonKey, jsonValue);
+        return newConfig.persistAndFlush().replaceWithVoid();
     }
 
 
@@ -100,5 +111,10 @@ public class ConfigurationsRepository extends RepositoryBase {
         boolean b = configurations.configuration.containsKey(MESSENGER);
         logger.info("isMessenger: " + b);
         return b;
+    }
+
+    @WithTransaction
+    public Uni<Map<String, Object>> getConfigurationsForUser(UUID currentUserId) {
+        return Uni.createFrom().item(Map.of(EMAIL_FROM, "Twój KOT!"));
     }
 }

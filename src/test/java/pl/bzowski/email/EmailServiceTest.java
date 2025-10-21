@@ -33,7 +33,7 @@ public class EmailServiceTest {
         String subject = "Test subject";
         String body = "Test email body";
 
-        emailService.sendEmail(RECIPIENT, subject, body);
+        emailService.sendEmail(RECIPIENT, subject, body, "Twój dyrygent");
 
         // Sprawdzenie, czy wiadomość została wysłana
         assertThat(mailbox.getTotalMessagesSent()).isEqualTo(1);

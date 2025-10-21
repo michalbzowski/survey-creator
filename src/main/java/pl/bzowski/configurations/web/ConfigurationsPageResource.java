@@ -1,5 +1,6 @@
 package pl.bzowski.configurations.web;
 
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Uni;
@@ -19,9 +20,10 @@ public class ConfigurationsPageResource {
     }
 
     @GET
+    @WithTransaction
     public Uni<TemplateInstance> getConfigurations() {
         return configurationsRepository
                 .getConfigurations()
-                .flatMap(c -> (Uni<? extends TemplateInstance>) this.configurations.data("configurations", c));
+                .flatMap(c -> Uni.createFrom().item(this.configurations.data("configurations", c)));
     }
 }
