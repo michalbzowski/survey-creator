@@ -258,7 +258,7 @@ public class RegisteredUserDriver implements Driver {
 
     @Override
     public void assertNewEventCreated(String eventName) {
-        WebElement element = driver.findElement(By.cssSelector("td[data-events-name=\"" + eventName + "\"]"));
+        WebElement element = driver.findElement(By.cssSelector("header[data-events-name=\"" + eventName + "\"]"));
         String text = element.getText();
         assertThat(text).isEqualTo(eventName);
     }
@@ -271,7 +271,12 @@ public class RegisteredUserDriver implements Driver {
 
     @Override
     public void lookAtDetails(String listName, String rowName) {
-        WebElement element = driver.findElement(By.cssSelector("td[data-" + listName + "-name=\"" + rowName + "\"]"));
+        WebElement element;
+        try {
+            element = driver.findElement(By.cssSelector("td[data-" + listName + "-name=\"" + rowName + "\"]"));
+        } catch (NoSuchElementException ex) {
+            element = driver.findElement(By.cssSelector("header[data-" + listName + "-name=\"" + rowName + "\"]"));
+        }
         WebElement parent = element.findElement(By.xpath("./.."));
         WebElement link = parent.findElement(By.cssSelector("a." + listName + "-details"));
         String href = link.getDomProperty("href");
