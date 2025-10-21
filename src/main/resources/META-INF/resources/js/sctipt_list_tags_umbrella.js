@@ -18,6 +18,9 @@ u(document).on('click', 'a.delete-tag', async function(event) {
 
         if (response.ok) {
             window.location.reload();
+        } else if (response.status == 409) {
+            const data = await response.json();
+            alert('Tag jest użyty przez osoby o email: ' + data);
         } else {
             alert('Błąd przy usuwaniu tagu');
         }

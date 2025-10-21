@@ -135,11 +135,11 @@ public class RegisteredUser {
         driver.assertTagNotExists(name);
     }
 
-    public void assertNewTagCreated(String... args) {
+    public void assertTagExists(String... args) {
         Params params = new Params(args);
         String name = params.Optional("name", "Dyrygent");
 
-        driver.assertNewTagCreated(name);
+        driver.assertTagExists(name);
     }
 
     public void assertIsChecked(String... checkboxes) {

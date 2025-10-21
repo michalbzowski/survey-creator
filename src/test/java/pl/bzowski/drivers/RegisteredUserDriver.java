@@ -84,7 +84,7 @@ public class RegisteredUserDriver implements Driver {
     }
 
     @Override
-    public void assertNewTagCreated(String name) {
+    public void assertTagExists(String name) {
         WebElement element = driver.findElement(By.id(name));
         String text = element.getText();
         assertThat(text).isEqualTo(name);
@@ -114,6 +114,11 @@ public class RegisteredUserDriver implements Driver {
 
     @Override
     public void assertTagNotExists(String name) {
+        new WebDriverWait(driver, Duration.ofSeconds(10))
+                .until(webDriver -> {
+                    log.info("assertTagNotExists - wait");
+                    return driver.findElements(By.id(name)).isEmpty();
+                });
         List<WebElement> elements = driver.findElements(By.id(name));
         assertThat(elements).isEmpty();
     }

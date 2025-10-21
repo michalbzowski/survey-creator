@@ -7,7 +7,7 @@ public interface Driver {
 
     void submitNewTag();
 
-    void assertNewTagCreated(String name);
+    void assertTagExists(String name);
 
     void askToCreateNew();
 

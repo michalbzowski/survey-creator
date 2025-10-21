@@ -42,13 +42,4 @@ public class PersonResource {
                 .onItem()
                 .transform(v -> Response.status(Response.Status.CREATED).entity(person).build());
     }
-
-
-    @DELETE
-    @Path("/{id}")
-    @WithTransaction
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Uni<Response> deletePerson(@PathParam("id") UUID id, @FormParam("_method") String method) {
-        return ReactiveDelete.reactiveDelete(id, method, Person::findById, "/web/persons");
-    }
 }

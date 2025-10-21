@@ -12,7 +12,7 @@ public class TagsTest extends MyTestsBase {
         registeredUser.askToCreateNew();
         registeredUser.fillNewTagDetails("name: Conductor");
         registeredUser.confirmNewTag();
-        registeredUser.assertNewTagCreated("name: Conductor");
+        registeredUser.assertTagExists("name: Conductor");
     }
 
     @Test
@@ -21,17 +21,25 @@ public class TagsTest extends MyTestsBase {
         registeredUser.askToCreateNew();
         registeredUser.fillNewTagDetails("name: Witcher");
         registeredUser.confirmNewTag();
-        registeredUser.assertNewTagCreated("name: Witcher");
+        registeredUser.assertTagExists("name: Witcher");
     }
 
     @Test
     public void shouldAddCheckRemoveCheckWizardTag() {
         registeredUser.lookAtList("tags");
         registeredUser.askToCreateNew();
-        registeredUser.fillNewTagDetails("name: Wizard");
+        registeredUser.fillNewTagDetails("name: Pierdzisław");
         registeredUser.confirmNewTag();
-        registeredUser.assertNewTagCreated("name: Wizard");
-        registeredUser.deleteTag("name: Wizard");
-        registeredUser.assertTagNotExists("name: Wizard");
+        registeredUser.assertTagExists("name: Pierdzisław");
+        registeredUser.deleteTag("name: Pierdzisław");
+        registeredUser.assertTagNotExists("name: Pierdzisław");
+    }
+
+    @Test
+    public void shouldNotRemoveUsedTag() {
+        registeredUser.lookAtList("tags");
+        registeredUser.assertTagExists("name: Dyrygent");
+        registeredUser.deleteTag("name: Dyrygent");
+        registeredUser.assertTagExists("name: Dyrygent");
     }
 }

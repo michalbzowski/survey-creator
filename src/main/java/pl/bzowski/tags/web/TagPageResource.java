@@ -7,8 +7,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import pl.bzowski.shared.base.ReactiveDelete;
-import pl.bzowski.persons.Person;
+import jakarta.ws.rs.core.UriBuilder;
 import pl.bzowski.tags.TagsRepository;
 
 import java.util.UUID;
@@ -43,7 +42,22 @@ public class TagPageResource {
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @WithTransaction
-    public Uni<Response> deletePerson(@PathParam("id") UUID id, @FormParam("_method") String method) {
-        return ReactiveDelete.reactiveDelete(id, method, Person::findById, "/web/tags");
+    public Uni<Response> deleteTag(@PathParam("id") UUID id, @FormParam("_method") String method) {
+        if (!"delete".equalsIgnoreCase(method)) {
+            return Uni.createFrom().item(Response.seeOther(UriBuilder.fromPath("/web/tags").build()).build());
+        } else {
+            return tagsRepository.deleteTag(id)
+                    .flatMap(conflictingPersons -> {
+                        if (conflictingPersons.isEmpty()) {
+                            return Uni.createFrom().item(Response.ok().build());
+                        } else {
+                            return Uni.createFrom().item(
+                                    Response.status(Response.Status.CONFLICT)
+                                            .entity(conflictingPersons)
+                                            .build()
+                            );
+                        }
+                    });
+        }
     }
 }
