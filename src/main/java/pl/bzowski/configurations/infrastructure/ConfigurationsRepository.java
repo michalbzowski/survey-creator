@@ -119,7 +119,7 @@ public class ConfigurationsRepository extends RepositoryBase {
                 .firstResult()
                 .flatMap(c -> {
                     if (c != null) {
-                        return (Uni<? extends Map<String, Object>>) c.configuration;
+                        return Uni.createFrom().item(c.configuration);
                     } else {
                         return Uni.createFrom().item(Map.of());
                     }

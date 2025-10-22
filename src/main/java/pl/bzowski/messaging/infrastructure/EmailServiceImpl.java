@@ -22,7 +22,7 @@ public class EmailServiceImpl implements EmailService {
     public Uni<Void> sendEmail(String to, String subject, String body, String emailFrom) {
         Mail mail = Mail.withHtml(to, subject, body);
         if (emailFrom != null && !emailFrom.isEmpty()) {
-            mail.setFrom(String.format("\"%s\" <%s>", emailFrom, username));
+            mail.setFrom(String.format("%s <%s>", emailFrom, username));
         } else {
             mail.setFrom(username);
         }
