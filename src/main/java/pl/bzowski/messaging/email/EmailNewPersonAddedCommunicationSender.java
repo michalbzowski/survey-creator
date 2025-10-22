@@ -38,7 +38,7 @@ public class EmailNewPersonAddedCommunicationSender implements CommunicationSend
                 .data("confirmationLink", communication.getProperty("confirmationLink"))
                 .render();
         return configurationsRepository
-                .getConfigurationsForUser(communication.getCurrentUserId())
+                .getConfigurationsForUser(communication.getRegisteredUserId())
                 .onItem()
                 .transform(configuration -> {
                     String emailFrom = (String) configuration.get(EMAIL_FROM);

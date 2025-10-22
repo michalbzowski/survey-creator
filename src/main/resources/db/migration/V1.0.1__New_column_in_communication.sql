@@ -1,0 +1,1 @@
+alter table communications add registered_user_id uuid not null;

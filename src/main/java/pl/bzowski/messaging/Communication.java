@@ -1,7 +1,6 @@
 package pl.bzowski.messaging;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-import io.smallrye.mutiny.Uni;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -26,8 +25,8 @@ public class Communication extends PanacheEntityBase {
     @Column(nullable = false)
     private UUID personId;
 
-    @Column(nullable = false)
-    private UUID currentUserId;
+    @Column(nullable = false, name = "registered_user_id")
+    public UUID registeredUserId;
 
     @Column(nullable = false)
     private String personFirstName;
@@ -48,7 +47,7 @@ public class Communication extends PanacheEntityBase {
     public Communication() {
     }
 
-    public Communication(Channel channel, CommunicationTemplate communicationTemplate, UUID personId, String personFirstName, String personLastName, String personEmail, SendingStatus status, UUID currentUserId, Map<String, Object> properties) {
+    public Communication(Channel channel, CommunicationTemplate communicationTemplate, UUID personId, String personFirstName, String personLastName, String personEmail, SendingStatus status, UUID registeredUserId, Map<String, Object> properties) {
         this.id = null;
         this.channel = channel;
         this.communicationTemplate = communicationTemplate;
@@ -57,7 +56,7 @@ public class Communication extends PanacheEntityBase {
         this.personLastName = personLastName;
         this.personEmail = personEmail;
         this.status = status;
-        this.currentUserId = currentUserId;
+        this.registeredUserId = registeredUserId;
         this.properties = properties;
     }
 
@@ -109,7 +108,7 @@ public class Communication extends PanacheEntityBase {
         return this.status;
     }
 
-    public UUID getCurrentUserId() {
-        return currentUserId;
+    public UUID getRegisteredUserId() {
+        return registeredUserId;
     }
 }
