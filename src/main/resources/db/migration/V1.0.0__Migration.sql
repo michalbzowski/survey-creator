@@ -93,6 +93,7 @@
 ;--[Hibernate]
     create table communications (
         id uuid not null,
+        registered_user_id uuid not null,
         personId uuid not null,
         channel varchar(255) check (channel in ('EMAIL','MESSENGER','WHATS_UP','SMS')),
         communicationTemplate varchar(255) check (communicationTemplate in ('EMAIL_NEW_PERSON_ADDED','TEAM_RECORD_LINK')),
