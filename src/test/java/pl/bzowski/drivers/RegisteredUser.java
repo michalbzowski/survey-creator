@@ -230,4 +230,11 @@ public class RegisteredUser {
 
         driver.assertPersonHasFields(firstName, lastName, email, defaultTag);
     }
+
+    public void assertPersonNotExists(String... args) {
+        Params params = new Params(args);
+        String firstName = params.Optional("firstName", null);
+
+        driver.assertPersonNotExists(firstName);
+    }
 }

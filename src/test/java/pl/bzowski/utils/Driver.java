@@ -60,4 +60,6 @@ public interface Driver {
     void assertStats(String selectedMembersCount, String sentEmailsCount, String answersCount, String notAnsweredCount, String yesCount, String noCount, String laterCount);
 
     void assertPersonHasFields(String firstName, String lastName, String email, String defaultTag);
+
+    void assertPersonNotExists(String email);
 }

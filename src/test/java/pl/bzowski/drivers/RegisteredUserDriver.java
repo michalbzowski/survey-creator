@@ -17,8 +17,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Singleton
 public class RegisteredUserDriver implements Driver {
@@ -155,6 +155,14 @@ public class RegisteredUserDriver implements Driver {
         if (defaultTag != null) {
             driver.findElement(By.id("defaultTag")).click();
             driver.findElement(By.id("tag-option-" + defaultTag)).click();
+        } else {
+            List<WebElement> options = driver.findElements(By.cssSelector("option[id^='tag-option-']"));
+            // użyj JavascriptExecutor do usunięcia ich z DOM
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+
+            for (WebElement option : options) {
+                js.executeScript("arguments[0].remove();", option);
+            }
         }
         if (groups != null) {
             //TODO
@@ -416,6 +424,12 @@ public class RegisteredUserDriver implements Driver {
         assertThat(driver.findElement(By.id("email")).getAttribute("value")).isEqualTo(email);
         assertThat(driver.findElement(By.id("defaultTag")).getAttribute("value")).isEqualTo(defaultTag);
 
+    }
+
+    @Override
+    public void assertPersonNotExists(String firstName) {
+        assertThatThrownBy(() -> driver.findElement(By.cssSelector("td[data-fist-name=\"" + firstName + "\"]")))
+                .isInstanceOf(org.openqa.selenium.NoSuchElementException.class);
     }
 
     @Override

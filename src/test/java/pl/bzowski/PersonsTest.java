@@ -8,10 +8,20 @@ import org.junit.jupiter.api.Test;
 public class PersonsTest extends MyTestsBase {
 
     @Test
+    public void shouldNotAddAPersonWithoutATag() {
+        registeredUser.lookAtList("persons");
+        registeredUser.askToCreateNew();
+        registeredUser.fillNewPersonDetails("firstName: KontrybutorXXX", "lastName: KowalskiXXX", "email: kontrybutorXXX.kowalskiXXX@gmail.com");
+        registeredUser.confirmNewPerson();
+        registeredUser.lookAtList("persons");
+        registeredUser.assertPersonNotExists("firstName: KontrybutorXXX");
+    }
+
+    @Test
     public void shouldAddAPerson() {
         registeredUser.lookAtList("persons");
         registeredUser.askToCreateNew();
-        registeredUser.fillNewPersonDetails("firstName: Kontrybutor", "lastName: Kowalski", "email: kontrybutor.kowalski@gmail.com");
+        registeredUser.fillNewPersonDetails("firstName: Kontrybutor", "lastName: Kowalski", "email: kontrybutor.kowalski@gmail.com", "defaultTag: Puzon");
         registeredUser.confirmNewPerson();
 
         registeredUser.assertNewPersonCreated("firstName: Kontrybutor");
@@ -64,7 +74,6 @@ public class PersonsTest extends MyTestsBase {
     public void shouldEditGroups() {
 
     }
-
 
 
 }

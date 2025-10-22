@@ -27,7 +27,7 @@ public class Person extends PanacheEntityBase {
     @Column(nullable = false)
     public String email; //todo: Opracuj sposób na przypadki, gdy osoby są niepełnoletnie i maila wysyłasz zarówno do nich jak i do rodzicó
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "tag_id")
     public Tag defaultTag;
 

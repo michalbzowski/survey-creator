@@ -13,7 +13,7 @@
     <input type="email" id="email" name="email" value="{person.email}" required><br><br>
 
     <label for="defaultTag">Default Tag:</label>
-    <select id="defaultTag" name="defaultTag">
+    <select id="defaultTag" name="defaultTag" required>
         {#for tag in tags}
         <option id="tag-option-{tag.name}" value="{tag.name}" {#if person.defaultTag && person.defaultTag.name == tag.name}selected{/if}>{tag.name}</option>
         {/for}
