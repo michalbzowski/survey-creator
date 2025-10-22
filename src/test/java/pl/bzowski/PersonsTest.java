@@ -75,5 +75,16 @@ public class PersonsTest extends MyTestsBase {
 
     }
 
+    @Test
+    @Disabled
+    public void shouldAddNewPersonSendEmailWithoutFromEmailConfiguration() {
+
+    }
+
+    @Test
+    @Disabled
+    public void shouldAddNewPersonSendEmailWithFromEmailConfiguration() {
+
+    }
 
 }

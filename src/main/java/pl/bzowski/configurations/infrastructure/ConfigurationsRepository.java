@@ -114,7 +114,15 @@ public class ConfigurationsRepository extends RepositoryBase {
     }
 
     @WithTransaction
-    public Uni<Map<String, Object>> getConfigurationsForUser(UUID currentUserId) {
-        return Uni.createFrom().item(Map.of(EMAIL_FROM, "Twój KOT!"));
+    public Uni<Map<String, Object>> getConfigurationsForUser(UUID registeredUserId) {
+        return Configurations.<Configurations>find("registeredUserId = ?1", registeredUserId)
+                .firstResult()
+                .flatMap(c -> {
+                    if (c != null) {
+                        return (Uni<? extends Map<String, Object>>) c.configuration;
+                    } else {
+                        return Uni.createFrom().item(Map.of());
+                    }
+                });
     }
 }
