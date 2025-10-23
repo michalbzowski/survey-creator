@@ -131,7 +131,7 @@ public class PersonPageResource {
         } else {
             return personService.deletePerson(id)
                     .onItem()
-                    .transform(t -> Response.seeOther(UriBuilder.fromPath("/web/persons").build()).build());
+                    .transform(t -> Response.ok().build());
         }
     }
 

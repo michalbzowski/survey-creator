@@ -177,5 +177,18 @@ public class EventsTest extends MyTestsBase {
 
     }
 
+    @Test
+    @Disabled
+    public void shouldNotSendEmailWithQuestionToPersonWhoDidNotAgree() {
+
+    }
+
+
+    @Test
+    @Disabled
+    public void shouldSendEmailWithQuestionToPersonWhoAgreed() {
+
+    }
+
 
 }
