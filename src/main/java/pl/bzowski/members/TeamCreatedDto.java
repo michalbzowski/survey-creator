@@ -1,6 +1,5 @@
 package pl.bzowski.members;
 
-import pl.bzowski.events.web.EventDto;
 
 import java.util.List;
 import java.util.UUID;
@@ -8,7 +7,7 @@ import java.util.UUID;
 
 public class TeamCreatedDto {
 
-    public static final String EVENT_WITH_TEAM_CREATED = "GENERATE-LINKS-EVENT";
+    public static final String EVENT_CREATED = "EVENT_CREATED";
 
     private final String withTeam;
     private final String teamType;

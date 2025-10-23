@@ -1,27 +1,34 @@
-const CACHE_NAME = 'app-cache-v1';
+// service-worker.js
+const CACHE_NAME = 'my-pwa-v1';
 const URLS_TO_CACHE = [
-  '/css/style.css',
+  '/',
   '/css/pico.min.css',
-  '/js/umbrellajs.js',
-  // … inne statyczne pliki, które chcesz cache'ować
+  '/css/style.css',
+  '/js/app.js'
 ];
 
+// Instalacja SW — cachowanie plików początkowych
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(URLS_TO_CACHE))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(URLS_TO_CACHE))
   );
+  self.skipWaiting();
 });
 
+// Aktywacja SW — czyszczenie starych cache
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+// Pobieranie — obsługa cache fallback
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => response || fetch(event.request))
   );
-
- self.addEventListener('message', (event) => {
-     if (event.data === 'SKIP_WAITING') {
-         self.skipWaiting();
-     }
- });
 });

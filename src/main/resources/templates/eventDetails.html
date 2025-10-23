@@ -2,21 +2,22 @@
 {#title}{event.name}{/title}
 {#body}
 <details name="event-details">
-    <summary>Szczegóły</summary>
+    <summary>Zobacz szczegóły wydarzenia</summary>
     <p><strong>Gdzie:</strong> {event.location}</p>
     <p><strong>Kiedy:</strong> {event.formatedLocalDateTime}</p>
     <p>{event.description}</p>
 </details>
 <hr/>
 {#if noTeamYet}
-<form action="/web/events/members" method="post">
+
+<form x-data="saveHandler()" @submit.prevent>
     {#if team != null}
     <input type="text" name="teamId" hidden="hidden" value="{event.team.id}">
     {/if}
     <input type="text" name="eventId" hidden="hidden" value="{event.id}">
     {#include forms/createTeamForm.html}
     {/include}
-    <button type="submit" id="submit">Zapisz</button>
+    <button type="button" id="submit" @click="save()">Zapisz</button>
 </form>
 {#else if linkCount == 0}
 <form action="/api/v1/links/{eventTeamId}" method="get" style="display:inline;">
@@ -25,15 +26,15 @@
 </form>
 {#else}
 <details name="event-details">
-    <summary id="summary-tab">Statystyki</summary>
+    <summary id="summary-tab">Statystyki wysłanych wiadomości</summary>
     <ul>
-        <li id="selectedMembersCount">Wybrane osoby: {linkCount}</li>
-        <li id="sentEmailsCount">Wysłane: {sentLinkCount}</li>
-        <li id="answersCount">Odpowiedzi: {answerSum}</li>
-        <li id="notAnsweredCount">Bez odpowiedzi: {unansweredCount}</li>
-        <li id="yesCount">Tak: {answerYesCount}</li>
-        <li id="noCount">Nie: {answerNoCount}</li>
-        <li id="laterCount">Odpowiem później: {answerLaterCount}</li>
+        <li id="selectedMembersCount">Liczba osób w zespole: {linkCount}</li>
+        <li id="sentEmailsCount">Liczba wysłanych wiadomości: {sentLinkCount}</li>
+        <li id="answersCount">Liczba wiadomości z odpowiedzią: {answerSum}</li>
+        <li id="notAnsweredCount">Liczba wiadomości bez odpowiedzi: {unansweredCount}</li>
+        <li id="yesCount">Liczba odpowiedzi 'Tak': {answerYesCount}</li>
+        <li id="noCount">Liczba odpowiedzi 'Nie': {answerNoCount}</li>
+        <li id="laterCount">Liczba odpowiedzi 'Odpowiem później': {answerLaterCount}</li>
     </ul>
 </details>
 <hr/>
@@ -42,7 +43,7 @@
 <!--Blank-->
 {#else}
 <details name="event-details">
-    <summary>Odpowiedzi</summary>
+    <summary>Odpowiedzi od zespołu</summary>
     <table>
         <thead>
         <tr>
@@ -68,7 +69,7 @@
 <hr/>
 {#if linkCount != 0}
 <details>
-    <summary>Zespół</summary>
+    <summary>Osoby w zespole</summary>
 
     <table>
         <thead>

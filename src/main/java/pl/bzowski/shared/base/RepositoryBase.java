@@ -36,20 +36,18 @@ public class RepositoryBase {
     }
 
     public Uni<UUID> currentRegisteredUserId() {
-        return Uni.createFrom().item(() -> {
-            String sub = jwt.getClaim("sub").toString();
-            logger.info("sub: " + sub);
-            return UUID.fromString(sub);
-        });
+        return Uni.createFrom().item(this::getRegisteredUserId);
+    }
+
+    public UUID getRegisteredUserId() {
+        String sub = jwt.getClaim("sub").toString();
+        logger.info("sub: " + sub);
+        return UUID.fromString(sub);
     }
 
 
     public CompletionStage<UUID> completionCurrentRegisteredUserId() {
-        CompletableFuture<UUID> future = CompletableFuture.supplyAsync(() -> {
-            String sub = jwt.getClaim("sub").toString();
-            logger.info("sub: " + sub);
-            return UUID.fromString(sub);
-        });
+        CompletableFuture<UUID> future = CompletableFuture.supplyAsync(this::getRegisteredUserId);
         return threadContext.withContextCapture(future)
                 .thenApplyAsync(uuid -> uuid, managedExecutor);
     }

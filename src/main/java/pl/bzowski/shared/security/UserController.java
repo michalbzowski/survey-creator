@@ -7,6 +7,9 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import pl.bzowski.shared.base.RepositoryBase;
 
+import java.util.Map;
+import java.util.UUID;
+
 @Path("/sec/")
 @Singleton
 public class UserController extends RepositoryBase {
@@ -17,7 +20,9 @@ public class UserController extends RepositoryBase {
     @GET
     @Path("username")
     public Response getCurrentUserUsername() {
-        return Response.ok(super.currentUsername()).build();
+        String entity = super.currentUsername();
+        UUID registeredUserId = super.getRegisteredUserId();
+        return Response.ok(Map.of("username", entity, "uuid", registeredUserId)).build();
     }
 
     @GET

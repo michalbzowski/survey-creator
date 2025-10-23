@@ -32,7 +32,6 @@ import pl.bzowski.tags.TagsRepository;
 import pl.bzowski.team.web.TeamDetailsContext;
 import pl.bzowski.team.web.TeamPageResource;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -40,7 +39,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-import static pl.bzowski.members.TeamCreatedDto.EVENT_WITH_TEAM_CREATED;
+import static pl.bzowski.members.TeamCreatedDto.EVENT_CREATED;
 
 @Path("/web/events")
 public class EventsPageResource {
@@ -167,7 +166,7 @@ public class EventsPageResource {
                 return teamRepository.currentRegisteredUserId()
                         .onItem()
                         .invoke(registeredUserId -> {
-                            eventBus.publish(EVENT_WITH_TEAM_CREATED,
+                            eventBus.publish(EVENT_CREATED,
                                     new TeamCreatedDto(withTeam, teamType, groupIds, personIds, teamId, registeredUserId));
                         })
                         .onItem()
@@ -183,7 +182,7 @@ public class EventsPageResource {
     private Consumer<TeamDTO> publish(String withTeam, String
             teamType, List<UUID> groupIds, List<UUID> personIds, UUID registeredUserId) {
         return teamDTO -> {
-            eventBus.publish(EVENT_WITH_TEAM_CREATED,
+            eventBus.publish(EVENT_CREATED,
                     new TeamCreatedDto(withTeam, teamType, groupIds, personIds, teamDTO.id, registeredUserId));
         };
     }
