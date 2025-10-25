@@ -370,49 +370,47 @@ public class RegisteredUserDriver implements Driver {
                 .ignoring(StaleElementReferenceException.class)
                 .ignoring(NoSuchElementException.class);
 
-        wait.until(_ -> driver.findElement(By.id("summary-tab"))).click();
-
         var selectedMembersCountText = wait.until(x -> {
             WebElement webElement = driver.findElement(By.id("selectedMembersCount"));
             return webElement.getText();
         });
-        assertThat(selectedMembersCountText).isEqualTo("Wybrane osoby: " + selectedMembersCount);
+        assertThat(selectedMembersCountText).isEqualTo("Liczba osób w zespole: " + selectedMembersCount);
 
         var sentEmailsCountText = wait.until(x -> {
             WebElement webElement = driver.findElement(By.id("sentEmailsCount"));
             return webElement.getText();
         });
-        assertThat(sentEmailsCountText).isEqualTo("Wysłane: " + sentEmailsCount);
+        assertThat(sentEmailsCountText).isEqualTo("Liczba wysłanych wiadomości: " + sentEmailsCount);
 
         var answersCountText = wait.until(x -> {
             WebElement webElement = driver.findElement(By.id("answersCount"));
             return webElement.getText();
         });
-        assertThat(answersCountText).isEqualTo("Odpowiedzi: " + answersCount);
+        assertThat(answersCountText).isEqualTo("Liczba wiadomości z odpowiedzią: " + answersCount);
 
         var notAnsweredCountText = wait.until(x -> {
             WebElement webElement = driver.findElement(By.id("notAnsweredCount"));
             return webElement.getText();
         });
-        assertThat(notAnsweredCountText).isEqualTo("Bez odpowiedzi: " + notAnsweredCount);
+        assertThat(notAnsweredCountText).isEqualTo("Liczba wiadomości bez odpowiedzi: " + notAnsweredCount);
 
         var yesCountText = wait.until(x -> {
             WebElement webElement = driver.findElement(By.id("yesCount"));
             return webElement.getText();
         });
-        assertThat(yesCountText).isEqualTo("Tak: " + yesCount);
+        assertThat(yesCountText).isEqualTo("Liczba odpowiedzi 'Tak': " + yesCount);
 
         var noCountText = wait.until(x -> {
             WebElement webElement = driver.findElement(By.id("noCount"));
             return webElement.getText();
         });
-        assertThat(noCountText).isEqualTo("Nie: " + noCount);
+        assertThat(noCountText).isEqualTo("Liczba odpowiedzi 'Nie': " + noCount);
 
         var laterCountText = wait.until(x -> {
             WebElement webElement = driver.findElement(By.id("laterCount"));
             return webElement.getText();
         });
-        assertThat(laterCountText).isEqualTo("Odpowiem później: " + laterCount);
+        assertThat(laterCountText).isEqualTo("Liczba odpowiedzi 'Odpowiem później': " + laterCount);
     }
 
     @Override
@@ -430,6 +428,14 @@ public class RegisteredUserDriver implements Driver {
     public void assertPersonNotExists(String firstName) {
         assertThatThrownBy(() -> driver.findElement(By.cssSelector("td[data-fist-name=\"" + firstName + "\"]")))
                 .isInstanceOf(org.openqa.selenium.NoSuchElementException.class);
+    }
+
+    @Override
+    public void unwindAccordion(String accordion) {
+        By by = By.id(accordion);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebElement element = wait.until(ExpectedConditions.elementToBeClickable(by));
+        element.click();
     }
 
     @Override

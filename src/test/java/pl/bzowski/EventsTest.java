@@ -144,6 +144,41 @@ public class EventsTest extends MyTestsBase {
         registeredUser.assertMemberAnswered("memberEmail: michal.bzowski@gmail.com");
         registeredUser.lookAtList("events");
         registeredUser.lookAtDetails("events", "rowName: Event6");
+        registeredUser.unwindAccordion("event-message-stats");
+        registeredUser.assertStats("Wybraneosoby: 2",
+                "Wysłane: 1",
+                "Odpowiedzi: 1",
+                "Bezodpowiedzi: 1",
+                "Tak: 1",
+                "Nie: 0",
+                "Odpowiempóźniej: 0");
+    }
+
+    @Test
+    public void shouldEventStatsBeCorrectAtEventStatsAccordionOnEventPage() {
+        registeredUser.lookAtList("events");
+        registeredUser.askToCreateNew();
+        registeredUser.fillEventFormFields("name: Event7",
+                "location: Location 2/3",
+                "datetimeInput: 2025-10-08T12:00",
+                "description: Longer description for description purpose",
+                "checkboxCount: 1",
+                "checkboxId1: withTeam",
+                "checkboxValue1: True",
+                "clickRadioId: choosePersons");
+        registeredUser.fillEventFormFields("checkboxCount: 1", "checkboxId1: michal.bzowski@gmail.com", "checkboxValue1: true");
+        registeredUser.fillEventFormFields("checkboxCount: 1", "checkboxId1: 00michal.bzowski@gmail.com", "checkboxValue1: true");
+        registeredUser.confirm("events");
+        registeredUser.unwindAccordion("team-members-details");
+        registeredUser.sendEmailToMember("memberEmail: michal.bzowski@gmail.com");
+        registeredUser.openQuestionToMember("memberEmail: michal.bzowski@gmail.com");
+        registeredUser.selectMemberAnswer("answerId: option-TAK");
+        registeredUser.lookAtList("events");
+        registeredUser.lookAtDetails("events", "rowName: Event7");
+        registeredUser.unwindAccordion("team-members-details");
+        registeredUser.assertIsEmailSent("memberEmail: michal.bzowski@gmail.com");
+        registeredUser.assertMemberAnswered("memberEmail: michal.bzowski@gmail.com");
+        registeredUser.unwindAccordion("event-message-stats");
         registeredUser.assertStats("Wybraneosoby: 2",
                 "Wysłane: 1",
                 "Odpowiedzi: 1",

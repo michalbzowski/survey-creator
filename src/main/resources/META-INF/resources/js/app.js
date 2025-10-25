@@ -80,8 +80,6 @@ function userHandler() {
         async loadUser() {
             let uuid = localStorage.getItem('uuid')
             if (uuid) {
-                // tu można np. pobrać username z localStorage (jeśli zapisujesz)\
-                this.connectWebSocket(uuid);
                 return {
                     'username': localStorage.getItem('username'),
                     'uuid': uuid
@@ -95,7 +93,6 @@ function userHandler() {
                     this.uuid = json.uuid;
                     localStorage.setItem('username', this.username)
                     localStorage.setItem('uuid',  this.uuid)
-                    this.connectWebSocket(json.uuid);
                 } else {
                     alert('Błąd przy pobieraniu nazwy usera');
                 }
@@ -103,20 +100,20 @@ function userHandler() {
                 alert('Błąd kot połączenia z serwerem');
             }
         },
-        connectWebSocket(userId) {
-                    if (!userId) return;
-                    this.ws = new WebSocket(`ws://localhost:8080/wss/${userId}`);
-                    this.ws.onopen = () => {
-                        console.log('WebSocket connected for', userId);
-                    };
-                    this.ws.onmessage = (evt) => {
-                        // tutaj obsłuż swoje komunikaty
-                        console.log('WS msg:', evt.data);
-                    };
-                    this.ws.onclose = () => {
-                        console.log('WebSocket closed');
-                        // Możesz dodać auto-reconnect, jeśli chcesz
-                    };
-                }
+//        connectWebSocket(userId) {
+//                    if (!userId) return;
+//                    this.ws = new WebSocket(`ws://localhost:8080/wss/${userId}`);
+//                    this.ws.onopen = () => {
+//                        console.log('WebSocket connected for', userId);
+//                    };
+//                    this.ws.onmessage = (evt) => {
+//                        // tutaj obsłuż swoje komunikaty
+//                        console.log('WS msg:', evt.data);
+//                    };
+//                    this.ws.onclose = () => {
+//                        console.log('WebSocket closed');
+//                        // Możesz dodać auto-reconnect, jeśli chcesz
+//                    };
+//                }
     }
 }

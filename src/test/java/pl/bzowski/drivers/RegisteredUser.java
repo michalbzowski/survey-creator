@@ -237,4 +237,8 @@ public class RegisteredUser {
 
         driver.assertPersonNotExists(firstName);
     }
+
+    public void unwindAccordion(String accordion) {
+        driver.unwindAccordion(accordion);
+    }
 }

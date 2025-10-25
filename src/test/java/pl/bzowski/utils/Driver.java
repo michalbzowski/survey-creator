@@ -62,4 +62,6 @@ public interface Driver {
     void assertPersonHasFields(String firstName, String lastName, String email, String defaultTag);
 
     void assertPersonNotExists(String email);
+
+    void unwindAccordion(String accordion);
 }

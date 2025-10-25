@@ -9,23 +9,38 @@
 </details>
 <hr/>
 {#if noTeamYet}
-
-<form x-data="saveHandler()" @submit.prevent>
+<form action="/web/events/members" method="post">
     {#if team != null}
     <input type="text" name="teamId" hidden="hidden" value="{event.team.id}">
     {/if}
     <input type="text" name="eventId" hidden="hidden" value="{event.id}">
     {#include forms/createTeamForm.html}
     {/include}
-    <button type="button" id="submit" @click="save()">Zapisz</button>
+    <button type="submit" id="submit">Zapisz</button>
 </form>
 {#else if linkCount == 0}
-<form action="/api/v1/links/{eventTeamId}" method="get" style="display:inline;">
-    <button type="submit" onclick="return confirm('Czy wybrać wszystkie osoby do tego zespołu?')">Generuj linki
-    </button>
-</form>
+<div x-data="linkGenerator()" x-init="startPolling('{event.team.id}')">
+    <span>
+    <!-- Animowana ikona klepsydry (CSS) -->
+    <svg class="hourglass-spin" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+         viewBox="0 0 24 24" fill="none" stroke="#cc2828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <style>
+        .hourglass-spin { animation: hourglass 1s linear infinite; }
+        @keyframes hourglass {
+          100% { transform: rotate(360deg);}
+        }
+      </style>
+      <path d="M5 22h14"/>
+      <path d="M5 2h14"/>
+      <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/>
+      <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>
+    </svg>
+    <span>Generowanie...</span>
+  </span>
+</div>
+
 {#else}
-<details name="event-details">
+<details name="event-details" id="event-message-stats">
     <summary id="summary-tab">Statystyki wysłanych wiadomości</summary>
     <ul>
         <li id="selectedMembersCount">Liczba osób w zespole: {linkCount}</li>
@@ -68,7 +83,7 @@
 {/if}
 <hr/>
 {#if linkCount != 0}
-<details>
+<details name="event-details" id="team-members-details">
     <summary>Osoby w zespole</summary>
 
     <table>

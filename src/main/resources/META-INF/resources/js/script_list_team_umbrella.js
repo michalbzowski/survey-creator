@@ -1,3 +1,28 @@
+function linkGenerator() {
+  return {
+    startPolling(teamId) {
+      this.pollingInterval = setInterval(async () => {
+        // Odpytaj API, np. /api/events/<teamId>
+        const response = await fetch("/api/events/" + teamId + "/hasMembers", {
+          credentials: "include"
+        });
+        if (response.ok) {
+          const linksReady = await response.json();
+          // Tutaj sprawdź, czy linki zostały wygenerowane
+          if (linksReady) {
+            this.loading = false;
+            clearInterval(this.pollingInterval);
+            // Możesz zaktualizować widok/linki/wykonać redirect itp.
+            window.location.reload(); // lub zaktualizuj fragment DOM
+          }
+        }
+      }, 1000); // odpytywanie co sekundę
+    }
+  }
+}
+
+
+
 // Obsługa generowania linków z potwierdzeniem
 u(document).on('click', 'a.generate-links', function(event) {
     event.preventDefault();
@@ -135,6 +160,7 @@ u(document).on('click', '#send-to-all', async function(event) {
             const response = await fetchWithLoader(`/api/v1/links/${teamId}/send/${linkPersonId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: "include",
             });
 
             if (!response.ok) {
