@@ -61,7 +61,7 @@ public class GroupsPageResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @WithTransaction
     public Uni<Response> create(@BeanParam GroupCreateRequest request) {
-        return personRepository.currentUserId()
+        return personRepository.registeredUserId()
                 .flatMap(uuid -> {
                     Group group = new Group();
                     group.name = request.name;

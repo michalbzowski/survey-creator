@@ -125,17 +125,17 @@ public class RegisteredUserDriver implements Driver {
 
     @Override
     public void lookAtList(String listName) {
-        log.info("lookAtPersonsList - start go to /web/" + listName + ". Current: " + driver.getCurrentUrl());
+        log.info("lookAtPersonsList - start go to /web/{}. Current: {}", listName, driver.getCurrentUrl());
         driver.get(appHost + "/web/" + listName);
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        log.info("Current URL after get(): " + driver.getCurrentUrl());
+        log.info("Current URL after get(): {}", driver.getCurrentUrl());
         new WebDriverWait(driver, Duration.ofSeconds(10))
                 .until(ExpectedConditions.urlContains("/web/" + listName));
-        log.info("lookAtPersonsList - stop go to /web/" + listName + ". Current: " + driver.getCurrentUrl());
+        log.info("lookAtPersonsList - stop go to /web/{}. Current: {}", listName, driver.getCurrentUrl());
     }
 
 
@@ -180,7 +180,6 @@ public class RegisteredUserDriver implements Driver {
         WebElement element = driver.findElement(By.id("submit"));
         element.click();
         FluentWait<WebDriver> wait = new FluentWait<>(driver)
-                .withTimeout(Duration.ofSeconds(30))       // maksymalny czas czekania
                 .pollingEvery(Duration.ofMillis(500))      // co 500ms sprawdzanie warunku
                 .ignoring(Exception.class);                 // ignorowanie wyjątków podczas oczekiwania
 
@@ -202,7 +201,12 @@ public class RegisteredUserDriver implements Driver {
     @Override
     public void confirm(String formUrl) {
         log.info("confirm new {} - start", formUrl);
-        WebElement element = driver.findElement(By.id("submit"));
+        By id = By.id("submit");
+
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebElement element = wait.until(ExpectedConditions.elementToBeClickable(id));
+
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
         element.click();
         new WebDriverWait(driver, Duration.ofSeconds(10))
                 .until(webDriver -> {
@@ -289,7 +293,7 @@ public class RegisteredUserDriver implements Driver {
         WebElement link = parent.findElement(By.cssSelector("a." + listName + "-details"));
         String href = link.getDomProperty("href");
         link.click();
-        new WebDriverWait(driver, Duration.ofSeconds(10))
+        new WebDriverWait(driver, Duration.ofSeconds(100))
                 .until(webDriver -> {
                     log.info("confirm href {} - wait", href);
                     return webDriver.getCurrentUrl().contains(href);

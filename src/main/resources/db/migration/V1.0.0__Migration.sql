@@ -76,7 +76,7 @@
     create table communication_agreement (
         agree boolean not null,
         id uuid not null,
-        personId uuid not null,
+        person_id uuid not null,
         registered_user_id uuid not null,
         channel varchar(255) check (channel in ('EMAIL','MESSENGER','WHATS_UP','SMS')),
         personEmail varchar(255) not null,
@@ -94,7 +94,7 @@
     create table communications (
         id uuid not null,
         registered_user_id uuid not null,
-        personId uuid not null,
+        person_id uuid not null,
         channel varchar(255) check (channel in ('EMAIL','MESSENGER','WHATS_UP','SMS')),
         communicationTemplate varchar(255) check (communicationTemplate in ('EMAIL_NEW_PERSON_ADDED','TEAM_RECORD_LINK')),
         personEmail varchar(255) not null,
@@ -134,8 +134,8 @@
         teamAnswered boolean not null,
         id uuid not null,
         linkToken uuid not null unique,
-        personId uuid,
-        teamId uuid not null,
+        person_id uuid,
+        team_id uuid not null,
         personEmail varchar(255),
         personFirstName varchar(255),
         personLastName varchar(255),

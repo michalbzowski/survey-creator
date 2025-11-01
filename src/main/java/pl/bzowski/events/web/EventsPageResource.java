@@ -32,6 +32,7 @@ import pl.bzowski.tags.TagsRepository;
 import pl.bzowski.team.web.TeamDetailsContext;
 import pl.bzowski.team.web.TeamPageResource;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -118,12 +119,18 @@ public class EventsPageResource {
                                      @FormParam("teamType") String teamType,
                                      @FormParam("groups") List<UUID> groupIds,
                                      @FormParam("persons") List<UUID> personIds) {
-        return eventRepository.persist(eventDto)
-                .invoke(withTeamLogger(withTeam))
-                .call(eventIfWithTeamChecked(withTeam, teamType, groupIds, personIds))
-                .map(redirectToEventDetails())
-                .onFailure().invoke(logFailure())
-                .onFailure().recoverWithItem(returnServerError());
+        return validateMembers(withTeam, teamType, groupIds, personIds)
+                .onItem()
+                .transformToUni(b -> eventRepository.persist(eventDto)
+                        .invoke(withTeamLogger(withTeam))
+                        .call(eventIfWithTeamChecked(withTeam, teamType, groupIds, personIds))
+                        .map(redirectToEventDetails())
+                        .onFailure()
+                        .invoke(logFailure())
+                        .onFailure()
+                        .recoverWithItem(returnServerError()))
+                .onFailure()
+                .recoverWithItem(e -> Response.status(400).entity(e.getMessage()).build());
     }
 
     private static Function<Event, Response> redirectToEventDetails() {
@@ -153,30 +160,58 @@ public class EventsPageResource {
                                     @FormParam("persons") List<UUID> personIds,
                                     @FormParam("teamId") UUID teamId,
                                     @FormParam("eventId") UUID eventId) {
-        if (teamId == null) {
-            return eventRepository.findById(eventId)
-                    .call(eventIfWithTeamChecked(withTeam, teamType, groupIds, personIds))
-                    .onItem()
-                    .transformToUni(t -> Uni.createFrom().item(Response.seeOther(UriBuilder.fromPath("/web/events/{id}/details")
-                            .build(eventId)).build()));
+        return validateMembers(withTeam, teamType, groupIds, personIds)
+                .onItem()
+                .transformToUni(v -> {
+                    if (teamId == null) {
+                        return eventRepository.findById(eventId)
+                                .call(eventIfWithTeamChecked(withTeam, teamType, groupIds, personIds))
+                                .onItem()
+                                .transformToUni(t -> Uni.createFrom().item(Response.seeOther(UriBuilder.fromPath("/web/events/{id}/details")
+                                        .build(eventId)).build()));
 
-        } else {
-            if ("checked".equals(withTeam)) {
+                    } else {
+                        if ("checked".equals(withTeam)) {
 
-                return teamRepository.currentRegisteredUserId()
+                            return teamRepository.currentRegisteredUserId()
+                                    .onItem()
+                                    .invoke(registeredUserId -> {
+                                        eventBus.publish(EVENT_CREATED,
+                                                new TeamCreatedDto(withTeam, teamType, groupIds, personIds, teamId, registeredUserId));
+                                    })
+                                    .onItem()
+                                    .transformToUni(t -> Uni.createFrom().item(Response.seeOther(UriBuilder.fromPath("/web/events/{id}/details")
+                                            .build(eventId)).build()));
+
+                        }
+                    }
+                    return Uni.createFrom().item(Response.seeOther(UriBuilder.fromPath("/web/events/{id}/details")
+                            .build(eventId)).build());
+                })
+                .onFailure(NotFoundException.class)
+                .recoverWithItem(e -> Response.status(400).entity(e.getMessage()).build());
+    }
+
+    private Uni<Boolean> validateMembers(String withTeam, String teamType, List<UUID> groupIds, List<UUID> personIds) {
+        if ("checked".equals(withTeam)) {
+            if ("group".equals(teamType) && groupIds.isEmpty()) {
+                return Uni.createFrom().failure(new NotFoundException("Nie wybrałeś żadnej grupy"));
+            }
+            if ("person".equals(teamType) && personIds.isEmpty()) {
+                return Uni.createFrom().failure(new NotFoundException("Nie wybrałeś żadnej osoby z listy osób"));
+            }
+            if ("all".equals(teamType)) {
+                return personRepository.hasCurrentUserAnyPerson()
                         .onItem()
-                        .invoke(registeredUserId -> {
-                            eventBus.publish(EVENT_CREATED,
-                                    new TeamCreatedDto(withTeam, teamType, groupIds, personIds, teamId, registeredUserId));
-                        })
-                        .onItem()
-                        .transformToUni(t -> Uni.createFrom().item(Response.seeOther(UriBuilder.fromPath("/web/events/{id}/details")
-                                .build(eventId)).build()));
-
+                        .transform(hasPerson -> {
+                            if (!hasPerson) {
+                                throw new NotFoundException("Nie masz zapisanej żadnej osoby");
+                            }
+                            return true;
+                        });
             }
         }
-        return Uni.createFrom().item(Response.seeOther(UriBuilder.fromPath("/web/events/{id}/details")
-                .build(eventId)).build());
+        return Uni.createFrom().item(true); // Walidacja OK (nie ma błędu)
     }
 
     private Consumer<TeamDTO> publish(String withTeam, String
@@ -201,24 +236,28 @@ public class EventsPageResource {
         return ex -> logger.log(Level.ERROR, "Failed to create event", ex);
     }
 
-    private Uni<TeamDTO> persistTeam(EventDto eventDto, Event event) {
-        // Utwórz listę obecności (team) powiązaną z tym wydarzeniem
-        TeamDTO teamDTO = new TeamDTO();
-        teamDTO.name = eventDto.name;
-        teamDTO.events = List.of(event.id);
-        return teamRepository.createTeam(teamDTO);
-    }
+    private final String query_0 = """
+            select e.id as event_id, e.team_id as team_id, e.name as event_name,
+            		e.location as event_location, e.localdatetime as event_localdatetime,
+            		e.description as event_description, count(m.id) as members_count,
+            		count(cal.id) as sent_links,
+            		count(a_tak.id) as tak, count(a_nie.id) as nie, count(a_pozniej.id) as pozniej
+            from public.events e
+            left join public.members m on m.teamId = e.team_id
+            left JOIN public.communication_team_links cal ON m.id = cal.teamEntryId
+            left join public.answers a_tak on a_tak.event_Id = e.id and a_tak.team_id = e.team_id and m.id = a_tak.member_id and a_tak.answerValue = 'TAK'
+            left join public.answers a_nie on a_nie.event_Id = e.id and a_nie.team_id = e.team_id and m.id = a_nie.member_id and a_nie.answerValue = 'NIE'
+            left join public.answers a_pozniej on a_pozniej.event_Id = e.id and a_pozniej.team_id = e.team_id and m.id = a_pozniej.member_id and a_pozniej.answerValue = 'ODPOWIEM_POZNIEJ'
+            where e.id = :eventId
+            group by e.id, e.team_id
+            """;
 
     @GET
-    @Path("/{id}/details")
+    @Path("/{eventId}/details")
     @Produces(MediaType.TEXT_HTML)
-    public Uni<TemplateInstance> eventDetails(@PathParam("id") UUID id) {
-        return findEventById(id)
-                .flatMap(this::loadLinkCount)
-                .flatMap(this::loadSentLinkCount)
-                .flatMap(this::loadAnswerYesCount)
-                .flatMap(this::loadAnswerNoCount)
-                .flatMap(this::loadAnswerLaterCount)
+    public Uni<TemplateInstance> eventDetails(@PathParam("eventId") UUID eventId) {
+        //TODO: Refactor that - make one view to get all data for that page
+        return findEventById(eventId)
                 .flatMap(this::loadStats)
                 .flatMap(ctx -> teamPageResource.getCreateTeamData(ctx.teamId)
                         .onItem()
@@ -228,22 +267,39 @@ public class EventsPageResource {
                 .map(this::buildTemplateInstance);
     }
 
-    private Uni<EventContext> findEventById(UUID id) {
-        return Event.<Event>findById(id)
-                .onItem().ifNull().failWith(() -> new WebApplicationException("Event not found", 404))
-                .map(EventContext::new);
+    private Uni<EventContext> findEventById(UUID eventId) {
+        return sessionFactory.openSession()
+                .flatMap(session ->
+                        session.createNativeQuery(query_0, Tuple.class)
+                                .setParameter("eventId", eventId)
+                                .getResultList()
+
+                ).onItem()
+                .transformToUni(list -> list.stream()
+                        .map(a -> {
+//                                UUID eventId = UUID.fromString(a.get("event_id").toString());
+                            UUID teamId = getTeamId(a);
+                            String eventName = (String) a.get("event_name");
+                            String eventLocation = (String) a.get("event_location");
+                            LocalDateTime eventLocaldatetime = (LocalDateTime) a.get("event_localdatetime");
+                            String eventDescription = (String) a.get("event_description");
+                            Long membersCount = (Long) a.get("members_count");
+                            Long sentLinks = (Long) a.get("sent_links");
+                            Long tak = (Long) a.get("tak");
+                            Long nie = (Long) a.get("nie");
+                            Long pozniej = (Long) a.get("pozniej");
+                            return Uni.createFrom().item(new EventContext(eventId, teamId, eventName, eventLocation, eventLocaldatetime, eventDescription,
+                                    membersCount, sentLinks, tak, nie, pozniej));
+                        }).findFirst().get());
     }
 
-    private Uni<EventContext> loadLinkCount(EventContext ctx) {
-        if (ctx.noTeamYet) {
-            ctx.linkCount = 0L;
-            return Uni.createFrom().item(ctx);
+    private static UUID getTeamId(Tuple a) {
+        Object teamId = a.get("team_id");
+        if (teamId != null) {
+            return UUID.fromString(teamId.toString());
+        } else {
+            return null;
         }
-        return Member.count("teamId = ?1", ctx.teamId)
-                .map(count -> {
-                    ctx.linkCount = count;
-                    return ctx;
-                });
     }
 
     String query = "SELECT count(cal.id)" +
@@ -251,58 +307,16 @@ public class EventsPageResource {
             "JOIN communication_team_links cal ON m.id = cal.teamEntryId " + //IF cal is present, then assuming communication was sent? //TODO: add another join and check is SEND status for real eg //  "LEFT JOIN communications c ON cal.teamentryid = c.id " + ?
             "WHERE m.teamId = :teamId ";
 
-    private Uni<EventContext> loadSentLinkCount(EventContext ctx) {
-        if (ctx.noTeamYet) {
-            ctx.sentLinkCount = 0L;
-            return Uni.createFrom().item(ctx);
-        }
-        return sessionFactory.openSession()
-                .flatMap(session ->
-                        session.createNativeQuery(query, Tuple.class)
-                                .setParameter("teamId", ctx.teamId)
-                                .getResultList()
-
-                )
-                .map(tuple -> {
-                    ctx.sentLinkCount = tuple.getFirst().get(0, Long.class);
-                    return ctx;
-                });
-    }
-
-    private Uni<EventContext> loadAnswerYesCount(EventContext ctx) {
-        return Answer.count("event = ?1 and answerValue = ?2", ctx.event, Answer.AnswerValue.TAK)
-                .map(count -> {
-                    ctx.answerYesCount = count;
-                    return ctx;
-                });
-    }
-
-    private Uni<EventContext> loadAnswerNoCount(EventContext ctx) {
-        return Answer.count("event = ?1 and answerValue = ?2", ctx.event, Answer.AnswerValue.NIE)
-                .map(count -> {
-                    ctx.answerNoCount = count;
-                    return ctx;
-                });
-    }
-
-    private Uni<EventContext> loadAnswerLaterCount(EventContext ctx) {
-        return Answer.count("event = ?1 and answerValue = ?2", ctx.event, Answer.AnswerValue.ODPOWIEM_POZNIEJ)
-                .map(count -> {
-                    ctx.answerLaterCount = count;
-                    return ctx;
-                });
-    }
-
     private Uni<EventContext> loadStats(EventContext ctx) {
         // Sekwencyjne ładowanie statystyk odpowiedzi według tagów
         return teamRepository.currentRegisteredUserId()
-                .flatMap(registeredUserId -> getResultListReactive(ctx.event, Answer.AnswerValue.TAK, registeredUserId)
-                        .flatMap(takStats -> getResultListReactive(ctx.event, Answer.AnswerValue.NIE, registeredUserId)
-                                .flatMap(nieStats -> getResultListReactive(ctx.event, Answer.AnswerValue.ODPOWIEM_POZNIEJ, registeredUserId)
+                .flatMap(registeredUserId -> getResultListReactive(ctx.eventId, Answer.AnswerValue.TAK, registeredUserId)
+                        .flatMap(takStats -> getResultListReactive(ctx.eventId, Answer.AnswerValue.NIE, registeredUserId)
+                                .flatMap(nieStats -> getResultListReactive(ctx.eventId, Answer.AnswerValue.ODPOWIEM_POZNIEJ, registeredUserId)
                                         .map(laterStats -> {
                                             ctx.fullStats = combineStats(takStats, nieStats, laterStats);
                                             return ctx;
-                }))));
+                                        }))));
 
     }
 
@@ -328,18 +342,22 @@ public class EventsPageResource {
     }
 
     private TemplateInstance buildTemplateInstance(EventContext ctx) {
-        long answerSum = ctx.answerYesCount + ctx.answerNoCount + ctx.answerLaterCount;
-        long unansweredCount = ctx.linkCount - answerSum;
+        long answerSum = ctx.tak + ctx.nie + ctx.pozniej;
+        long unansweredCount = ctx.membersCount - answerSum;
 
-        TemplateInstance data = eventDetails
-                .data("event", ctx.event)
-                .data("linkCount", ctx.linkCount)
-                .data("sentLinkCount", ctx.sentLinkCount)
+        return eventDetails
+                .data("eventId", ctx.eventId)
+                .data("eventName", ctx.eventName)
+                .data("eventLocation", ctx.eventLocation)
+                .data("eventLocaldatetime", ctx.eventLocaldatetime)
+                .data("eventDescription", ctx.eventDescription)
+                .data("linkCount", ctx.membersCount)
+                .data("sentLinkCount", ctx.sentLinks)
                 .data("answerSum", answerSum)
                 .data("unansweredCount", unansweredCount)
-                .data("answerYesCount", ctx.answerYesCount)
-                .data("answerNoCount", ctx.answerNoCount)
-                .data("answerLaterCount", ctx.answerLaterCount)
+                .data("answerYesCount", ctx.tak)
+                .data("answerNoCount", ctx.nie)
+                .data("answerLaterCount", ctx.pozniej)
                 .data("fullStats", ctx.fullStats)
                 .data("noTeamYet", ctx.noTeamYet)
                 .data("eventTeamId", ctx.teamId)
@@ -347,31 +365,43 @@ public class EventsPageResource {
                 .data("links", ctx.teamData.getLinks())
                 .data("groups", ctx.teamData.getGroups())
                 .data("persons", ctx.teamData.getPersons());
-        return data;
     }
 
     private static class EventContext {
-        final Event event;
         final boolean noTeamYet;
         final UUID teamId;
+        private final String eventName;
+        private final String eventLocation;
+        private final LocalDateTime eventLocaldatetime;
+        private final String eventDescription;
+        private final Long membersCount;
+        private final Long sentLinks;
+        private final Long tak;
+        private final Long nie;
+        private final Long pozniej;
+        private final UUID eventId;
         TeamDetailsContext teamData;
 
-        long linkCount;
-        long sentLinkCount;
-        long answerYesCount;
-        long answerNoCount;
-        long answerLaterCount;
         List<EventDetails.Stats> fullStats;
 
-        EventContext(Event event) {
-            this.event = event;
-            this.noTeamYet = event.team == null;
-            this.teamId = noTeamYet ? null : event.team.id;
+        public EventContext(UUID eventId, UUID teamId, String eventName, String eventLocation, LocalDateTime eventLocaldatetime, String eventDescription, Long membersCount, Long sentLinks, Long tak, Long nie, Long pozniej) {
+            this.eventId = eventId;
+            this.teamId = teamId;
+            this.noTeamYet = teamId == null;
+            this.eventName = eventName;
+            this.eventLocation = eventLocation;
+            this.eventLocaldatetime = eventLocaldatetime;
+            this.eventDescription = eventDescription;
+            this.membersCount = membersCount;
+            this.sentLinks = sentLinks;
+            this.tak = tak;
+            this.nie = nie;
+            this.pozniej = pozniej;
         }
     }
 
 
-    private Uni<List<Object[]>> getResultListReactive(Event event, Answer.AnswerValue answerValue, UUID registeredUserId) {
+    private Uni<List<Object[]>> getResultListReactive(UUID eventId, Answer.AnswerValue answerValue, UUID registeredUserId) {
         return Panache
                 .getSession()
                 .onItem()
@@ -379,10 +409,10 @@ public class EventsPageResource {
                                 "SELECT t.name, COUNT(a.member) " +
                                         "FROM Tag t " +
                                         "LEFT JOIN Member m ON m.personTag = t.name " +
-                                        "LEFT JOIN Answer a ON a.member = m AND a.event = :event AND a.answerValue = :answerValue " +
+                                        "LEFT JOIN Answer a ON a.member = m AND a.event.id = :eventId AND a.answerValue = :answerValue " +
                                         "WHERE t.registeredUserId = :registeredUserId " +
                                         "GROUP BY t.name", Object[].class)
-                        .setParameter("event", event)
+                        .setParameter("eventId", eventId)
                         .setParameter("answerValue", answerValue)
                         .setParameter("registeredUserId", registeredUserId)
                         .getResultList());

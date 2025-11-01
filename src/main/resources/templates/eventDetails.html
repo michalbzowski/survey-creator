@@ -1,25 +1,25 @@
 {#include layouts/main}
-{#title}{event.name}{/title}
+{#title}{eventName}{/title}
 {#body}
 <details name="event-details">
     <summary>Zobacz szczegóły wydarzenia</summary>
-    <p><strong>Gdzie:</strong> {event.location}</p>
-    <p><strong>Kiedy:</strong> {event.formatedLocalDateTime}</p>
-    <p>{event.description}</p>
+    <p><strong>Gdzie:</strong> {eventLocation}</p>
+    <p><strong>Kiedy:</strong> {eventLocaldatetime}</p>
+    <p>{eventDescription}</p>
 </details>
 <hr/>
 {#if noTeamYet}
 <form action="/web/events/members" method="post">
     {#if team != null}
-    <input type="text" name="teamId" hidden="hidden" value="{event.team.id}">
+    <input type="text" name="teamId" hidden="hidden" value="{eventTeamId}">
     {/if}
-    <input type="text" name="eventId" hidden="hidden" value="{event.id}">
+    <input type="text" name="eventId" hidden="hidden" value="{eventId}">
     {#include forms/createTeamForm.html}
     {/include}
     <button type="submit" id="submit">Zapisz</button>
 </form>
 {#else if linkCount == 0}
-<div x-data="linkGenerator()" x-init="startPolling('{event.team.id}')">
+<div x-data="linkGenerator()" x-init="startPolling('{eventTeamId}')">
     <span>
     <!-- Animowana ikona klepsydry (CSS) -->
     <svg class="hourglass-spin" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
@@ -53,10 +53,6 @@
     </ul>
 </details>
 <hr/>
-{/if}
-{#if noTeamYet}
-<!--Blank-->
-{#else}
 <details name="event-details">
     <summary>Odpowiedzi od zespołu</summary>
     <table>

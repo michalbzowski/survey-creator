@@ -33,7 +33,15 @@ public class PersonRepository extends RepositoryBase {
                 });
     }
 
-    public Uni<UUID> currentUserId() {
+    public Uni<UUID> registeredUserId() {
         return currentRegisteredUserId();
+    }
+
+    public Uni<Boolean> hasCurrentUserAnyPerson() {
+        return registeredUserId()
+                .onItem()
+                .transformToUni(uuid -> Person.count("registeredUserId = ?1", uuid))
+                .onItem()
+                .transform(count -> count > 0);
     }
 }

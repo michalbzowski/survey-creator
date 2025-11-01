@@ -117,7 +117,7 @@ public class LinkGenerationResource {
                                                      teamId, @PathParam("personId") UUID personId) {
         logger.info(String.format("Start saving message for team %s for person %s", teamId, personId));
 
-        return personRepository.currentUserId().flatMap(currentUserId -> {
+        return personRepository.registeredUserId().flatMap(currentUserId -> {
             return Team.<Team>findById(teamId)
                     .flatMap(team -> {
                         if (team == null) {

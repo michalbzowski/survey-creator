@@ -67,8 +67,8 @@ public class EventsTest extends MyTestsBase {
         registeredUser.confirm("events");
         registeredUser.lookAtList("events"); //need to go manually, because redirect after events submit
         registeredUser.assertNewEventCreated("eventName: Event3");
-        registeredUser.lookAtList("teams");
-        registeredUser.lookAtDetails("teams", "rowName: Event3");
+        registeredUser.lookAtDetails("events", "rowName: Event3");
+        registeredUser.unwindAccordion("team-members-details");
         registeredUser.assertMemberWasSelected("memberEmail: michal.bzowski@gmail.com");
     }
 
@@ -189,6 +189,7 @@ public class EventsTest extends MyTestsBase {
     }
 
     @Test
+    @Disabled
     public void shouldEventAnswersBeCorrectAtEventAnswersAccordion() {
 
     }
@@ -225,5 +226,28 @@ public class EventsTest extends MyTestsBase {
 
     }
 
+    @Test
+    @Disabled
+    public void shouldNotCreateTeamWithEmptyGroupOfPersons() {
 
+    }
+
+    @Test
+    @Disabled
+    public void shouldNotCreateTeamWithEmptyPersons() {
+
+    }
+
+
+    @Test
+    @Disabled
+    public void shouldNotCreateTeamWhenNoPersonAreDefinedInSystem() {
+
+    }
+
+    @Test
+    @Disabled
+    public void shouldNotCreateSameEventTwice() {
+
+    }
 }
