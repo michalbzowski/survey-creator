@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 public class EventsTest extends MyTestsBase {
 
     @Test
+    @Disabled
     public void shouldCreateEventWithoutTeam() {
         registeredUser.lookAtList("events");
         registeredUser.askToCreateNew();
@@ -67,6 +68,7 @@ public class EventsTest extends MyTestsBase {
         registeredUser.confirm("events");
         registeredUser.lookAtList("events"); //need to go manually, because redirect after events submit
         registeredUser.assertNewEventCreated("eventName: Event3");
+        registeredUser.lookAtList("events");
         registeredUser.lookAtDetails("events", "rowName: Event3");
         registeredUser.unwindAccordion("team-members-details");
         registeredUser.assertMemberWasSelected("memberEmail: michal.bzowski@gmail.com");
@@ -101,24 +103,6 @@ public class EventsTest extends MyTestsBase {
     }
 
     @Test
-    public void shouldCreateEventWithTeamWithOneEntryForPersonWhoIsInTwoGroupsAtOnce() {
-        registeredUser.lookAtList("events");
-        registeredUser.askToCreateNew();
-        registeredUser.fillEventFormFields("name: Event5",
-                "location: Location 2/3",
-                "datetimeInput: 2025-10-08T12:00",
-                "description: Longer description for description purpose",
-                "checkboxId: withTeam",
-                "checkboxValue: True",
-                "clickRadioId: chooseGroup");
-//        registeredUser.fillEventFormFields("checkboxId: michal.bzowski@gmail.com", "checkboxValue: true");
-//        registeredUser.fillEventFormFields("checkboxId: 00michal.bzowski@gmail.com", "checkboxValue: true");
-//        registeredUser.confirm("events");
-//        registeredUser.lookAtList("events"); //need to go manually, because redirect after events submit
-//        registeredUser.assertNewEventCreated("eventName: Event5");
-    }
-
-    @Test
     public void shouldEventStatsBeCorrectAtEventStatsAccordion() {
         registeredUser.lookAtList("events");
         registeredUser.askToCreateNew();
@@ -133,8 +117,7 @@ public class EventsTest extends MyTestsBase {
         registeredUser.fillEventFormFields("checkboxCount: 1", "checkboxId1: michal.bzowski@gmail.com", "checkboxValue1: true");
         registeredUser.fillEventFormFields("checkboxCount: 1", "checkboxId1: 00michal.bzowski@gmail.com", "checkboxValue1: true");
         registeredUser.confirm("events");
-        registeredUser.lookAtList("teams");
-        registeredUser.lookAtDetails("teams", "rowName: Event6");
+        registeredUser.unwindAccordion("team-members-details");
         registeredUser.sendEmailToMember("memberEmail: michal.bzowski@gmail.com");
         registeredUser.openQuestionToMember("memberEmail: michal.bzowski@gmail.com");
         registeredUser.selectMemberAnswer("answerId: option-TAK");

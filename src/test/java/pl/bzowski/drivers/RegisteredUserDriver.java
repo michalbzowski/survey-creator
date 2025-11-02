@@ -338,15 +338,23 @@ public class RegisteredUserDriver implements Driver {
         Object[] windowHandles = driver.getWindowHandles().toArray();
         driver.switchTo().window((String) windowHandles[1]);
 
-        WebElement element = driver.findElement(By.cssSelector("select.answerValue-entry"));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        By bySelectValue = By.cssSelector("select.answerValue-entry");
+
+        WebElement element = wait.until(ExpectedConditions.elementToBeClickable(bySelectValue));
         element.click();
 
-        WebElement answerValueElement = driver.findElement(By.id(answerId));
+        By byAnswerId = By.id(answerId);
+        WebElement answerValueElement = wait.until(ExpectedConditions.elementToBeClickable(byAnswerId));
         answerValueElement.click();
 
-        WebElement submit = driver.findElement(By.id("submit"));
+        By bySubmit = By.id("submit");
+        WebElement submit = wait.until(ExpectedConditions.elementToBeClickable(bySubmit));
         submit.click();
 
+        wait.until(ExpectedConditions.urlContains("web/thank_you"));
+
+        driver.close();
         driver.switchTo().window((String) windowHandles[0]);
     }
 

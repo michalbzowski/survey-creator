@@ -19,7 +19,8 @@ public class EventWithTeamCreatedListener {
 
     @ConsumeEvent(EVENT_CREATED)
     public void consume(Message<TeamCreatedDto> message) {
-        this.myNextBean.getVoidUni(message).subscribe().with(
+        this.myNextBean.getVoidUni(message)
+                .subscribe().with(
                 unused -> eventBus.send(MembersAssignedDto.MEMBERS_ASSIGNED, new MembersAssignedDto(message.body().getRegisteredUserId(), message.body().getTeamId())),
                 failure -> System.err.println("Błąd: " + failure.getMessage())
         );

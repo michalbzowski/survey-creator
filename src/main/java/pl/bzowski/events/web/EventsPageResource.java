@@ -15,7 +15,6 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logmanager.Level;
-import pl.bzowski.members.Member;
 import pl.bzowski.team.api.TeamDTO;
 import pl.bzowski.team.infrastructure.TeamRepository;
 import pl.bzowski.shared.base.ReactiveDelete;

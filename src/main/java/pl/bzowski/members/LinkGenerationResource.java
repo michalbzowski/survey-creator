@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static pl.bzowski.messaging.CommunicationEventListener.PERSIST_COMMUNICATION;
 import static pl.bzowski.messaging.email.MemberAssignedMailSender.MEMBER_ASSIGNED_MAIL_SENT;
@@ -79,34 +80,40 @@ public class LinkGenerationResource {
     @WithTransaction
     public Uni<Void> processTeam(UUID teamId, List<Person> persons) {
         return Team.<Team>findById(teamId)
-                .onFailure().invoke(_ -> logger.info("Failure - team id: " + teamId))
+                .onFailure().invoke(e -> logger.info("Failure - team id: " + teamId))
                 .onItem().ifNull().failWith(() -> new WebApplicationException("team not found", 404))
                 .flatMap(team -> {
                     logger.info("Found team with id: " + teamId);
 
-                    return Multi.createFrom().iterable(persons)
-                            .onItem().transformToUniAndConcatenate(person ->
-                                    Member.find("personId = ?1 and teamId = ?2", person.id, team.id)
-                                            .firstResult()
-                                            .flatMap(messageTemplate -> {
-                                                if (messageTemplate != null) {
-                                                    logger.info(String.format("Found existing Member for Person %s and Team %s.", person.id, team.id));
-                                                    return Uni.createFrom().voidItem();
-                                                } else {
-                                                    logger.info(String.format("Creating new Member for Person %s and Team %s.", person.id, team.id));
-                                                    Member member = new Member(person, team);
-                                                    Uni<PanacheEntityBase> persist = member.persist();
-                                                    return persist.replaceWithVoid();
-                                                }
-                                            })
-                            )
-                            .collect().asList()
-                            .call(list -> {
-                                logger.info("List size: " + list.stream().count());
-                                return Uni.createFrom().voidItem();
-                            })
-                            .replaceWithVoid();
+                    List<UUID> personIds = persons.stream().map(p -> p.id).toList();
 
+                    // Pobranie wszystkich istniejących Memberów dla teamId i poniższej listy personId jednym zapytaniem
+                    return Member.<Member>find("teamId = ?1 and personId in ?2", team.id, personIds)
+                            .list()
+                            .flatMap(existingMembers -> {
+                                // Mapujemy personId na Member, aby szybko sprawdzić istnienie
+                                Map<UUID, Member> existingMembersMap = existingMembers.stream()
+                                        .collect(Collectors.toMap(m -> m.personId, m -> m));
+
+                                // Filtrujemy osoby które nie mają jeszcze Member'a
+                                List<Person> personsToCreate = persons.stream()
+                                        .filter(p -> !existingMembersMap.containsKey(p.id))
+                                        .toList();
+
+                                // Tworzymy Memberów tylko dla osób bez istniejących Memberów
+                                return Multi.createFrom().iterable(personsToCreate)
+                                        .onItem().transformToUniAndConcatenate(person -> {
+                                            logger.info(String.format("Creating new Member for Person %s and Team %s.", person.id, teamId));
+                                            Member newMember = new Member(person, team);
+                                            return newMember.persist().replaceWithVoid();
+                                        })
+                                        .collect().asList()
+                                        .call(list -> {
+                                            logger.info("Created new members count: " + list.size());
+                                            return Uni.createFrom().voidItem();
+                                        })
+                                        .replaceWithVoid();
+                            });
                 });
     }
 
