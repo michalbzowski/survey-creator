@@ -89,6 +89,8 @@ public class TeamRepository extends RepositoryBase {
     public Uni<Boolean> teamHasMembers(UUID teamId) {
         return Team.<Team>findById(teamId)
                 .onItem()
-                .transformToUni(t -> Uni.createFrom().item(!t.members.isEmpty()));
+                .transformToUni(t -> Uni.createFrom().item(!t.members.isEmpty()))
+                .onFailure()
+                .recoverWithItem(t -> Boolean.FALSE);
     }
 }
