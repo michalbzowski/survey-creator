@@ -1,6 +1,4 @@
 ;--[Hibernate]
-    set client_min_messages = WARNING
-;--[Hibernate]
     alter table if exists answers
        drop constraint if exists FKkw9v0ofgb1ct8g0u3ot00fknq
 ;--[Hibernate]
@@ -76,7 +74,7 @@
     create table communication_agreement (
         agree boolean not null,
         id uuid not null,
-        person_id uuid not null,
+        personId uuid not null,
         registered_user_id uuid not null,
         channel varchar(255) check (channel in ('EMAIL','MESSENGER','WHATS_UP','SMS')),
         personEmail varchar(255) not null,
@@ -93,8 +91,8 @@
 ;--[Hibernate]
     create table communications (
         id uuid not null,
+        personId uuid not null,
         registered_user_id uuid not null,
-        person_id uuid not null,
         channel varchar(255) check (channel in ('EMAIL','MESSENGER','WHATS_UP','SMS')),
         communicationTemplate varchar(255) check (communicationTemplate in ('EMAIL_NEW_PERSON_ADDED','TEAM_RECORD_LINK')),
         personEmail varchar(255) not null,
@@ -134,8 +132,8 @@
         teamAnswered boolean not null,
         id uuid not null,
         linkToken uuid not null unique,
-        person_id uuid,
-        team_id uuid not null,
+        personId uuid,
+        teamId uuid not null,
         personEmail varchar(255),
         personFirstName varchar(255),
         personLastName varchar(255),
@@ -162,7 +160,7 @@
     create table persons (
         id uuid not null,
         registered_user_id uuid not null,
-        tag_id uuid,
+        tag_id uuid not null,
         email varchar(255) not null,
         firstName varchar(255) not null,
         lastName varchar(255) not null,
