@@ -241,4 +241,8 @@ public class RegisteredUser {
     public void unwindAccordion(String accordion) {
         driver.unwindAccordion(accordion);
     }
+
+    public void confirmAlert() {
+        driver.confirmAlert();
+    }
 }

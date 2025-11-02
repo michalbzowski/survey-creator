@@ -41,5 +41,6 @@ public class TagsTest extends MyTestsBase {
         registeredUser.assertTagExists("name: Dyrygent");
         registeredUser.deleteTag("name: Dyrygent");
         registeredUser.assertTagExists("name: Dyrygent");
+        registeredUser.confirmAlert();
     }
 }

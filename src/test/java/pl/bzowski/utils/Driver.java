@@ -64,4 +64,6 @@ public interface Driver {
     void assertPersonNotExists(String email);
 
     void unwindAccordion(String accordion);
+
+    void confirmAlert();
 }

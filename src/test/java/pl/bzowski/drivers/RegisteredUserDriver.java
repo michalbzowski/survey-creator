@@ -451,6 +451,27 @@ public class RegisteredUserDriver implements Driver {
     }
 
     @Override
+    public void confirmAlert() {
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            // Przełącz się do alertu
+            Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+
+            // Możesz odczytać tekst alertu (opcjonalne)
+            String alertText = alert.getText();
+            System.out.println("Alert text: " + alertText);
+
+            // Zaakceptuj alert (kliknij "OK")
+            alert.accept();
+            System.out.println("accepted");
+
+            // Lub jeśli chcesz anulować (kliknąć "Cancel"), to daj alert.dismiss();
+        } catch (NoAlertPresentException e) {
+            // Alert nie pojawił się - możesz obsłużyć ten przypadek
+        }
+    }
+
+    @Override
     public void exit() {
         try {
             if (driver != null) {
