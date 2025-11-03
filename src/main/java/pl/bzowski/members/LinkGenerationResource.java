@@ -83,14 +83,6 @@ public class LinkGenerationResource {
         log.info("- teamId: {}:", teamId);
         log.info("- persons: {}:", persons.size());
         return Team.<Team>findById(teamId)
-                .onFailure()
-                .retry()
-                .withBackOff(Duration.ofSeconds(5), Duration.ofSeconds(50))
-                .atMost(5)
-                .invoke(e -> log.info("Failure - team id: {}", teamId))
-                .onItem()
-                .ifNull()
-                .failWith(() -> new WebApplicationException("team not found", 404))
                 .flatMap(team -> {
                     log.info("Found team with id: {}", teamId);
 
@@ -115,13 +107,7 @@ public class LinkGenerationResource {
                                             log.info("Creating new Member for Person {} and Team {}.", person.id, teamId);
                                             Member newMember = new Member(person, team);
                                             return newMember.persist().replaceWithVoid();
-                                        })
-                                        .collect().asList()
-                                        .call(list -> {
-                                            log.info("Created new members count: {}", list.size());
-                                            return Uni.createFrom().voidItem();
-                                        })
-                                        .replaceWithVoid();
+                                        }).toUni();
                             });
                 });
     }

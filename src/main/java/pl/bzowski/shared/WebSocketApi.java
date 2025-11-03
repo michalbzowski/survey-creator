@@ -51,7 +51,7 @@ public class WebSocketApi {
                 .stream()
                 .filter(c -> {
                     String registeredUserId1 = c.pathParam("registeredUserId");
-                    UUID registeredUserId2 = membersAssignedDto.getRegisteredUserId();
+                    UUID registeredUserId2 = membersAssignedDto.registeredUserId();
                     return registeredUserId1.equals(registeredUserId2.toString());
                 })
                 .findFirst().ifPresentOrElse(c -> c.sendText("Hejeczka")

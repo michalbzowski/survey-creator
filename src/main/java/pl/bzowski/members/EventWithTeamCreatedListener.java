@@ -25,11 +25,17 @@ public class EventWithTeamCreatedListener {
     public void consumeEventCreated(Message<TeamCreatedDto> message) {
         log.info("[START] method: consumeEventCreated");
         this.teamMembersCreator.createMembersForTeam(message)
-                .subscribe().with(
-                unused -> eventBus.send(MembersAssignedDto.MEMBERS_ASSIGNED, new MembersAssignedDto(message.body().registeredUserId(), message.body().teamId())),
-                failure -> System.err.println("Błąd: " + failure.getMessage())
-        );
-        log.info("[STOP ] method: consumeEventCreated");
+                .subscribe()
+                .with(
+                        _ -> {
+                            MembersAssignedDto mad = new MembersAssignedDto(message.body().registeredUserId(), message.body().teamId());
+                            log.info("- send: {}: {}", MembersAssignedDto.MEMBERS_ASSIGNED, mad);
+                            eventBus.send(MembersAssignedDto.MEMBERS_ASSIGNED, mad);
+                            log.info("- send: {}: FINISHED", MembersAssignedDto.MEMBERS_ASSIGNED);
+                            log.info("[STOP ] method: consumeEventCreated");
+                        },
+                        failure -> System.err.println("Błąd: " + failure.getMessage())
+                );
     }
 
 }

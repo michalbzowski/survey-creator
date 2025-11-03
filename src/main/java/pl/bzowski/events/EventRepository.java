@@ -35,7 +35,7 @@ public class EventRepository extends RepositoryBase {
 
     @WithTransaction
     public Uni<Event> persist(EventDto eventDto) {
-        log.info("method: persist {}", eventDto.toString());
+        log.info("[START] method: persist {}", eventDto.toString());
         return currentRegisteredUserId()
                 .onItem()
                 .invoke(registeredUserId -> log.info("- registeredUserId: {}", registeredUserId))

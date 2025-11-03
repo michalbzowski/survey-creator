@@ -119,7 +119,7 @@ public class EventsPageResource {
                                      @FormParam("teamType") String teamType,
                                      @FormParam("groups") List<UUID> groupIds,
                                      @FormParam("persons") List<UUID> personIds) {
-        log.info("method: createEvent");
+        log.info("[START] method: createEvent");
         return validateMembers(withTeam, teamType, groupIds, personIds)
                 .onItem()
                 .transformToUni(b -> eventRepository.persist(eventDto)
@@ -131,7 +131,8 @@ public class EventsPageResource {
                         .onFailure()
                         .recoverWithItem(returnServerError()))
                 .onFailure()
-                .recoverWithItem(e -> Response.status(400).entity(e.getMessage()).build());
+                .recoverWithItem(e -> Response.status(400).entity(e.getMessage()).build())
+                .invoke(_ -> log.info("[STOP ] method: createEvent"));
     }
 
     private static Function<Event, Response> redirectToEventDetails() {
@@ -144,7 +145,7 @@ public class EventsPageResource {
                 log.info("- team creation requested for event ID: {}, teamType: {}", event.id, teamType);
                 return teamRepository.createTeam(new TeamDTO(event.id))
                         .onItem()
-                        .invoke(team -> log.info("- team created successfully for event ID: {}", event.id))
+                        .invoke(team -> log.info("- team {} created successfully for event ID: {}", team.id, event.id))
                         .onItem()
                         .invoke(publish(withTeam, teamType, groupIds, personIds, event.registeredUserId))
                         .onFailure()
@@ -198,7 +199,7 @@ public class EventsPageResource {
     }
 
     private Uni<Boolean> validateMembers(String withTeam, String teamType, List<UUID> groupIds, List<UUID> personIds) {
-        log.info("method: validateMember. withTeam: {}, teamType: {}, groupsIds: {}, personsIds: {}", withTeam, teamType, groupIds.size(), personIds.size());
+        log.info("[START] method: validateMember. withTeam: {}, teamType: {}, groupsIds: {}, personsIds: {}", withTeam, teamType, groupIds.size(), personIds.size());
         if ("checked".equals(withTeam)) {
             if ("group".equals(teamType) && groupIds.isEmpty()) {
                 return Uni.createFrom().failure(new NotFoundException("Nie wybrałeś żadnej grupy"));

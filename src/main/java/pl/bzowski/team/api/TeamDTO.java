@@ -22,4 +22,13 @@ public class TeamDTO {
         this.name = name;
         this.events = events;
     }
+
+    @Override
+    public String toString() {
+        return "TeamDTO{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", events=" + events +
+                '}';
+    }
 }

@@ -6,6 +6,8 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Singleton;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.bzowski.team.Team;
 import pl.bzowski.shared.base.RepositoryBase;
 import pl.bzowski.events.Event;
@@ -18,20 +20,26 @@ import java.util.UUID;
 @Singleton
 public class TeamRepository extends RepositoryBase {
 
+    private static final Logger log = LoggerFactory.getLogger(TeamRepository.class);
+
     @WithTransaction
     public Uni<TeamDTO> createTeam(TeamDTO teamDTO) {
+        log.info("Starting creation of team: {}", teamDTO);
+
         List<UUID> eventIds = teamDTO.events;
 
-        // Start with an initial Uni emitting an empty list of Event
         Uni<List<Event>> eventsUni = Uni.createFrom().item(new ArrayList<>());
 
-        // Sequentially process event IDs one by one, accumulating validated Event instances
         for (UUID eventId : eventIds) {
             eventsUni = eventsUni.flatMap(events ->
                     Event.<Event>findById(eventId)
-                            .onItem().ifNull().failWith(() -> new IllegalArgumentException("Nie znaleziono wydarzenia o id: " + eventId))
+                            .onItem().ifNull().failWith(() -> {
+                                log.info("Nie znaleziono wydarzenia o id: {}", eventId);
+                                return new IllegalArgumentException("Nie znaleziono wydarzenia o id: " + eventId);
+                            })
                             .onItem().invoke(event -> {
                                 if (event.team != null) {
+                                    log.info("Wydarzenie o id {} jest już przypisany zespół", eventId);
                                     throw new IllegalArgumentException("Wydarzenie jest już przypisany zespół");
                                 }
                             })
@@ -49,6 +57,7 @@ public class TeamRepository extends RepositoryBase {
                             team.name = teamDTO.name;
                             team.events = events;
                             team.registeredUserId = uuid;
+                            log.info("Persisting team with name: {}, for user: {}", team.name, uuid);
                             return Panache.withTransaction(team::persist)
                                     .onItem().transform(_ -> {
                                         teamDTO.id = team.id;
@@ -60,7 +69,11 @@ public class TeamRepository extends RepositoryBase {
                         })
                 )
                 .onItem()
-                .call(team -> team.persist())
+                .call(team -> {
+                    log.info("Team persisted with ID: {}", team.id);
+                    return team.persist();
+                })
+                .onFailure().invoke(failure -> log.info("Failure while creating team: {}", failure.getMessage()))
                 .onFailure().recoverWithNull()
                 .onItem()
                 .transform(Team::toDTO);
