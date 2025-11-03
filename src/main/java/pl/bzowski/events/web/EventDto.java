@@ -33,4 +33,15 @@ public class EventDto {
         this.localDateTime = localDateTime;
         this.description = description;
     }
+
+    @Override
+    public String toString() {
+        return "EventDto{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", location='" + location + '\'' +
+                ", localDateTime=" + localDateTime +
+                ", description='" + description + '\'' +
+                '}';
+    }
 }

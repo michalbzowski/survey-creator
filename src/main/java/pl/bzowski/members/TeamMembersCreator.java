@@ -5,17 +5,17 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.eventbus.Message;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import org.jboss.logmanager.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.bzowski.persons.Person;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 @Singleton
-public class MyNextBean {
+public class TeamMembersCreator {
 
-    private final Logger logger = Logger.getLogger(EventWithTeamCreatedListener.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(TeamMembersCreator.class);
 
     @Inject
     LinkGenerationResource linkGenerationResource;
@@ -36,12 +36,15 @@ public class MyNextBean {
     }
 
     @WithTransaction
-    public Uni<Void> getVoidUni(Message<TeamCreatedDto> message) {
+    public Uni<Void> createMembersForTeam(Message<TeamCreatedDto> message) {
+        log.info("[START] method: createMembersForTeam");
         TeamCreatedDto dto = message.body();
-        UUID teamId = dto.getTeamId();
-        switch (dto.getTeamType()) {
+        log.info("- body: {}", dto);
+        UUID teamId = dto.teamId();
+        log.info("- teamId: {}", teamId);
+        switch (dto.teamType()) {
             case "group":
-                List<UUID> groupIds = dto.getGroupIds();
+                List<UUID> groupIds = dto.groupIds();
                 if (groupIds != null && !groupIds.isEmpty()) {
                     return getPersonsFromGroups(groupIds)
                             .flatMap(personsFromGroups ->
@@ -50,15 +53,15 @@ public class MyNextBean {
                 }
                 break;
             case "person":
-                if (dto.getPersonIds() != null && !dto.getPersonIds().isEmpty()) {
-                    return this.getSelectedPersonsFromForm(dto.getPersonIds())
+                if (dto.personIds() != null && !dto.personIds().isEmpty()) {
+                    return this.getSelectedPersonsFromForm(dto.personIds())
                             .flatMap(selectedPersons -> linkGenerationResource.processTeam(teamId, selectedPersons))
                             .onFailure()
-                            .invoke(() -> logger.log(Level.ERROR, "error"));
+                            .invoke(() -> log.error("error"));
                 }
                 break;
             case "all":
-                return this.getAllPersonsForUser(dto.getRegisteredUserId())
+                return this.getAllPersonsForUser(dto.registeredUserId())
                         .flatMap(allPersons -> linkGenerationResource.processTeam(teamId, allPersons));
         }
         return Uni.createFrom().voidItem();

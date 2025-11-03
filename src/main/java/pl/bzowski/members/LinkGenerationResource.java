@@ -1,6 +1,5 @@
 package pl.bzowski.members;
 
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Multi;
@@ -12,9 +11,12 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 
+import java.time.Duration;
 import java.util.Map;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.bzowski.team.Team;
 import pl.bzowski.messaging.*;
 import pl.bzowski.messaging.email.MemberAssignedMailSentEvent;
@@ -24,7 +26,6 @@ import pl.bzowski.persons.Person;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static pl.bzowski.messaging.CommunicationEventListener.PERSIST_COMMUNICATION;
@@ -40,11 +41,10 @@ public class LinkGenerationResource {
     private final EventBus eventBus;
     private final CostamService costamService;
 
-    Logger logger = Logger.getLogger(LinkGenerationResource.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(LinkGenerationResource.class);
 
     @ConfigProperty(name = "app.host")
     String appHost;
-
 
     public LinkGenerationResource(PersonRepository personRepository, EventBus eventBus, CostamService costamService) {
         this.personRepository = personRepository;
@@ -79,11 +79,20 @@ public class LinkGenerationResource {
 
     @WithTransaction
     public Uni<Void> processTeam(UUID teamId, List<Person> persons) {
+        log.info("[START] method: processTeam");
+        log.info("- teamId: {}:", teamId);
+        log.info("- persons: {}:", persons.size());
         return Team.<Team>findById(teamId)
-                .onFailure().invoke(e -> logger.info("Failure - team id: " + teamId))
-                .onItem().ifNull().failWith(() -> new WebApplicationException("team not found", 404))
+                .onFailure()
+                .retry()
+                .withBackOff(Duration.ofSeconds(5), Duration.ofSeconds(50))
+                .atMost(5)
+                .invoke(e -> log.info("Failure - team id: {}", teamId))
+                .onItem()
+                .ifNull()
+                .failWith(() -> new WebApplicationException("team not found", 404))
                 .flatMap(team -> {
-                    logger.info("Found team with id: " + teamId);
+                    log.info("Found team with id: {}", teamId);
 
                     List<UUID> personIds = persons.stream().map(p -> p.id).toList();
 
@@ -103,13 +112,13 @@ public class LinkGenerationResource {
                                 // Tworzymy Memberów tylko dla osób bez istniejących Memberów
                                 return Multi.createFrom().iterable(personsToCreate)
                                         .onItem().transformToUniAndConcatenate(person -> {
-                                            logger.info(String.format("Creating new Member for Person %s and Team %s.", person.id, teamId));
+                                            log.info("Creating new Member for Person {} and Team {}.", person.id, teamId);
                                             Member newMember = new Member(person, team);
                                             return newMember.persist().replaceWithVoid();
                                         })
                                         .collect().asList()
                                         .call(list -> {
-                                            logger.info("Created new members count: " + list.size());
+                                            log.info("Created new members count: {}", list.size());
                                             return Uni.createFrom().voidItem();
                                         })
                                         .replaceWithVoid();
@@ -122,19 +131,19 @@ public class LinkGenerationResource {
     @WithTransaction
     public Uni<Void> saveteamMessageToPerson(@PathParam("teamId") UUID
                                                      teamId, @PathParam("personId") UUID personId) {
-        logger.info(String.format("Start saving message for team %s for person %s", teamId, personId));
+        log.info("Start saving message for team {} for person {}", teamId, personId);
 
         return personRepository.registeredUserId().flatMap(currentUserId -> {
             return Team.<Team>findById(teamId)
                     .flatMap(team -> {
                         if (team == null) {
-                            logger.info("team is null");
+                            log.info("team is null");
                             return Uni.createFrom().failure(new NotFoundException("Zapytanie nie istnieje"));
                         }
                         return Person.<Person>findById(personId)
                                 .flatMap(person -> {
                                     if (person == null) {
-                                        logger.info("Person is null");
+                                        log.info("Person is null");
                                         return Uni.createFrom().failure(new NotFoundException("Osoba nie istnieje"));
                                     }
                                     return Member.<Member>find("personId = ?1 and teamId = ?2", person.id, team.id)
@@ -142,7 +151,7 @@ public class LinkGenerationResource {
                                             .flatMap(member -> {
                                                 if (member == null) {
                                                     String format = String.format("Can not send link. Link doesn't exist for: %s - %s", person.email, teamId);
-                                                    logger.info(format);
+                                                    log.info(format);
                                                     return Uni.createFrom().failure(new RuntimeException(format));
                                                 }
                                                 Map<String, Object> properties = Map.of("eventTitle", member.team.joinedEventsName(),
@@ -162,21 +171,21 @@ public class LinkGenerationResource {
     @WithTransaction
     @GET
     public Uni<Response> getStatus(@PathParam("teamEntryId") UUID teamId) {
-        logger.info("teamEntryId:" + teamId.toString());
+        log.info("teamEntryId:" + teamId.toString());
         return CommunicationTeamLink.<CommunicationTeamLink>find("teamEntryId = ?1 ", teamId)
                 .firstResult()
                 .flatMap(cal -> Communication
                         .<Communication>findById(cal.communicationId)
                         .flatMap(comm -> {
                             SendingStatus status = comm.getStatus();
-                            logger.info("KOT: " + status.name());
+                            log.info("KOT: " + status.name());
                             Response build = getBuild(Response.ok(Map.of("status", status)));
                             return Uni.createFrom().item(build);
                         }))
                 .onFailure()
                 .recoverWithItem(a -> {
-                    logger.log(Level.FINEST, a.toString());
-                    logger.info("PIES: " + SendingStatus.TO_SEND.name());
+                    log.error(a.toString());
+                    log.info("PIES: {}", SendingStatus.TO_SEND.name());
                     return getBuild(Response.ok(Map.of("status", SendingStatus.TO_SEND)));
                 });
     }

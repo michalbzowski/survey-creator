@@ -4,6 +4,8 @@ import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.bzowski.events.web.EventsPageResource;
 import pl.bzowski.shared.base.RepositoryBase;
 import pl.bzowski.events.web.EventDto;
@@ -14,6 +16,8 @@ import java.util.UUID;
 
 @Singleton
 public class EventRepository extends RepositoryBase {
+
+    private static final Logger log = LoggerFactory.getLogger(EventRepository.class);
 
     public Uni<List<Event>> findAvailableEvents() {
         return currentRegisteredUserId()
@@ -31,11 +35,17 @@ public class EventRepository extends RepositoryBase {
 
     @WithTransaction
     public Uni<Event> persist(EventDto eventDto) {
+        log.info("method: persist {}", eventDto.toString());
         return currentRegisteredUserId()
+                .onItem()
+                .invoke(registeredUserId -> log.info("- registeredUserId: {}", registeredUserId))
                 .onItem()
                 .transformToUni(registeredUserId -> {
                     Event event = new Event(eventDto.name, eventDto.location, eventDto.localDateTime, eventDto.description, registeredUserId);
-                    return event.persist();
+                    log.info("- Created Event entity: {}", event);
+                    return event.<Event>persist()
+                            .onItem()
+                            .invoke(persistedEvent -> log.info("- Event persisted with ID: {}", persistedEvent.id));
                 });
     }
 

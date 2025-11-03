@@ -6,16 +6,17 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.eclipse.microprofile.context.ThreadContext;
 import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.logging.Logger;
 
 
 public class RepositoryBase {
 
-    private static final Logger logger = Logger.getLogger(RepositoryBase.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(RepositoryBase.class);
 
     @Inject
     SecurityIdentity securityIdentity;
@@ -31,7 +32,7 @@ public class RepositoryBase {
 
     protected String currentUsername() {
         var username = securityIdentity.getPrincipal().getName();
-        logger.info("currentUsername: " + username);
+        log.info("currentUsername: {}", username);
         return username;
     }
 
@@ -41,7 +42,7 @@ public class RepositoryBase {
 
     public UUID getRegisteredUserId() {
         String sub = jwt.getClaim("sub").toString();
-        logger.info("sub: " + sub);
+        log.info("sub: {}", sub);
         return UUID.fromString(sub);
     }
 
@@ -53,9 +54,9 @@ public class RepositoryBase {
     }
 
     public String currentRegisteredUserEmail() {
-        logger.info(jwt.getClaimNames().toString());
+        log.info(jwt.getClaimNames().toString());
         String firstName = jwt.getClaim("email").toString();
-        logger.info("email: " + firstName);
+        log.info("email: {}", firstName);
         return firstName;
     }
 }

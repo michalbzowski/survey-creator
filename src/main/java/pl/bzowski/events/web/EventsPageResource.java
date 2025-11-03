@@ -14,7 +14,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.jboss.logmanager.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.bzowski.persons.PersonBasicInfoDto;
 import pl.bzowski.team.api.TeamDTO;
 import pl.bzowski.team.infrastructure.TeamRepository;
 import pl.bzowski.shared.base.ReactiveDelete;
@@ -37,14 +39,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.logging.Logger;
 
 import static pl.bzowski.members.TeamCreatedDto.EVENT_CREATED;
 
 @Path("/web/events")
 public class EventsPageResource {
 
-    Logger logger = Logger.getLogger(EventsPageResource.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(EventsPageResource.class);
 
     private final Template createEvent;
     private final Template listEvents;
@@ -90,8 +91,8 @@ public class EventsPageResource {
         return groupsRepository.listAll();
     }
 
-    private Uni<List<Person>> loadPersons() {
-        return personRepository.listAll();
+    private Uni<List<PersonBasicInfoDto>> loadPersonsBasicInfo() {
+        return personRepository.listAllToBasicInfo();
     }
 
     @GET
@@ -101,7 +102,7 @@ public class EventsPageResource {
     public Uni<TemplateInstance> showAddForm() {
         return loadTags()
                 .flatMap(tags -> loadGroups()
-                        .flatMap(groups -> loadPersons()
+                        .flatMap(groups -> loadPersonsBasicInfo()
                                 .map(persons -> createEvent.data(
                                         "tags", tags,
                                         "groups", groups,
@@ -118,6 +119,7 @@ public class EventsPageResource {
                                      @FormParam("teamType") String teamType,
                                      @FormParam("groups") List<UUID> groupIds,
                                      @FormParam("persons") List<UUID> personIds) {
+        log.info("method: createEvent");
         return validateMembers(withTeam, teamType, groupIds, personIds)
                 .onItem()
                 .transformToUni(b -> eventRepository.persist(eventDto)
@@ -139,11 +141,14 @@ public class EventsPageResource {
     private Function<Event, Uni<?>> eventIfWithTeamChecked(String withTeam, String teamType, List<UUID> groupIds, List<UUID> personIds) {
         return event -> {
             if ("checked".equals(withTeam)) {
+                log.info("- team creation requested for event ID: {}, teamType: {}", event.id, teamType);
                 return teamRepository.createTeam(new TeamDTO(event.id))
+                        .onItem()
+                        .invoke(team -> log.info("- team created successfully for event ID: {}", event.id))
                         .onItem()
                         .invoke(publish(withTeam, teamType, groupIds, personIds, event.registeredUserId))
                         .onFailure()
-                        .invoke(failure -> System.out.println(failure.getMessage()));
+                        .invoke(failure -> log.info("- failed to create team: {}", failure.getMessage()));
             }
             return Uni.createFrom().voidItem();
         };
@@ -159,6 +164,7 @@ public class EventsPageResource {
                                     @FormParam("persons") List<UUID> personIds,
                                     @FormParam("teamId") UUID teamId,
                                     @FormParam("eventId") UUID eventId) {
+        log.info(String.format("Add members: %s, %s, %s, %s, %s, %s"));
         return validateMembers(withTeam, teamType, groupIds, personIds)
                 .onItem()
                 .transformToUni(v -> {
@@ -192,6 +198,7 @@ public class EventsPageResource {
     }
 
     private Uni<Boolean> validateMembers(String withTeam, String teamType, List<UUID> groupIds, List<UUID> personIds) {
+        log.info("method: validateMember. withTeam: {}, teamType: {}, groupsIds: {}, personsIds: {}", withTeam, teamType, groupIds.size(), personIds.size());
         if ("checked".equals(withTeam)) {
             if ("group".equals(teamType) && groupIds.isEmpty()) {
                 return Uni.createFrom().failure(new NotFoundException("Nie wybrałeś żadnej grupy"));
@@ -210,19 +217,22 @@ public class EventsPageResource {
                         });
             }
         }
+        log.info("- result: true");
         return Uni.createFrom().item(true); // Walidacja OK (nie ma błędu)
     }
 
     private Consumer<TeamDTO> publish(String withTeam, String
             teamType, List<UUID> groupIds, List<UUID> personIds, UUID registeredUserId) {
         return teamDTO -> {
-            eventBus.publish(EVENT_CREATED,
-                    new TeamCreatedDto(withTeam, teamType, groupIds, personIds, teamDTO.id, registeredUserId));
+            TeamCreatedDto dto = new TeamCreatedDto(withTeam, teamType, groupIds, personIds, teamDTO.id, registeredUserId);
+            log.info("- [start] publish: {}", dto);
+            eventBus.publish(EVENT_CREATED, dto);
+            log.info("- [stop ] publish");
         };
     }
 
     private Consumer<Event> withTeamLogger(String withTeam) {
-        return event -> logger.info("Created event withTeam: " + withTeam);
+        return event -> log.info("- created event withTeam: {}", withTeam);
     }
 
     private static Function<Throwable, Response> returnServerError() {
@@ -232,7 +242,7 @@ public class EventsPageResource {
     }
 
     private Consumer<Throwable> logFailure() {
-        return ex -> logger.log(Level.ERROR, "Failed to create event", ex);
+        return ex -> log.error("Failed to create event", ex);
     }
 
     private final String query_0 = """
