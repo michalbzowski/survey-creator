@@ -1,6 +1,7 @@
 package pl.bzowski.team.infrastructure;
 
 import io.quarkus.hibernate.reactive.panache.Panache;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -59,7 +60,10 @@ public class TeamRepository extends RepositoryBase {
                             team.registeredUserId = uuid;
                             log.info("Persisting team with name: {}, for user: {}", team.name, uuid);
                             return Panache.withTransaction(team::persist)
-                                    .onItem().transform(_ -> {
+                                    .onItem()
+                                    .transform(_ -> {
+                                        log.info("Team persisted with ID: {}", team.id);
+                                        log.info("Enriching with events: {}", events);
                                         teamDTO.id = team.id;
                                         for (Event ev : events) {
                                             ev.team = team;
@@ -69,10 +73,7 @@ public class TeamRepository extends RepositoryBase {
                         })
                 )
                 .onItem()
-                .call(team -> {
-                    log.info("Team persisted with ID: {}", team.id);
-                    return team.persist();
-                })
+                .call(PanacheEntityBase::persistAndFlush)
                 .onFailure().invoke(failure -> log.info("Failure while creating team: {}", failure.getMessage()))
                 .onFailure().recoverWithNull()
                 .onItem()

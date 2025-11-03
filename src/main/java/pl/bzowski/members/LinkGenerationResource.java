@@ -80,8 +80,8 @@ public class LinkGenerationResource {
     @WithTransaction
     public Uni<Void> processTeam(UUID teamId, List<Person> persons) {
         log.info("[START] method: processTeam");
-        log.info("- teamId: {}:", teamId);
-        log.info("- persons: {}:", persons.size());
+        log.info("- teamId: {}", teamId);
+        log.info("- persons: {}", persons.size());
         return Team.<Team>findById(teamId)
                 .flatMap(team -> {
                     log.info("- found team with id: {}", teamId);

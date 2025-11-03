@@ -2,6 +2,8 @@ package pl.bzowski.team;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.bzowski.events.Event;
 import pl.bzowski.members.Member;
 import pl.bzowski.team.api.TeamDTO;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 @Table(name = "teams")
 public class Team extends PanacheEntityBase {
 
+    private static final Logger log = LoggerFactory.getLogger(Team.class);
     @Id
     @GeneratedValue
     public UUID id;
@@ -49,7 +52,9 @@ public class Team extends PanacheEntityBase {
     }
 
     public TeamDTO toDTO() {
-        return new TeamDTO(this.id, this.name, this.events.stream().map(e -> e.id).toList());
+        TeamDTO dto = new TeamDTO(this.id, this.name, this.events.stream().map(e -> e.id).toList());
+        log.info("- toDTO: {}", dto);
+        return dto;
     }
 
     public String joinedEventsName() {
