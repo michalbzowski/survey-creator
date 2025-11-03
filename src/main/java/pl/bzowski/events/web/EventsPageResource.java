@@ -1,5 +1,6 @@
 package pl.bzowski.events.web;
 
+import io.netty.handler.codec.http.HttpScheme;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.panache.common.Sort;
@@ -139,7 +140,7 @@ public class EventsPageResource {
     private static Function<Event, Response> redirectToEventDetails() {
         return event -> {
             UriBuilder uriBuilder = UriBuilder.fromPath("/web/events/" + event.id + "/details");
-            URI build = uriBuilder.build();
+            URI build = uriBuilder.scheme(HttpScheme.HTTPS.toString()).build();
             log.info("- redirect after successful event creation: {}", build);
             return Response.seeOther(build).build();
         };
