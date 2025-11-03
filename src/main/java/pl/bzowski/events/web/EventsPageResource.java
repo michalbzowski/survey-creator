@@ -33,6 +33,7 @@ import pl.bzowski.tags.TagsRepository;
 import pl.bzowski.team.web.TeamDetailsContext;
 import pl.bzowski.team.web.TeamPageResource;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -136,7 +137,12 @@ public class EventsPageResource {
     }
 
     private static Function<Event, Response> redirectToEventDetails() {
-        return event -> Response.seeOther(UriBuilder.fromPath("/web/events/" + event.id + "/details").build()).build();
+        return event -> {
+            UriBuilder uriBuilder = UriBuilder.fromPath("/web/events/" + event.id + "/details");
+            URI build = uriBuilder.build();
+            log.info("- redirect after successful event creation: {}", build);
+            return Response.seeOther(build).build();
+        };
     }
 
     private Function<Event, Uni<?>> eventIfWithTeamChecked(String withTeam, String teamType, List<UUID> groupIds, List<UUID> personIds) {
