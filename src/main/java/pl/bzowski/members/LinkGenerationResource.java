@@ -84,12 +84,12 @@ public class LinkGenerationResource {
         log.info("- persons: {}:", persons.size());
         return Team.<Team>findById(teamId)
                 .flatMap(team -> {
-                    log.info("Found team with id: {}", teamId);
-
+                    log.info("- found team with id: {}", teamId);
+                    log.info("- team details: {}", team);
                     List<UUID> personIds = persons.stream().map(p -> p.id).toList();
-
+                    log.info("- personIds: {}", personIds);
                     // Pobranie wszystkich istniejących Memberów dla teamId i poniższej listy personId jednym zapytaniem
-                    return Member.<Member>find("teamId = ?1 and personId in ?2", team.id, personIds)
+                    return Member.<Member>find("teamId = ?1 and personId in ?2", teamId, personIds)
                             .list()
                             .flatMap(existingMembers -> {
                                 // Mapujemy personId na Member, aby szybko sprawdzić istnienie

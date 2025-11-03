@@ -55,4 +55,15 @@ public class Team extends PanacheEntityBase {
     public String joinedEventsName() {
         return events.stream().map(e -> e.name).collect(Collectors.joining(", "));
     }
+
+    @Override
+    public String toString() {
+        return "Team{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", registeredUserId=" + registeredUserId +
+                ", events=" + events +
+                ", members=" + members +
+                '}';
+    }
 }
