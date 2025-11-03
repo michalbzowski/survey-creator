@@ -165,7 +165,7 @@ public class EventsPageResource {
                                     @FormParam("persons") List<UUID> personIds,
                                     @FormParam("teamId") UUID teamId,
                                     @FormParam("eventId") UUID eventId) {
-        log.info(String.format("Add members: %s, %s, %s, %s, %s, %s"));
+        log.info("Add members: %s, %s, %s, %s, %s, %s");
         return validateMembers(withTeam, teamType, groupIds, personIds)
                 .onItem()
                 .transformToUni(v -> {

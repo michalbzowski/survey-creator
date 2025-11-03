@@ -26,7 +26,7 @@ u('#eventForm').on('submit', function(e) {
     }
 
     // Prześlij AJAX-em
-    fetch(form.action, {
+    fetchWithLoader(form.action, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
