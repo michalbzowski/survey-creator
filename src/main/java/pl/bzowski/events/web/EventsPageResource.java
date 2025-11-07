@@ -139,8 +139,7 @@ public class EventsPageResource {
 
     private static Function<Event, Response> redirectToEventDetails() {
         return event -> {
-            UriBuilder uriBuilder = UriBuilder.fromPath("/web/events/" + event.id + "/details");
-            URI build = uriBuilder.scheme(HttpScheme.HTTPS.toString()).build();
+            URI build = UriBuilder.fromPath("/web/events/" + event.id + "/details").build();
             log.info("- redirect after successful event creation: {}", build);
             return Response.seeOther(build).build();
         };
