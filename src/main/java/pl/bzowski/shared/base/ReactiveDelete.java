@@ -25,7 +25,7 @@ public class ReactiveDelete {
                     } else {
                         return ((PanacheEntityBase) entity)
                                 .delete()
-                                .map(deleted -> Response.seeOther(UriBuilder.fromPath("/web/events").build()).build());
+                                .map(deleted -> Response.seeOther(UriBuilder.fromPath(redirectPath).build()).build());
                     }
                 });
     }
